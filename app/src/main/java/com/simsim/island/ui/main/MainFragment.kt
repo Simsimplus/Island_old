@@ -1,13 +1,11 @@
 package com.simsim.island.ui.main
 
-import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import com.simsim.island.R
 import com.simsim.island.databinding.MainFragmentBinding
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -25,13 +23,17 @@ class MainFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View {
         binding= MainFragmentBinding.inflate(inflater, container, false)
-
+        binding.viewModel=viewModel
+        binding.lifecycleOwner=this
+        viewModel.getThreads()
+        viewModel.threadsResult.observe(viewLifecycleOwner){
+            binding.message.text=it.toString()
+        }
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.message.text="hello island"
     }
 
 }

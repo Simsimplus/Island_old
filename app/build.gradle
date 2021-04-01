@@ -43,6 +43,11 @@ android {
 
 dependencies {
     implementation "com.google.dagger:hilt-android:$hilt_version"
+    implementation 'org.jsoup:jsoup:1.13.1'
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-scalars:2.9.0'
+    implementation 'androidx.paging:paging-common-ktx:3.0.0-beta03'
+    implementation 'androidx.paging:paging-runtime-ktx:3.0.0-beta03'
     kapt "com.google.dagger:hilt-android-compiler:$hilt_version"
     def fuel_version="2.3.1"
     def room_version="2.2.6"
