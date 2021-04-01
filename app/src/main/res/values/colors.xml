@@ -10,5 +10,6 @@
     <color name="white">#FFFFFFFF</color>
     <color name="backGroundGrey">#FFf1f1f1</color>
     <color name="card_stroke_color">#ffe1e1e1</color>
+    <color name="background_soft_grey">#EFEFEF</color>
 
 </resources>

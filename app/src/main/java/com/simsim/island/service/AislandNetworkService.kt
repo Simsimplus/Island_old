@@ -10,7 +10,8 @@ import retrofit2.http.GET
 import retrofit2.http.Url
 import javax.inject.Inject
 
-class AislandRequest @Inject constructor() {
+
+class AislandNetworkService @Inject constructor() {
     companion object {
         private const val baseUrl = "https://adnmb3.com"
     }
@@ -30,10 +31,10 @@ class AislandRequest @Inject constructor() {
             Log.e("Simsim:url:", url)
             if (call.isSuccessful) {
                 response = call.body()
-                Log.e("Simsim:response body:", response.toString())
+//                Log.e("Simsim:response body:", response.toString())
             } else {
                 response=null
-                Log.e("Simsim:error:", call.code().toString())
+//                Log.e("Simsim:error:", call.code().toString())
             }
         response
         }
