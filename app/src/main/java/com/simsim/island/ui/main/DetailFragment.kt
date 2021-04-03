@@ -1,11 +1,10 @@
 package com.simsim.island.ui.main
 
 import android.os.Bundle
+import android.view.*
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.commit
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,6 +20,11 @@ class DetailFragment(private val mainThread:IslandThread) : Fragment() {
     private val viewModel:MainViewModel by activityViewModels()
     private lateinit var binding:DetailFragmentBinding
     private lateinit var adapter: DetailRecyclerViewAdapter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
 
 
     override fun onCreateView(
@@ -41,6 +45,34 @@ class DetailFragment(private val mainThread:IslandThread) : Fragment() {
             }
         }
         return binding.root
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.detail_fragment_toolbar_menu,menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId){
+            R.id.detail_fragment_menu_add->{
+                newThreadReply()
+            }
+            R.id.detail_fragment_menu_report->{
+
+            }
+            R.id.detail_fragment_menu_share->{
+
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun newThreadReply() {
+        parentFragmentManager.commit {
+            add( R.id.activity_fragment_container,NewDraftFragment.newInstance(target = "thread",targetKeyWord =mainThread.poThread.ThreadId),"reply")
+            addToBackStack("reply")
+            viewModel.isMainFragment.value = false
+        }
     }
 
     override fun onDetach() {

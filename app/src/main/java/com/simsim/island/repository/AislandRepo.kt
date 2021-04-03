@@ -101,7 +101,7 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                             }
                         }
                         "h-threads-content" -> {
-                            basicThread.content = p.ownText()
+                            basicThread.content = p.text()
                         }
                     }
                 }

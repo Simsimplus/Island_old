@@ -10,4 +10,8 @@
     <string name="load_state_indicator">正在取回…</string>
     <string name="menu_item_refresh">刷新</string>
     <string name="menu_item_search">搜索</string>
+    <string name="loading_image">loading_image</string>
+    <string name="menu_add">add</string>
+    <string name="thread_report_menu_item">举报</string>
+    <string name="menu_share_title">分享</string>
 </resources>

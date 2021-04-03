@@ -1,9 +1,11 @@
 package com.simsim.island.adapter
 
 import android.graphics.Color
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -33,7 +35,9 @@ class DetailRecyclerViewAdapter(private val fragment:DetailFragment,val poId:Str
             holder.binding.uidTextview.text= handleThreadId(it.uid)
             val uidTextviewText=holder.binding.uidTextview.text
             if (it.uid==poId){
-                holder.binding.uidTextview.text=uidTextviewText.toString().plus("(po)")
+//                holder.binding.uidTextview.text=uidTextviewText.toString().plus("(po)")
+                holder.binding.uidTextview.setTypeface(null,Typeface.BOLD)
+                holder.binding.uidTextview.setTextColor(ContextCompat.getColor(fragment.requireContext(),R.color.po_id_highlight))
             }
             holder.binding.timeTextview.text= handleThreadTime(it.time)
             holder.binding.threadIdTextview.text=it.ThreadId

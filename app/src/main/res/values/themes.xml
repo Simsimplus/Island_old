@@ -18,6 +18,8 @@
 <!--        <item name="actionModeBackground">?attr/colorPrimary</item>-->
 <!--        <item name="actionModeStyle">@style/actionModeLight</item>-->
         <!--        <item name="actionBarTheme">@style/Theme.PodPlayer</item>-->
+<!--        toolbar style-->
 
     </style>
+
 </resources>
