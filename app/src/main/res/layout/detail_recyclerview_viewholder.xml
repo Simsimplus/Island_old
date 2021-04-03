@@ -8,7 +8,7 @@
     </data>
 
     <com.google.android.material.card.MaterialCardView
-        android:id="@+id/md_card"
+        android:id="@+id/detail_md_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardBackgroundColor="#FFFFFF"
@@ -37,7 +37,8 @@
                     android:layout_gravity="start"
                     android:layout_weight="1"
                     android:gravity="start"
-                    android:textColor="@color/first_col_font_color" />
+                    android:textColor="@color/first_col_font_color"
+                    android:textSize="@dimen/first_col_font_size" />
 
                 <TextView
                     android:id="@+id/thread_id_textview"
@@ -46,7 +47,8 @@
                     android:layout_gravity="center"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:textColor="@color/first_col_font_color" />
+                    android:textColor="@color/first_col_font_color"
+                    android:textSize="@dimen/first_col_font_size" />
 
                 <TextView
                     android:id="@+id/time_textview"
@@ -55,7 +57,8 @@
                     android:layout_gravity="end"
                     android:layout_weight="1"
                     android:gravity="end"
-                    android:textColor="@color/first_col_font_color" />
+                    android:textColor="@color/first_col_font_color"
+                    android:textSize="@dimen/first_col_font_size" />
             </LinearLayout>
 
             <LinearLayout
@@ -69,61 +72,21 @@
                     android:id="@+id/content_textview"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-thin"
                     android:paddingTop="8dp"
                     android:paddingBottom="8dp"
                     android:textColor="@color/content_font_color"
                     android:textSize="@dimen/content_font_size" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="start"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:id="@+id/image_posted"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="start"
-                        android:adjustViewBounds="true"
-                        android:background="#FFFFFF"
-                        android:contentDescription="@string/posted_image"
-                        android:maxHeight="100dp"
-                        android:visibility="gone"
-                        tools:srcCompat="@tools:sample/avatars" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="bottom|end"
-                        android:layout_weight="1"
-                        android:gravity="center|end"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:id="@+id/comment_icon"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center|end"
-                            android:background="@drawable/image_shape"
-                            android:contentDescription="@string/coment_icon"
-                            android:paddingStart="1dp"
-                            android:paddingEnd="1dp"
-                            app:srcCompat="@drawable/ic_outline_mode_comment_16" />
-
-                        <TextView
-                            android:id="@+id/comment_number"
-                            android:layout_width="37dp"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center|end"
-                            android:gravity="center|start"
-                            android:text="@string/initial_comment_number"
-                            android:textColor="@color/first_col_font_color"
-                            android:textSize="@dimen/first_col_font_size" />
-                    </LinearLayout>
-                </LinearLayout>
-
+                <ImageView
+                    android:id="@+id/image_posted"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:background="#FFFFFF"
+                    android:contentDescription="@string/posted_image"
+                    android:maxHeight="100dp"
+                    android:visibility="gone"
+                    tools:srcCompat="@tools:sample/avatars" />
             </LinearLayout>
 
         </LinearLayout>

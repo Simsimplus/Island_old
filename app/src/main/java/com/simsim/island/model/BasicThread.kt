@@ -15,8 +15,9 @@ data class BasicThread(
 )
 
 data class IslandThread(
+        var commentsNumber:String="0",
         var section:String,
         var poThread:BasicThread,
         var replyThreads:List<BasicThread>,
-        var commentsNumber:String="0"
+
 )

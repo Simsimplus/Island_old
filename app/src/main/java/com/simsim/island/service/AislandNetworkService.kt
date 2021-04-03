@@ -8,6 +8,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Url
+import java.lang.Exception
 import javax.inject.Inject
 
 
@@ -26,18 +27,21 @@ class AislandNetworkService @Inject constructor() {
     private val service: IslandHtmlService by lazy { retrofit.create(IslandHtmlService::class.java) }
 
     suspend fun getHtmlStringByPage(url:String):String?=withContext(Dispatchers.IO){
-            val response:String?
-            val call = service.getHtmlStringByPage(url)
-            Log.e("Simsim:url:", url)
-            if (call.isSuccessful) {
-                response = call.body()
-//                Log.e("Simsim:response body:", response.toString())
-            } else {
-                response=null
-//                Log.e("Simsim:error:", call.code().toString())
+            var response:String?=null
+            try {
+                val call = service.getHtmlStringByPage(url)
+                Log.e("Simsim:url:", url)
+                response = if (call.isSuccessful) {
+                    call.body()
+                } else{
+                    null
+                }
+            }catch (e:Exception){
+                throw e
             }
         response
         }
+
 
 
 

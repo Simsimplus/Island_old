@@ -1,5 +1,6 @@
 package com.simsim.island.repository
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.simsim.island.model.BasicThread
@@ -8,6 +9,7 @@ import com.simsim.island.service.AislandNetworkService
 import com.simsim.island.util.firstNumberPlus5
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import java.lang.Exception
 import java.time.LocalDateTime
 import javax.inject.Inject
 
@@ -33,7 +35,7 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                         "回应有\\s*(\\d+)\\s*篇被省略.*".toRegex().matches(font.ownText())
                     }?.ownText()?.firstNumberPlus5()?:replyThreads.size.toString()
                     if (commentsNumber.length>=4) commentsNumber="999+"
-                    val islandThread=IslandThread(section, poThread, replyThreads,commentsNumber)
+                    val islandThread=IslandThread(commentsNumber,Uri.decode(section), poThread, replyThreads,)
                     threads.add(islandThread)
                     Log.e("Simsim", islandThread.toString())
                 }
@@ -44,7 +46,7 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
             }
         }
 
-        private fun divToBasicThread(div: Element): BasicThread {
+        fun divToBasicThread(div: Element): BasicThread {
             val basicThread = BasicThread()
             val pTags = div.select("p")
             val divClassName=div.className()
@@ -80,7 +82,11 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
 //                                        ) ?: Date()
 //                                Log.e("Simsim","time replaced as:${child.ownText().replace("\\(.\\)".toRegex(), "-")}")
 //                                Log.e("Simsim","time parsed as:${basicThread.time}")
-                                        basicThread.time= LocalDateTime.parse(child.ownText().replace("\\(.\\)".toRegex(),"T"))
+                                        basicThread.time= try {
+                                            LocalDateTime.parse(child.ownText().replace("\\(.\\)|(?=\\d)\\s".toRegex(),"T"))
+                                        }catch (e:Exception){
+                                            LocalDateTime.of(2099,1,1,0,1)
+                                        }
                                     }
                                     "h-threads-uid" -> {
                                         basicThread.uid = child.ownText()
@@ -107,10 +113,10 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
     }
 
     internal val threadLiveData = MutableLiveData<List<IslandThread>?>()
-    suspend fun getThreadsByPage(section: String, page: Int) {
-        val response: String? = service.getHtmlStringByPage(baseUrl.format(section, page))
-        threadLiveData.value=responseToThreadList(section,response)
-    }
+//    suspend fun getThreadsByPage(section: String, page: Int) {
+//        val response: String? = service.getHtmlStringByPage(baseUrl.format(section, page))
+//        threadLiveData.value=responseToThreadList(section,response)
+//    }
 
 
 }

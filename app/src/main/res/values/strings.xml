@@ -3,5 +3,11 @@
     <string name="initial_comment_number">000+</string>
     <string name="posted_image">posted_image</string>
     <string name="coment_icon">coment_icon</string>
-    <string name="indicator_text">上岛中</string>
+    <string name="indicator_text">上岛中…</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="image_detail">image_detail</string>
+    <string name="load_state_indicator">正在取回…</string>
+    <string name="menu_item_refresh">刷新</string>
+    <string name="menu_item_search">搜索</string>
 </resources>

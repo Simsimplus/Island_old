@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="md_card_margin">5dp</dimen>
+    <dimen name="first_col_font_size">16sp</dimen>
+    <dimen name="content_font_size">17sp</dimen>
 </resources>

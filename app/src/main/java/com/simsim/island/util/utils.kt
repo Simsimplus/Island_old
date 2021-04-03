@@ -15,25 +15,30 @@ fun handleThreadTime(time:LocalDateTime):String{
     val duration=Duration.between(time,now)
     val minutes=duration.toMinutes()
     when{
-        minutes<60 ->{
-            return "${duration.toMinutes()}分"
+            minutes in 0..59 ->{
+            return "${duration.toMinutes()}分前"
         }
-        minutes>=60 && minutes<60*24->{
-            return "${duration.toHours()}时"
+        minutes in 60 until 60*24->{
+            return "${duration.toHours()}时前"
         }
-        minutes>=60*24 && minutes<60*24*30->{
-            return "${duration.toDays()}天"
+        minutes in 60*24 until 60*24*2->{
+            return "昨天"
         }
-        minutes>=60*24*30 && minutes<60*24*30*12->{
-            return "${duration.toDays()/30}月"
+        minutes in 60*24*2 until 60*24*3->{
+            return "前天"
         }
-        minutes>60*24*30*12->{
-            return "${duration.toDays()/(30*12)}年"
+        minutes in 60*24*3 until 60*24*4->{
+            return "大前天"
+        }
+        minutes <0->{
+            return "未来"
         }
         else ->{
-            return "未知"
+            return "%d-%d-%d".format(time.year,time.month.value,time.dayOfMonth)
         }
     }
 }
 fun String.firstNumberPlus5():String=
     ((".*?(\\d+).*?".toRegex().matchEntire(this)?.groupValues?.get(1)?.toInt()?:0)+5).toString()
+
+fun String.findPageNumber():String=".*page=(\\d+).*".toRegex().matchEntire(this)?.groupValues?.get(1)?:"99"
