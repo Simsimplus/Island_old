@@ -15,7 +15,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.simsim.island.R
 import com.simsim.island.databinding.ImageDetailFragmentBinding
 
-class ImageDetailFragment(val imageUrl:String) : BottomSheetDialogFragment() {
+class ImageDetailFragment(private val imageUrl:String) : BottomSheetDialogFragment() {
     internal lateinit var binding: ImageDetailFragmentBinding
     private val viewModel:MainViewModel by activityViewModels()
 
@@ -43,8 +43,8 @@ class ImageDetailFragment(val imageUrl:String) : BottomSheetDialogFragment() {
 
         (dialog as BottomSheetDialog).behavior.apply {
             peekHeight = BottomSheetBehavior.PEEK_HEIGHT_AUTO
-//            isFitToContents=false
-//            expandedOffset=33
+            isFitToContents=false
+//            expandedOffset=viewModel.actionBarHeight
             state=BottomSheetBehavior.STATE_EXPANDED
         }
         return binding.root

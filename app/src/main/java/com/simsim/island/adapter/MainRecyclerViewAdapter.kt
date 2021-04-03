@@ -41,7 +41,7 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val clic
             if (islandThread.poThread.imageUrl.isNotBlank()){
                 val imageUrl=islandThread.poThread.imageUrl
 //                val imagePosted=holder.binding.imagePosted
-                Glide.with(holder.itemView).load(imageUrl).into(holder.binding.imagePosted)
+                Glide.with(holder.itemView).load(imageUrl).placeholder(R.drawable.image_loading).error(R.drawable.image_load_failed).dontAnimate().into(holder.binding.imagePosted)
                 holder.binding.imagePosted.visibility=View.VISIBLE
                 holder.binding.imagePosted.setBackgroundResource(R.drawable.image_shape)
                 holder.binding.imagePosted.clipToOutline=true

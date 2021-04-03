@@ -32,6 +32,7 @@ class MainViewModel @Inject constructor(application: Application,private val rep
     var detailFlow:Flow<PagingData<BasicThread>> = emptyFlow()
     val isMainFragment=MutableLiveData(true)
     var windowHeight=1
+    var actionBarHeight=1
 
 
     fun setDetailFlow(mainThread: IslandThread): Flow<PagingData<BasicThread>> {
@@ -40,6 +41,7 @@ class MainViewModel @Inject constructor(application: Application,private val rep
                 pageSize = 10,
                 enablePlaceholders = false,
                 maxSize = 300,
+                initialLoadSize = 10
             )
         ){
             IslandDetailPaging(AislandNetworkService(),mainThread)
@@ -55,6 +57,7 @@ class MainViewModel @Inject constructor(application: Application,private val rep
             pageSize = 10,
             enablePlaceholders = false,
             maxSize = 300,
+            initialLoadSize = 10
         )
     ){
         IslandMainPaging(AislandNetworkService(),section = section)

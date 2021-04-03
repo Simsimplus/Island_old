@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
+import android.util.TypedValue
 import android.view.MenuItem
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -15,7 +16,6 @@ import com.simsim.island.ui.main.ImageDetailFragment
 import com.simsim.island.ui.main.MainFragment
 import com.simsim.island.ui.main.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
         }
         mainFragment=supportFragmentManager.findFragmentByTag("mainFragment") as MainFragment
 
-        getWindowHeight()
+        getWindowHeightAndActionBarHeight()
         lifecycleScope.launch {
                 Log.e("Simsim", "network connected: ${checkNetwork()}")
 
@@ -44,10 +44,13 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun getWindowHeight() {
+    private fun getWindowHeightAndActionBarHeight() {
         val displayMetrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(displayMetrics)
         viewModel.windowHeight = displayMetrics.heightPixels
+        val tv=TypedValue()
+        theme.resolveAttribute(R.attr.actionBarSize,tv,true)
+        viewModel.actionBarHeight=TypedValue.complexToDimensionPixelSize(tv.data,resources.displayMetrics)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

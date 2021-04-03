@@ -90,6 +90,7 @@
                         android:background="#FFFFFF"
                         android:contentDescription="@string/posted_image"
                         android:maxHeight="100dp"
+                        android:minHeight="66dp"
                         android:visibility="gone"
                         tools:srcCompat="@tools:sample/avatars" />
 
