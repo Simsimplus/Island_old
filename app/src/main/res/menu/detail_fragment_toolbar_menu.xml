@@ -9,8 +9,11 @@
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/detail_fragment_menu_share"
-        android:title="@string/menu_share_title" />
+        android:icon="@drawable/ic_round_share_24"
+        android:title="@string/menu_share_title"
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/detail_fragment_menu_report"
-        android:title="@string/thread_report_menu_item" />
+        android:title="@string/thread_report_menu_item"
+        app:showAsAction="never" />
 </menu>

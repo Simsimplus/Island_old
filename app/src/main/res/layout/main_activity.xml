@@ -21,11 +21,13 @@
                 android:layout_height="?attr/actionBarSize"
                 android:elevation="4dp"
                 app:menu="@menu/main_toolbar_menu"
-                app:navigationIcon="@drawable/ic_round_menu_24"
+
                 app:title="@string/app_name"
-                app:layout_scrollFlags="scroll|enterAlways|snap"
+
                 style="@style/Widget.MaterialComponents.Toolbar.Primary"
                 />
+            <!--            app:navigationIcon="@drawable/ic_round_menu_24"-->
+            <!--            app:layout_scrollFlags="scroll|enterAlways|snap"-->
             <!--            style="@style/Widget.MaterialComponents.Toolbar.Primary"-->
             <!--            android:theme="@style/ThemeOverlay.AppCompat.ActionBar"-->
             <!--            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"-->

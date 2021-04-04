@@ -3,12 +3,39 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.main.NewDraftFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".ui.main.NewDraftFragment"
+    android:background="@color/white"
+    android:orientation="horizontal">
+<!--    <com.google.android.material.appbar.AppBarLayout-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content">-->
+
+<!--        <com.google.android.material.appbar.MaterialToolbar-->
+<!--            android:id="@+id/draft_toolbar"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="?attr/actionBarSize"-->
+<!--            android:elevation="4dp"-->
+<!--            app:menu="@menu/new_draft_tollbar_menu"-->
+<!--            app:layout_scrollFlags="noScroll"-->
+<!--            style="@style/Widget.MaterialComponents.Toolbar.Primary"-->
+<!--            />-->
+<!--        &lt;!&ndash;            style="@style/Widget.MaterialComponents.Toolbar.Primary"&ndash;&gt;-->
+<!--        &lt;!&ndash;            android:theme="@style/ThemeOverlay.AppCompat.ActionBar"&ndash;&gt;-->
+<!--        &lt;!&ndash;            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"&ndash;&gt;-->
+<!--    </com.google.android.material.appbar.AppBarLayout>-->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+            android:contentDescription="@string/new_thread_content"
+            android:gravity="start|top"
+            android:inputType="text|textMultiLine"
+            android:selectAllOnFocus="true"
+            tools:text="@tools:sample/lorem" />
     </com.google.android.material.textfield.TextInputLayout>
 </LinearLayout>

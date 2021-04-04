@@ -12,13 +12,12 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
-<!--        <item name="windowActionModeOverlay">true</item>-->
 
-<!--        <item name="actionModeCloseDrawable">@drawable/ic_baseline_keyboard_backspace_24</item>-->
-<!--        <item name="actionModeBackground">?attr/colorPrimary</item>-->
-<!--        <item name="actionModeStyle">@style/actionModeLight</item>-->
-        <!--        <item name="actionBarTheme">@style/Theme.PodPlayer</item>-->
-<!--        toolbar style-->
+<!--        action-mode-style-->
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeBackground">?attr/colorPrimary</item>
+        <item name="actionModeCloseDrawable">@drawable/ic_round_arrow_back_24</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.MaterialComponents.Dark.ActionBar</item>
 
     </style>
 
