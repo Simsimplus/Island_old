@@ -1,7 +1,6 @@
 package com.simsim.island.model
 
 import java.time.LocalDateTime
-import java.util.*
 
 data class BasicThread(
         var ThreadId:String="",

@@ -28,8 +28,10 @@ class IslandDetailPaging(
             // Start refresh at page 1 if undefined.
             val maxPage:Int?
             val nextPageNumber = params.key ?: 1
+            val url="https://adnmb3.com/" + mainThread.poThread.link + "?page=$nextPageNumber"
+            Log.e("Simsim","request for thread detail:$url")
             val response =
-                service.getHtmlStringByPage("https://adnmb3.com/" + mainThread.poThread.link + "?page=$nextPageNumber")
+                service.getHtmlStringByPage(url)
             val threadList: List<BasicThread>? = if (response != null) {
                 val doc = Jsoup.parse(response)
                 val pages=doc.select("[href~=.*page=[0-9]+]")

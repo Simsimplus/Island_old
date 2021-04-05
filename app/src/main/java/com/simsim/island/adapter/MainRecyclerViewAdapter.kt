@@ -6,6 +6,8 @@ import android.view.ViewGroup
 import android.widget.ExpandableListView
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -16,10 +18,11 @@ import com.simsim.island.adapter.MainRecyclerViewAdapter.*
 import com.simsim.island.databinding.MainRecyclerviewViewholderBinding
 import com.simsim.island.model.IslandThread
 import com.simsim.island.ui.main.MainFragment
+import com.simsim.island.ui.main.MainFragmentDirections
 import com.simsim.island.util.handleThreadId
 import com.simsim.island.util.handleThreadTime
 
-class MainRecyclerViewAdapter(private val fragment:MainFragment,private val clickListener: (mainThread:IslandThread)->Unit):PagingDataAdapter<IslandThread, IslandThreadViewHolder>(diffComparator) {
+class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imageClickListener: (imageUrl:String)->Unit,private val clickListener: (mainThread:IslandThread)->Unit):PagingDataAdapter<IslandThread, IslandThreadViewHolder>(diffComparator) {
     inner class IslandThreadViewHolder(view: View):RecyclerView.ViewHolder(view){
         val binding=MainRecyclerviewViewholderBinding.bind(view)
 //        val uidTextview:TextView=view.findViewById(R.id.uid_textview)
@@ -46,7 +49,8 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val clic
                 holder.binding.imagePosted.setBackgroundResource(R.drawable.image_shape)
                 holder.binding.imagePosted.clipToOutline=true
                 holder.binding.imagePosted.setOnClickListener {
-                    (fragment.requireActivity() as MainActivity).showImageDetailFragment(imageUrl.replace("thumb","image"))
+                    imageClickListener(imageUrl.replace("thumb","image"))
+//                    (fragment.requireActivity() as MainActivity).showImageDetailFragment(imageUrl.replace("thumb","image"))
                 }
             }else{
                 Glide.with(fragment).clear(holder.binding.imagePosted)

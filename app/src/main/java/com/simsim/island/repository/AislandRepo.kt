@@ -7,6 +7,7 @@ import com.simsim.island.model.BasicThread
 import com.simsim.island.model.IslandThread
 import com.simsim.island.service.AislandNetworkService
 import com.simsim.island.util.firstNumberPlus5
+import com.simsim.island.util.removeQueryTail
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import java.lang.Exception
@@ -16,6 +17,7 @@ import javax.inject.Inject
 class AislandRepo @Inject constructor(private val service: AislandNetworkService) {
     companion object {
         private const val baseUrl = "https://adnmb3.com/m/f/%s?page=%d"
+        private const val islandUrl="https://adnmb3.com"
         fun responseToThreadList(section: String,response: String?): List<IslandThread>? {
             val threads = mutableListOf<IslandThread>()
             if (response != null) {
@@ -37,7 +39,7 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                     if (commentsNumber.length>=4) commentsNumber="999+"
                     val islandThread=IslandThread(commentsNumber,Uri.decode(section), poThread, replyThreads,)
                     threads.add(islandThread)
-                    Log.e("Simsim", islandThread.toString())
+//                    Log.e("Simsim", islandThread.toString())
                 }
                 return threads
 
@@ -50,6 +52,10 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
             val basicThread = BasicThread()
             val pTags = div.select("p")
             val divClassName=div.className()
+            val img=div.selectFirst("img")
+            if (img!=null){
+                basicThread.imageUrl = img.attr("src")
+            }
             pTags.forEach { p ->
                 if(p.parent().className()==divClassName){
                     when (p.className()) {
@@ -63,8 +69,8 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                                         basicThread.name = child.ownText()
                                     }
                                     "h-threads-id" -> {
-                                        basicThread.link = child.attr("href")
-                                        basicThread.ThreadId=child.ownText()
+                                        basicThread.link = child.attr("href").removeQueryTail()
+                                        basicThread.ThreadId=child.ownText().replace("\\D".toRegex(),"")
                                     }
                                 }
                             }
@@ -95,10 +101,10 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                                 }
                             }
                             //check whether there is image
-                            val img = p.selectFirst("img")
-                            if (img !== null) {
-                                basicThread.imageUrl = img.attr("src")
-                            }
+//                            val img = p.selectFirst("img")
+//                            if (img !== null) {
+//                                basicThread.imageUrl = img.attr("src")
+//                            }
                         }
                         "h-threads-content" -> {
                             basicThread.content = p.text()

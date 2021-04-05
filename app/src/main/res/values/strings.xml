@@ -20,4 +20,5 @@
     <string name="menu_item_send">send</string>
     <string name="draft_menu_image_pick">image_pick</string>
     <string name="emoji">颜文字</string>
+    <string name="image_share">share</string>
 </resources>

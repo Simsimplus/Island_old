@@ -33,6 +33,8 @@ class MainViewModel @Inject constructor(application: Application,private val rep
     val isMainFragment=MutableLiveData(true)
     var windowHeight=1
     var actionBarHeight=1
+    var refreshMainRecyclerView:MutableLiveData<Boolean> = MutableLiveData()
+    private val networkService=AislandNetworkService()
 
 
     fun setDetailFlow(mainThread: IslandThread): Flow<PagingData<BasicThread>> {
@@ -44,7 +46,7 @@ class MainViewModel @Inject constructor(application: Application,private val rep
                 initialLoadSize = 10
             )
         ){
-            IslandDetailPaging(AislandNetworkService(),mainThread)
+            IslandDetailPaging(networkService,mainThread)
         }.flow.cachedIn(viewModelScope)
         return detailFlow
     }
@@ -60,7 +62,7 @@ class MainViewModel @Inject constructor(application: Application,private val rep
             initialLoadSize = 10
         )
     ){
-        IslandMainPaging(AislandNetworkService(),section = section)
+        IslandMainPaging(networkService,section = section)
     }.flow.cachedIn(viewModelScope)
         return mainFlow
     }

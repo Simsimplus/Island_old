@@ -42,3 +42,5 @@ fun String.firstNumberPlus5():String=
     ((".*?(\\d+).*?".toRegex().matchEntire(this)?.groupValues?.get(1)?.toInt()?:0)+5).toString()
 
 fun String.findPageNumber():String=".*page=(\\d+).*".toRegex().matchEntire(this)?.groupValues?.get(1)?:"99"
+
+fun String.removeQueryTail():String=this.replace("\\?r=\\d+".toRegex(),"")

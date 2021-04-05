@@ -12,6 +12,7 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
 import com.simsim.island.databinding.MainActivityBinding
 import com.simsim.island.ui.main.ImageDetailFragment
 import com.simsim.island.ui.main.MainFragment
@@ -23,25 +24,20 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
     private lateinit var binding:MainActivityBinding
     private val viewModel:MainViewModel by viewModels()
-    private lateinit var mainFragment: MainFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding= MainActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setSupportActionBar(binding.mainToolbar)
-        if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                    .replace(R.id.activity_fragment_container, MainFragment.newInstance(),"mainFragment")
-                    .commitNow()
-        }
-        mainFragment=supportFragmentManager.findFragmentByTag("mainFragment") as MainFragment
-
         getWindowHeightAndActionBarHeight()
         lifecycleScope.launch {
                 Log.e("Simsim", "network connected: ${checkNetwork()}")
-
         }
+
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
 
     }
 
@@ -54,29 +50,11 @@ class MainActivity : AppCompatActivity() {
         viewModel.actionBarHeight=TypedValue.complexToDimensionPixelSize(tv.data,resources.displayMetrics)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.main_toolbar_menu,menu)
-        return super.onCreateOptionsMenu(menu)
-    }
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when(item.itemId){
-            R.id.menu_item_refresh->{
-                mainFragment.adapter.refresh()
-                mainFragment.layoutManager.scrollToPosition(0)
-                Log.e("Simsim","refresh item pressed")
-            }
-//            R.id.menu_item_search->{}
-        }
-        return super.onOptionsItemSelected(item)
-    }
+
     private fun checkNetwork(): Boolean {
         val connMgr = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val networkInfo: NetworkInfo? = connMgr.activeNetworkInfo
         return networkInfo?.isConnected == true
     }
-    internal  fun showImageDetailFragment(url:String){
-        val imageDetailFragment= ImageDetailFragment.newInstance(url)
-        imageDetailFragment.show(supportFragmentManager,"imageDetail")
-        viewModel.isMainFragment.value=false
-    }
+
 }

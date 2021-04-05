@@ -5,12 +5,13 @@ import android.view.*
 import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.NavHostFragment
 import com.simsim.island.MainActivity
 import com.simsim.island.R
 import com.simsim.island.databinding.NewDraftFragmentBinding
 
 
-class NewDraftFragment(val target: String,val targetKeyWord: String,val actionMode: ActionMode) : Fragment() {
+class NewDraftFragment(val target: String,val targetKeyWord: String) : Fragment() {
     private val viewModel:MainViewModel by activityViewModels()
     private lateinit var binding:NewDraftFragmentBinding
 
@@ -21,10 +22,6 @@ class NewDraftFragment(val target: String,val targetKeyWord: String,val actionMo
         savedInstanceState: Bundle?
     ): View? {
         binding= NewDraftFragmentBinding.inflate(inflater, container, false)
-        actionMode.title=targetKeyWord
-        actionMode.menu.clear()
-        actionMode.menuInflater.inflate(R.menu.new_draft_tollbar_menu,actionMode.menu)
-        actionMode.invalidate()
         return binding.root
     }
 
@@ -76,7 +73,7 @@ class NewDraftFragment(val target: String,val targetKeyWord: String,val actionMo
 
     companion object {
         @JvmStatic
-        fun newInstance(target: String, targetKeyWord: String,actionMode: ActionMode) =
-            NewDraftFragment(target, targetKeyWord,actionMode)
+        fun newInstance(target: String, targetKeyWord: String) =
+            NewDraftFragment(target, targetKeyWord)
     }
 }

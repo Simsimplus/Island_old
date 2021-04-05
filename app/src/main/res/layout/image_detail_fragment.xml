@@ -6,37 +6,32 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center"
-    android:background="#59FFFFFF"
-    android:focusable="auto"
     android:orientation="vertical"
-    android:padding="8dp"
-    android:scrollbars="vertical"
-    app:behavior_hideable="false"
-    app:layout_behavior="android.support.design.widget.BottomSheetBehavior"
     tools:context=".ui.main.ImageDetailFragment">
-
-    <androidx.core.widget.NestedScrollView
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true">
+        android:layout_height="wrap_content"
+        >
 
-        <LinearLayout
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/image_toolbar"
+            style="@style/Widget.MaterialComponents.Toolbar.Primary"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="?attr/actionBarSize"
+            />
+        <!--            app:navigationIcon="@drawable/ic_round_menu_24"-->
+        <!--            app:layout_scrollFlags="scroll|enterAlways|snap"-->
+        <!--            style="@style/Widget.MaterialComponents.Toolbar.Primary"-->
+        <!--            android:theme="@style/ThemeOverlay.AppCompat.ActionBar"-->
+        <!--            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"-->
+    </com.google.android.material.appbar.AppBarLayout>
 
-            <ImageView
-                android:id="@+id/imge_detail"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                android:adjustViewBounds="true"
-                android:contentDescription="@string/image_detail"
-                android:focusable="auto"
-                android:src="@drawable/image_holder" />
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-
+    <com.github.chrisbanes.photoview.PhotoView
+        android:id="@+id/image_detail"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:adjustViewBounds="true"
+        android:contentDescription="@string/image_detail" />
 </LinearLayout>

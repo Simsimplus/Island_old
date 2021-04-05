@@ -10,8 +10,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.commit
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.simsim.island.R
@@ -32,6 +32,8 @@ class MainFragment : Fragment() {
         fun newInstance() = MainFragment()
     }
 
+
+
     private val viewModel: MainViewModel by activityViewModels()
 
 
@@ -42,16 +44,14 @@ class MainFragment : Fragment() {
         binding = MainFragmentBinding.inflate(inflater, container, false)
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
-        adapter = MainRecyclerViewAdapter(this) {
-            parentFragmentManager.commit {
-                add(
-                    R.id.activity_fragment_container,
-                    DetailFragment.newInstance(it),
-                    "threadDetail"
-                )
-                addToBackStack("threadDetail")
-                viewModel.isMainFragment.value = false
-            }
+        adapter = MainRecyclerViewAdapter(this,{imageUrl ->
+            val action=MainFragmentDirections.actionGlobalImageDetailFragment(imageUrl)
+            findNavController().navigate(action)
+        }) { islandThread ->
+            val action=MainFragmentDirections.actionMainFragmentToDetailDialogFragment(islandThread.poThread.uid,islandThread.poThread.ThreadId)
+            findNavController().navigate(action)
+            viewModel.setDetailFlow(islandThread)
+            viewModel.isMainFragment.value = false
         }
         binding.mainRecyclerView.adapter = adapter
             .withLoadStateFooter(MainLoadStateAdapter(adapter::retry))
@@ -59,24 +59,25 @@ class MainFragment : Fragment() {
         binding.mainRecyclerView.layoutManager = layoutManager
         val swipeRefreshLayout=binding.swipeFreshLayout
         swipeRefreshLayout.setOnRefreshListener {
+            Log.e("Simsim","main recycler view refresh by swipeRefreshLayout")
             adapter.refresh()
             if (swipeRefreshLayout.isRefreshing){
                 swipeRefreshLayout.isRefreshing=false
             }
         }
-//        binding.mainRecyclerView.addItemDecoration(
-//            DividerItemDecoration(
-//                context,
-//                layoutManager.orientation
-//            )
-//        )
 
-//        viewModel.getThreads()
         viewModel.threadsResult.observe(viewLifecycleOwner) {
 //            binding.message.text=it.toString()
         }
         viewModel.currentSection.observe(viewLifecycleOwner) {
             viewModel.setMainFlow(it)
+        }
+        viewModel.refreshMainRecyclerView.observe(viewLifecycleOwner){
+            if (it){
+                Log.e("Simsim","main recycler view refresh by viewModel.refreshMainRecyclerView")
+                adapter.refresh()
+                viewModel.refreshMainRecyclerView.value=false
+            }
         }
         lifecycleScope.launch {
             viewModel.mainFlow.collectLatest {
@@ -114,8 +115,6 @@ class MainFragment : Fragment() {
                     binding.indicatorTextview.visibility = View.GONE
                     binding.loadingImage.visibility = View.GONE
                 }
-//                binding.mainProgressIndicator.isVisible = loadStates.refresh is LoadState.Loading
-//                binding.indicatorTextview.isVisible = loadStates.refresh is LoadState.Loading
                 if (loadStates.refresh is LoadState.Error) {
                     binding.indicatorTextview.isVisible = true
                     binding.indicatorTextview.text = "错误，点击重试!"
@@ -130,8 +129,31 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        setupToolbar()
     }
 
+    override fun onDestroy() {
+        Glide.get(requireContext()).clearDiskCache()
+        Glide.get(requireContext()).clearMemory()
+        super.onDestroy()
+    }
+    private fun setupToolbar() {
+        val toolbar = binding.mainToolbar
+        toolbar.setNavigationIcon(R.drawable.ic_round_menu_24)
+        toolbar.title = viewModel.currentSection.value
+        toolbar.inflateMenu(R.menu.main_toolbar_menu)
+        toolbar.setOnMenuItemClickListener {
+            when(it.itemId){
+                R.id.menu_item_refresh->{
+                    adapter.refresh()
+                    layoutManager.scrollToPosition(0)
+                    Log.e("Simsim","refresh item pressed")
+                    true
+                }
+//            R.id.menu_item_search->{}
+                else -> false
+            }
+        }
+    }
 
 }

@@ -14,6 +14,24 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appBarLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            >
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/main_toolbar"
+                style="@style/Widget.MaterialComponents.Toolbar.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                />
+            <!--            app:navigationIcon="@drawable/ic_round_menu_24"-->
+            <!--            app:layout_scrollFlags="scroll|enterAlways|snap"-->
+            <!--            style="@style/Widget.MaterialComponents.Toolbar.Primary"-->
+            <!--            android:theme="@style/ThemeOverlay.AppCompat.ActionBar"-->
+            <!--            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"-->
+        </com.google.android.material.appbar.AppBarLayout>
 
         <com.google.android.material.progressindicator.LinearProgressIndicator
             android:id="@+id/main_progress_indicator"
@@ -29,7 +47,7 @@
             android:adjustViewBounds="true"
             android:contentDescription="@string/loading_image"
             android:visibility="visible"
-            tools:srcCompat="@tools:sample/avatars" />
+            tools:srcCompat="@drawable/ic_blue_ocean1" />
 
         <TextView
             android:id="@+id/indicator_textview"
@@ -41,6 +59,7 @@
             android:textColor="#646464"
             android:textSize="25sp"
             android:visibility="gone" />
+
 
 <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
     android:layout_width="match_parent"

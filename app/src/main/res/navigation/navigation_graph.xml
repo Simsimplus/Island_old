@@ -1,5 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/navigation_graph">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navigation_graph"
+    app:startDestination="@id/mainFragment">
 
+    <fragment
+        android:id="@+id/mainFragment"
+        android:name="com.simsim.island.ui.main.MainFragment"
+        android:label="MainFragment"
+        tools:layout="@layout/main_fragment">
+        <action
+            android:id="@+id/action_mainFragment_to_detailDialogFragment"
+            app:destination="@id/detailDialogFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/newDraftFragment"
+        android:name="com.simsim.island.ui.main.NewDraftFragment"
+        android:label="new_draft_fragment"
+        tools:layout="@layout/new_draft_fragment" />
+    <dialog
+        android:id="@+id/detailDialogFragment"
+        android:name="com.simsim.island.ui.main.DetailDialogFragment"
+        android:label="DetailDialogFragment"
+        tools:layout="@layout/detail_dialogfragment">
+        <argument
+            android:name="poId"
+            app:argType="string" />
+        <argument
+            android:name="ThreadId"
+            app:argType="string" />
+        <argument
+            android:name="isManager"
+            app:argType="boolean"
+            android:defaultValue="false" />
+    </dialog>
+    <dialog
+        android:id="@+id/imageDetailFragment"
+        android:name="com.simsim.island.ui.main.ImageDetailFragment"
+        android:label="image_detail_fragment"
+        tools:layout="@layout/image_detail_fragment" >
+        <argument
+            android:name="imageUrl"
+            app:argType="string" />
+    </dialog>
+    <action
+        android:id="@+id/action_global_imageDetailFragment"
+        app:destination="@id/imageDetailFragment" />
 </navigation>
