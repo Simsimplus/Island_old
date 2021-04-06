@@ -44,6 +44,11 @@ class MainFragment : Fragment() {
         binding = MainFragmentBinding.inflate(inflater, container, false)
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
+
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         adapter = MainRecyclerViewAdapter(this,{imageUrl ->
             val action=MainFragmentDirections.actionGlobalImageDetailFragment(imageUrl)
             findNavController().navigate(action)
@@ -124,12 +129,8 @@ class MainFragment : Fragment() {
                 }
             }
         }
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
         setupToolbar()
+        super.onViewCreated(view, savedInstanceState)
     }
 
     override fun onDestroy() {

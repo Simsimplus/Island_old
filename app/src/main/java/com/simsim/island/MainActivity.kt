@@ -3,19 +3,14 @@ package com.simsim.island
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
-import android.view.Menu
-import android.view.MenuItem
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.bumptech.glide.Glide
 import com.simsim.island.databinding.MainActivityBinding
-import com.simsim.island.ui.main.ImageDetailFragment
-import com.simsim.island.ui.main.MainFragment
 import com.simsim.island.ui.main.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -33,11 +28,6 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
                 Log.e("Simsim", "network connected: ${checkNetwork()}")
         }
-
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
 
     }
 

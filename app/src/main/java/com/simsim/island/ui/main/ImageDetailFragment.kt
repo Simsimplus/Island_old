@@ -87,7 +87,7 @@ class ImageDetailFragment() : DialogFragment() {
         }
         Glide.with(binding.root).load(args.imageUrl).addListener(
             imageRequestListener
-            ).placeholder(circularProgress).into(binding.imgeDetail)
+            ).placeholder(circularProgress).into(binding.imageDetail)
 
 
 

@@ -1,5 +1,6 @@
 package com.simsim.island.model
 
+import androidx.room.Entity
 import java.time.LocalDateTime
 
 data class BasicThread(

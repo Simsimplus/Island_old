@@ -12,7 +12,9 @@
         tools:layout="@layout/main_fragment">
         <action
             android:id="@+id/action_mainFragment_to_detailDialogFragment"
-            app:destination="@id/detailDialogFragment" />
+            app:destination="@id/detailDialogFragment"
+            app:enterAnim="@android:anim/fade_in"
+            app:exitAnim="@android:anim/fade_out" />
     </fragment>
     <fragment
         android:id="@+id/newDraftFragment"
@@ -46,5 +48,7 @@
     </dialog>
     <action
         android:id="@+id/action_global_imageDetailFragment"
-        app:destination="@id/imageDetailFragment" />
+        app:destination="@id/imageDetailFragment"
+        app:enterAnim="@android:anim/fade_in"
+        app:exitAnim="@android:anim/fade_out" />
 </navigation>
