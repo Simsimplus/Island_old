@@ -75,8 +75,14 @@ data class PoThread(
     )
 }
 @Entity
-data class RemoteKeysForPoThread(
+data class MainRemoteKey(
         @PrimaryKey var poThreadId: String,
+        var previousKey:Int?,
+        var nextKey:Int?,
+)
+@Entity
+data class DetailRemoteKey(
+        @PrimaryKey var threadId: String,
         var previousKey:Int?,
         var nextKey:Int?,
 )
