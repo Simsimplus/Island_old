@@ -1,26 +1,28 @@
 package com.simsim.island.paging
 
+import android.net.Uri
 import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.simsim.island.model.IslandThread
+import com.simsim.island.model.BasicThread
+import com.simsim.island.model.PoThread
 import com.simsim.island.repository.AislandRepo
 import com.simsim.island.service.AislandNetworkService
 
 class IslandMainPaging(private val service: AislandNetworkService, private val section: String) :
-    PagingSource<Int, IslandThread>() {
+    PagingSource<Int, PoThread>() {
     companion object {
         private const val baseUrl = "https://adnmb3.com/m/f/%s?page=%d"
     }
 
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, IslandThread> {
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, PoThread> {
 //        if (!isNetworkConnected) return LoadResult.Error(Exception("not network"))
         try {
             // Start refresh at page 1 if undefined.
             val nextPageNumber = params.key ?: 1
             val response = service.getHtmlStringByPage(baseUrl.format(section, nextPageNumber))
-            val threadList: List<IslandThread>? = if (response != null) {
-                AislandRepo.responseToThreadList(section, response)
+            val threadList: List<PoThread>? = if (response != null) {
+                AislandRepo.responseToThreadList(Uri.decode(section), response)
             } else {
                 null
             }
@@ -36,7 +38,7 @@ class IslandMainPaging(private val service: AislandNetworkService, private val s
         }
     }
 
-    override fun getRefreshKey(state: PagingState<Int, IslandThread>): Int? {
+    override fun getRefreshKey(state: PagingState<Int, PoThread>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
             val anchorPage = state.closestPageToPosition(anchorPosition)
             anchorPage?.prevKey?.plus(1) ?: anchorPage?.nextKey?.minus(1)

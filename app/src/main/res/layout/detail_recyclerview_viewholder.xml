@@ -65,6 +65,16 @@
                 android:paddingStart="5dp"
                 android:paddingEnd="5dp">
 
+<!--                <TextView-->
+<!--                    android:id="@+id/content_reference_textview"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:paddingTop="8dp"-->
+<!--                    android:paddingBottom="8dp"-->
+<!--                    android:textColor="@color/thread_reference"-->
+<!--                    android:textSize="@dimen/content_font_size"-->
+<!--                    android:visibility="gone" />-->
+
                 <TextView
                     android:id="@+id/content_textview"
                     android:layout_width="match_parent"

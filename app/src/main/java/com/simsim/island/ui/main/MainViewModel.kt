@@ -2,7 +2,6 @@ package com.simsim.island.ui.main
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -10,7 +9,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.simsim.island.model.BasicThread
-import com.simsim.island.model.IslandThread
+import com.simsim.island.model.PoThread
 import com.simsim.island.paging.IslandDetailPaging
 import com.simsim.island.paging.IslandMainPaging
 import com.simsim.island.repository.AislandRepo
@@ -23,12 +22,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(application: Application,private val repo: AislandRepo) : AndroidViewModel(application) {
-    private val _threadsResult=repo.threadLiveData
-    val threadsResult:LiveData<List<IslandThread>?>
-    get() = _threadsResult
     internal val currentSection=MutableLiveData<String>("综合版1")
 //    var currentSection="综合版1"
-    var mainFlow: Flow<PagingData<IslandThread>> =setMainFlow("综合版1")
+    var mainFlow: Flow<PagingData<PoThread>> =setMainFlow("综合版1")
     var detailFlow:Flow<PagingData<BasicThread>> = emptyFlow()
     val isMainFragment=MutableLiveData(true)
     var windowHeight=1
@@ -37,7 +33,7 @@ class MainViewModel @Inject constructor(application: Application,private val rep
     private val networkService=AislandNetworkService()
 
 
-    fun setDetailFlow(mainThread: IslandThread): Flow<PagingData<BasicThread>> {
+    fun setDetailFlow(poThread: BasicThread): Flow<PagingData<BasicThread>> {
         detailFlow=Pager(
             PagingConfig(
                 pageSize = 10,
@@ -46,14 +42,14 @@ class MainViewModel @Inject constructor(application: Application,private val rep
                 initialLoadSize = 10
             )
         ){
-            IslandDetailPaging(networkService,mainThread)
+            IslandDetailPaging(networkService,poThread)
         }.flow.cachedIn(viewModelScope)
         return detailFlow
     }
 
 
 
-    fun setMainFlow(section: String): Flow<PagingData<IslandThread>> {
+    fun setMainFlow(section: String): Flow<PagingData<PoThread>> {
         mainFlow= Pager(
         PagingConfig(
             pageSize = 10,

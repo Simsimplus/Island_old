@@ -1,11 +1,13 @@
 package com.simsim.island.adapter
 
+import android.graphics.Paint
 import android.graphics.Typeface
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
@@ -16,11 +18,13 @@ import com.simsim.island.databinding.DetailRecyclerviewViewholderBinding
 import com.simsim.island.model.BasicThread
 import com.simsim.island.util.handleThreadId
 import com.simsim.island.util.handleThreadTime
+import com.simsim.island.util.referenceStringSpliterator
 
 class DetailRecyclerViewAdapter(
     private val fragment: Fragment,
     private val poId: String,
     private val imageClickListener: (imageUrl: String) -> Unit,
+    private val referenceClickListener:(reference:String)->Unit,
     private val itemClickListener: () -> Unit
 ) : PagingDataAdapter<BasicThread, DetailRecyclerViewAdapter.BasicThreadViewHolder>(diffComparator) {
     inner class BasicThreadViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
@@ -37,11 +41,13 @@ class DetailRecyclerViewAdapter(
         val thread = getItem(position)
         thread?.let {
             val binding = DetailRecyclerviewViewholderBinding.bind(holder.view)
-            Log.e("Simsim", it.toString())
+//            Log.e("Simsim", it.toString())
             binding.uidTextview.text = handleThreadId(it.uid)
-            val uidTextviewText = binding.uidTextview.text
+            binding.timeTextview.text = handleThreadTime(it.time)
+            binding.threadIdTextview.text = it.ThreadId
+            binding.contentTextview.text = it.content
+            // set po id highlighted
             if (it.uid == poId) {
-//                holder.binding.uidTextview.text=uidTextviewText.toString().plus("(po)")
                 binding.uidTextview.setTypeface(null, Typeface.BOLD)
                 binding.uidTextview.setTextColor(
                     ContextCompat.getColor(
@@ -49,7 +55,7 @@ class DetailRecyclerViewAdapter(
                         R.color.po_id_highlight
                     )
                 )
-            }else{
+            } else {
                 binding.uidTextview.setTypeface(null, Typeface.NORMAL)
                 binding.uidTextview.setTextColor(
                     ContextCompat.getColor(
@@ -58,16 +64,52 @@ class DetailRecyclerViewAdapter(
                     )
                 )
             }
-            binding.timeTextview.text = handleThreadTime(it.time)
-            binding.threadIdTextview.text = it.ThreadId
-            binding.contentTextview.text = it.content
 
+            //add text view to hold reference
+            if (it.references.isNotBlank()) {
+                val references = it.references.split(referenceStringSpliterator).reversed()
+                val layoutParams = binding.contentTextview.layoutParams
+//                val textSize = fragment.resources.getDimension(R.dimen.content_font_size)
+                references.forEach { reference ->
+                    val textView = LayoutInflater.from(fragment.requireContext())
+                        .inflate(R.layout.reference_view, binding.detailFragmentContentLayout,false) as TextView
+                    textView.apply {
+                        text = reference
+                        paintFlags = paintFlags or Paint.UNDERLINE_TEXT_FLAG
+//                        setTextSize(textSize)
+                        tag = reference
+                        setTextColor(
+                            ContextCompat.getColor(
+                                fragment.requireContext(),
+                                R.color.thread_reference
+                            )
+                        )
+                        setOnClickListener {
+                            referenceClickListener(reference)
+                        }
+                    }
+                    binding.detailFragmentContentLayout.addView(textView, 0, layoutParams)
+                }
+            } else {
+                binding.detailFragmentContentLayout.children.forEach { childView ->
+                    childView.tag?.run {
+                        binding.detailFragmentContentLayout.removeView(childView)
+                    }
+                }
+            }
+            // if a posted image exists, load it from internet
             if (it.imageUrl.isNotBlank()) {
                 val imageUrl = it.imageUrl
-//                val imagePosted=holder.binding.imagePosted
-                Glide.with(holder.itemView).load(imageUrl).placeholder(R.drawable.image_loading)
-                    .error(R.drawable.image_load_failed).dontAnimate()
-                    .into(binding.imagePosted)
+                if (imageUrl.endsWith("gif")){
+                    Glide.with(holder.itemView).asGif().load(imageUrl).placeholder(R.drawable.image_loading)
+                        .error(R.drawable.image_load_failed)
+                        .into(binding.imagePosted)
+                }else{
+                    Glide.with(holder.itemView).asBitmap().load(imageUrl).placeholder(R.drawable.image_loading)
+                        .error(R.drawable.image_load_failed).dontAnimate()
+                        .into(binding.imagePosted)
+                }
+
                 binding.imagePosted.visibility = View.VISIBLE
                 binding.imagePosted.setBackgroundResource(R.drawable.image_shape)
                 binding.imagePosted.clipToOutline = true
@@ -78,15 +120,17 @@ class DetailRecyclerViewAdapter(
                 //https://adnmb3.com/m/t/36468316
                 if (it.content == "分享图片" || it.content.isBlank()) {
 //                    Log.e("Simsim","thread to remove content:$it")
-                    binding.contentTextview.visibility=View.GONE
+                    binding.contentTextview.visibility = View.GONE
                     binding.imagePosted.setPadding(0, 8, 0, 8)
                 }
             } else {
                 Glide.with(fragment).clear(binding.imagePosted)
                 binding.imagePosted.visibility = View.GONE
-                binding.contentTextview.visibility=View.VISIBLE
+                binding.contentTextview.visibility = View.VISIBLE
                 binding.imagePosted.setPadding(0, 0, 0, 0)
             }
+
+
             binding.detailMdCard.setOnClickListener {
                 itemClickListener.invoke()
             }

@@ -5,6 +5,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
+val referencePattern=".*>>No\\.\\d+.*".toRegex()
+val referenceStringSpliterator="\n"
 fun handleThreadId(id:String): String {
     val regex="ID:([\\s0-9a-zA-Z]+)".toRegex()
     return regex.matchEntire(id)?.groupValues?.get(1)?.trim() ?:""
@@ -34,7 +36,7 @@ fun handleThreadTime(time:LocalDateTime):String{
             return "未来"
         }
         else ->{
-            return "%d-%d-%d".format(time.year,time.month.value,time.dayOfMonth)
+            return if (time.year==LocalDateTime.now().year) "%d-%d".format(time.month.value,time.dayOfMonth) else "%d-%d-%d".format(time.year,time.month.value,time.dayOfMonth)
         }
     }
 }

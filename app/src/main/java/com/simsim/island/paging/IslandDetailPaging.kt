@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.simsim.island.model.BasicThread
-import com.simsim.island.model.IslandThread
 import com.simsim.island.repository.AislandRepo
 import com.simsim.island.service.AislandNetworkService
 import com.simsim.island.util.findPageNumber
@@ -12,7 +11,7 @@ import org.jsoup.Jsoup
 
 class IslandDetailPaging(
     private val service: AislandNetworkService,
-    private val mainThread: IslandThread,
+    private val poThread: BasicThread,
 ) :
     PagingSource<Int, BasicThread>() {
     override fun getRefreshKey(state: PagingState<Int, BasicThread>): Int? {
@@ -25,10 +24,13 @@ class IslandDetailPaging(
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, BasicThread> {
 //        if (!isNetworkConnected) return LoadResult.Error(Exception("not network"))
         try {
+//            val poThread=mainThread.find {
+//                it.isPo
+//            }?:throw IllegalArgumentException("no poThread is available")
             // Start refresh at page 1 if undefined.
             val maxPage:Int?
             val nextPageNumber = params.key ?: 1
-            val url="https://adnmb3.com/" + mainThread.poThread.link + "?page=$nextPageNumber"
+            val url="https://adnmb3.com/" + poThread.link + "?page=$nextPageNumber"
             Log.e("Simsim","request for thread detail:$url")
             val response =
                 service.getHtmlStringByPage(url)
@@ -39,11 +41,11 @@ class IslandDetailPaging(
                 Log.e("Simsim","max page:$maxPage")
                 val replyThreads = mutableListOf<BasicThread>()
                 if (nextPageNumber == 1) {
-                    replyThreads.add(mainThread.poThread)
+                    replyThreads.add(poThread)
                 }
                 val replyDivs = doc.select("div[class=uk-container h-threads-reply-container]")
                 replyDivs.forEach { replyDiv ->
-                    replyThreads.add(AislandRepo.divToBasicThread(replyDiv))
+                    replyThreads.add(AislandRepo.divToBasicThread(div=replyDiv,isPo = false,section = poThread.section,poThreadId = poThread.ThreadId))
                 }
                 replyThreads
             } else {

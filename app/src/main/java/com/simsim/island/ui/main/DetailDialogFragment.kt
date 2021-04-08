@@ -15,6 +15,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.simsim.island.R
 import com.simsim.island.adapter.DetailRecyclerViewAdapter
 import com.simsim.island.databinding.DetailDialogfragmentBinding
@@ -26,6 +27,7 @@ class DetailDialogFragment : DialogFragment() {
     private val args: DetailDialogFragmentArgs by navArgs()
     private lateinit var binding: DetailDialogfragmentBinding
     private lateinit var adapter: DetailRecyclerViewAdapter
+    private lateinit var layoutManager: LinearLayoutManager
     private lateinit var actionMode: ActionMode
 
     //1.set dialog style in onCreate()
@@ -41,15 +43,29 @@ class DetailDialogFragment : DialogFragment() {
     ): View? {
         // Inflate the layout for this fragment
         binding = DetailDialogfragmentBinding.inflate(inflater, container, false)
-        adapter = DetailRecyclerViewAdapter(this, args.poId, { imageUrl ->
-            val action = MainFragmentDirections.actionGlobalImageDetailFragment(imageUrl)
-            findNavController().navigate(action)
-        }) {}
+        adapter = DetailRecyclerViewAdapter(this,
+            poId = args.poId,
+            imageClickListener = { imageUrl ->
+                val action = MainFragmentDirections.actionGlobalImageDetailFragment(imageUrl)
+                findNavController().navigate(action)
+            },
+            referenceClickListener = { reference ->
+                showReferenceDialog(reference)
+            }) {
+
+        }
         setupRecyclerView()
         setupSwipeRefreshLayout()
 
         observeRecyclerViewFlow()
         return binding.root
+    }
+
+    private fun showReferenceDialog(reference: String) {
+        Log.e("Simsim", "create reference dialog with reference: $reference")
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(reference)
+            .show()
     }
 
     private fun observeRecyclerViewFlow() {
@@ -63,7 +79,7 @@ class DetailDialogFragment : DialogFragment() {
 
     private fun setupRecyclerView() {
         binding.detailDialogRecyclerView.adapter = adapter
-        val layoutManager = LinearLayoutManager(context)
+        layoutManager = LinearLayoutManager(context)
         binding.detailDialogRecyclerView.layoutManager = layoutManager
         binding.detailDialogRecyclerView.addItemDecoration(
             DividerItemDecoration(

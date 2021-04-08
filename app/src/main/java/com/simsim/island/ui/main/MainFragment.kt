@@ -52,10 +52,10 @@ class MainFragment : Fragment() {
         adapter = MainRecyclerViewAdapter(this,{imageUrl ->
             val action=MainFragmentDirections.actionGlobalImageDetailFragment(imageUrl)
             findNavController().navigate(action)
-        }) { islandThread ->
-            val action=MainFragmentDirections.actionMainFragmentToDetailDialogFragment(islandThread.poThread.uid,islandThread.poThread.ThreadId)
+        }) { poThread ->
+            val action=MainFragmentDirections.actionMainFragmentToDetailDialogFragment(poThread.uid,poThread.ThreadId)
             findNavController().navigate(action)
-            viewModel.setDetailFlow(islandThread)
+            viewModel.setDetailFlow(poThread)
             viewModel.isMainFragment.value = false
         }
         binding.mainRecyclerView.adapter = adapter
@@ -71,9 +71,7 @@ class MainFragment : Fragment() {
             }
         }
 
-        viewModel.threadsResult.observe(viewLifecycleOwner) {
-//            binding.message.text=it.toString()
-        }
+
         viewModel.currentSection.observe(viewLifecycleOwner) {
             viewModel.setMainFlow(it)
         }
