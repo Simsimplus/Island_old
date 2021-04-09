@@ -16,5 +16,6 @@
     <color name="po_id_highlight">#FF555555</color>
     <color name="thread_reference">#ff227c71</color>
     <color name="web_green">#ff789922</color>
+    <color name="manager_red">#ffff0000</color>
 
 </resources>

@@ -11,7 +11,7 @@ class Converter {
 
     @TypeConverter
     fun toLocalDateTime(time: Long): LocalDateTime {
-        return LocalDateTime.ofEpochSecond(time,0,ZoneOffset.UTC)
+        return LocalDateTime.ofEpochSecond(time, 0, ZoneOffset.UTC)
     }
 
 }
@@ -25,7 +25,7 @@ class Converter {
         )]
 )
 data class BasicThread(
-        @PrimaryKey var ThreadId: String = "",
+        @PrimaryKey var replyThreadId: String="",
         var poThreadId: String = "",
         var title: String = "",
         var name: String = "",
@@ -34,6 +34,7 @@ data class BasicThread(
         var uid: String = "",
         var imageUrl: String = "",
         var content: String = "",
+        var isManager:Boolean=false,
         var isPo: Boolean = false,
         var commentsNumber: String = "0",
         var section: String,
@@ -41,8 +42,9 @@ data class BasicThread(
 )
 
 @Entity
-data class PoThread(
-        @PrimaryKey var ThreadId: String = "",
+data class PoThread constructor(
+        @PrimaryKey var ThreadId: String="",
+        var isManager:Boolean,
         var title: String = "",
         var name: String = "",
         var link: String = "",
@@ -51,38 +53,28 @@ data class PoThread(
         var imageUrl: String = "",
         var content: String = "",
         var isPo: Boolean = true,
+        var isStar:Boolean=false,
         var commentsNumber: String = "0",
         var section: String,
         var references: String = "",
         var collectTime: LocalDateTime = LocalDateTime.now(),
+
+
+){
         @Ignore
-        var replyThreads: List<BasicThread>
-) {
-    fun toBasicThread(): BasicThread = BasicThread(
-            ThreadId = this.ThreadId,
-            poThreadId = this.ThreadId,
-            title = this.title,
-            name = this.name,
-            link = this.link,
-            time = this.time,
-            uid = this.uid,
-            imageUrl = this.imageUrl,
-            content = this.content,
-            isPo = this.isPo,
-            commentsNumber = this.commentsNumber,
-            section = this.section,
-            references = this.references,
-    )
+        var replyThreads: List<BasicThread> = listOf()
 }
+
 @Entity
 data class MainRemoteKey(
         @PrimaryKey var poThreadId: String,
-        var previousKey:Int?,
-        var nextKey:Int?,
+        var previousKey: Int?,
+        var nextKey: Int?,
 )
+
 @Entity
 data class DetailRemoteKey(
         @PrimaryKey var threadId: String,
-        var previousKey:Int?,
-        var nextKey:Int?,
+        var previousKey: Int?,
+        var nextKey: Int?,
 )

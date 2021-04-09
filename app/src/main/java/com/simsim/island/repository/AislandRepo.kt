@@ -4,6 +4,7 @@ import android.util.Log
 import com.simsim.island.model.BasicThread
 import com.simsim.island.model.PoThread
 import com.simsim.island.service.AislandNetworkService
+import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.firstNumberPlus5
 import com.simsim.island.util.referenceStringSpliterator
 import com.simsim.island.util.removeQueryTail
@@ -34,7 +35,7 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                                 div = replyDiv,
                                 isPo = false,
                                 section = section,
-                                poThreadId = poBasicThread.ThreadId
+                                poThreadId = poBasicThread.replyThreadId
                             )
                         )
                     }
@@ -46,7 +47,7 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                     val poThread= basicThreadToPoThread(poBasicThread,replyThreads)
                     poThreads.add(poThread)
 
-                    Log.e("Simsim", poThread.toString())
+//                    Log.e("Simsim", poThread.toString())
                 }
                 return poThreads
 
@@ -56,7 +57,7 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
         }
 
         fun divToBasicThread(div: Element, isPo: Boolean, section: String,poThreadId:String): BasicThread {
-            val basicThread = BasicThread(section = section, isPo = isPo,poThreadId =poThreadId )
+            val basicThread = BasicThread(section = section, isPo = isPo,poThreadId =poThreadId)
             val pTags = div.select("p")
             val divClassName = div.className()
             val img = div.selectFirst("img")
@@ -77,7 +78,7 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                                     }
                                     "h-threads-id" -> {
                                         basicThread.link = child.attr("href").removeQueryTail()
-                                        basicThread.ThreadId =
+                                        basicThread.replyThreadId =
                                             child.ownText().replace("\\D".toRegex(), "")
                                     }
                                 }
@@ -88,14 +89,6 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                                 when (child.className()) {
                                     //2021-03-17(三)16:06:23
                                     "h-threads-time" -> {
-//                                        basicThread.time = SimpleDateFormat(
-//                                            "yyyy-MM-dd-HH:mm:ss",
-//                                            Locale.getDefault()
-//                                        ).parse(
-//                                            child.ownText().replace("\\(.\\)".toRegex(), "-")
-//                                        ) ?: Date()
-//                                Log.e("Simsim","time replaced as:${child.ownText().replace("\\(.\\)".toRegex(), "-")}")
-//                                Log.e("Simsim","time parsed as:${basicThread.time}")
                                         basicThread.time = try {
                                             LocalDateTime.parse(
                                                 child.ownText()
@@ -106,16 +99,13 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                                         }
                                     }
                                     "h-threads-uid" -> {
-                                        basicThread.uid = child.ownText()
+                                        val isManager= child.selectFirst("font[color=red]")!=null
+                                        basicThread.isManager=isManager
+                                        basicThread.uid = child.text()
 
                                     }
                                 }
                             }
-                            //check whether there is image
-//                            val img = p.selectFirst("img")
-//                            if (img !== null) {
-//                                basicThread.imageUrl = img.attr("src")
-//                            }
                         }
                         "h-threads-content" -> {
                             val referenceTags = try {
@@ -141,9 +131,10 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
 //        Log.e("Simsim",basicThread.toString())
             return basicThread
         }
-        fun basicThreadToPoThread(basicThread: BasicThread,replyThreads:List<BasicThread>):PoThread{
+        private fun basicThreadToPoThread(basicThread: BasicThread, replyThreads:List<BasicThread>):PoThread{
             return PoThread(
-                ThreadId=basicThread.ThreadId,
+                isManager = basicThread.isManager,
+                ThreadId=basicThread.replyThreadId,
                 title=basicThread.title,
             name=basicThread.name,
             link=basicThread.link,
@@ -155,9 +146,9 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
             commentsNumber=basicThread.commentsNumber,
             section=basicThread.section,
             references=basicThread.references,
-
-            replyThreads=replyThreads
-            )
+            ).apply {
+                this.replyThreads=replyThreads
+            }
         }
     }
 

@@ -8,7 +8,6 @@ import android.view.ViewGroup
 import androidx.core.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.commit
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
@@ -94,8 +93,7 @@ class MainFragment : Fragment() {
             adapter.loadStateFlow.collectLatest { loadStates ->
                 if (loadStates.refresh is LoadState.Loading) {
                     binding.mainProgressIndicator.visibility = View.VISIBLE
-                    val index = (1..12).random()
-                    val loadingImageId = when(index){
+                    val loadingImageId = when((1..12).random()){
                         1->R.drawable.ic_blue_ocean1
                         2->R.drawable.ic_blue_ocean2
                         3->R.drawable.ic_blue_ocean3
@@ -132,8 +130,7 @@ class MainFragment : Fragment() {
     }
 
     override fun onDestroy() {
-        Glide.get(requireContext()).clearDiskCache()
-        Glide.get(requireContext()).clearMemory()
+        viewModel.doWhenDestroy()
         super.onDestroy()
     }
     private fun setupToolbar() {

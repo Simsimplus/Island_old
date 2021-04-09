@@ -10,7 +10,7 @@ import com.bumptech.glide.module.AppGlideModule
 class IslandGlideConfigure :AppGlideModule(){
     override fun applyOptions(context: Context, builder: GlideBuilder) {
         val diskCacheSize=1024*1024*20L//20MB
-        val internalCacheDiskCacheFactory=InternalCacheDiskCacheFactory(context,diskCacheSize)
+        val internalCacheDiskCacheFactory=InternalCacheDiskCacheFactory(context,"IslandImageCache",diskCacheSize)
         builder.setDiskCache(internalCacheDiskCacheFactory)
     }
 }

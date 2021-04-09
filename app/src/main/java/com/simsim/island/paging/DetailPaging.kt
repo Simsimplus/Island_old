@@ -4,14 +4,16 @@ import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.simsim.island.model.BasicThread
+import com.simsim.island.model.PoThread
 import com.simsim.island.repository.AislandRepo
 import com.simsim.island.service.AislandNetworkService
 import com.simsim.island.util.findPageNumber
+import com.simsim.island.util.toBasicThread
 import org.jsoup.Jsoup
 
-class IslandDetailPaging(
+class DetailPaging(
     private val service: AislandNetworkService,
-    private val poThread: BasicThread,
+    private val poThread: PoThread,
 ) :
     PagingSource<Int, BasicThread>() {
     override fun getRefreshKey(state: PagingState<Int, BasicThread>): Int? {
@@ -41,11 +43,14 @@ class IslandDetailPaging(
                 Log.e("Simsim","max page:$maxPage")
                 val replyThreads = mutableListOf<BasicThread>()
                 if (nextPageNumber == 1) {
-                    replyThreads.add(poThread)
+                    replyThreads.add(poThread.toBasicThread())
                 }
                 val replyDivs = doc.select("div[class=uk-container h-threads-reply-container]")
                 replyDivs.forEach { replyDiv ->
                     replyThreads.add(AislandRepo.divToBasicThread(div=replyDiv,isPo = false,section = poThread.section,poThreadId = poThread.ThreadId))
+                }
+                replyThreads.removeIf {
+                    it.uid.isBlank()
                 }
                 replyThreads
             } else {

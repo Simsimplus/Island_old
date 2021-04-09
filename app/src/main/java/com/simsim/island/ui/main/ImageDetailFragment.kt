@@ -25,11 +25,13 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.simsim.island.R
 import com.simsim.island.databinding.ImageDetailFragmentBinding
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class ImageDetailFragment() : DialogFragment() {
     private val args:ImageDetailFragmentArgs by navArgs()
     internal lateinit var binding: ImageDetailFragmentBinding

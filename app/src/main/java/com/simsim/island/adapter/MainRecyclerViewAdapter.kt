@@ -1,29 +1,27 @@
 package com.simsim.island.adapter
 
+import android.graphics.Typeface
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ExpandableListView
-import android.widget.ImageView
-import android.widget.TextView
-import androidx.navigation.findNavController
-import androidx.navigation.fragment.findNavController
+import androidx.core.content.ContextCompat
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.simsim.island.MainActivity
 import com.simsim.island.R
 import com.simsim.island.adapter.MainRecyclerViewAdapter.*
 import com.simsim.island.databinding.MainRecyclerviewViewholderBinding
 import com.simsim.island.model.BasicThread
 import com.simsim.island.model.PoThread
 import com.simsim.island.ui.main.MainFragment
-import com.simsim.island.ui.main.MainFragmentDirections
+import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.handleThreadId
 import com.simsim.island.util.handleThreadTime
+import com.simsim.island.util.toBasicThread
 
-class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imageClickListener: (imageUrl:String)->Unit,private val clickListener: (poThread:BasicThread)->Unit):PagingDataAdapter<PoThread, IslandThreadViewHolder>(diffComparator) {
+class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imageClickListener: (imageUrl:String)->Unit,private val clickListener: (poThread:PoThread)->Unit):PagingDataAdapter<PoThread, IslandThreadViewHolder>(diffComparator) {
     inner class IslandThreadViewHolder(view: View):RecyclerView.ViewHolder(view){
         val binding=MainRecyclerviewViewholderBinding.bind(view)
 //        val uidTextview:TextView=view.findViewById(R.id.uid_textview)
@@ -36,9 +34,27 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imag
 
     override fun onBindViewHolder(holder: IslandThreadViewHolder, position: Int) {
         val thread=getItem(position)
-        thread?.let {
-            val poThread=thread.toBasicThread()
+        thread?.let { poThread->
+//            val poThread=thread.toBasicThread()
+            Log.e(LOG_TAG,poThread.toString())
             holder.binding.uidTextview.text= handleThreadId(poThread.uid)
+            if (poThread.isManager){
+                holder.binding.uidTextview.setTypeface(null, Typeface.BOLD)
+                holder.binding.uidTextview.setTextColor(
+                    ContextCompat.getColor(
+                        fragment.requireContext(),
+                        R.color.manager_red
+                    )
+                )
+            }else{
+                holder.binding.uidTextview.setTypeface(null, Typeface.NORMAL)
+                holder.binding.uidTextview.setTextColor(
+                    ContextCompat.getColor(
+                        fragment.requireContext(),
+                        R.color.first_col_font_color
+                    )
+                )
+            }
             holder.binding.timeTextview.text= handleThreadTime(poThread.time)
             holder.binding.threadIdTextview.text= poThread.ThreadId
             holder.binding.contentTextview.text=poThread.content

@@ -44,17 +44,27 @@ class DetailRecyclerViewAdapter(
 //            Log.e("Simsim", it.toString())
             binding.uidTextview.text = handleThreadId(it.uid)
             binding.timeTextview.text = handleThreadTime(it.time)
-            binding.threadIdTextview.text = it.ThreadId
+            binding.threadIdTextview.text = it.replyThreadId
             binding.contentTextview.text = it.content
             // set po id highlighted
             if (it.uid == poId) {
                 binding.uidTextview.setTypeface(null, Typeface.BOLD)
-                binding.uidTextview.setTextColor(
-                    ContextCompat.getColor(
-                        fragment.requireContext(),
-                        R.color.po_id_highlight
+                if (it.isManager){
+                    binding.uidTextview.setTextColor(
+                        ContextCompat.getColor(
+                            fragment.requireContext(),
+                            R.color.manager_red
+                        )
                     )
-                )
+                }else{
+                    binding.uidTextview.setTextColor(
+                        ContextCompat.getColor(
+                            fragment.requireContext(),
+                            R.color.po_id_highlight
+                        )
+                    )
+                }
+
             } else {
                 binding.uidTextview.setTypeface(null, Typeface.NORMAL)
                 binding.uidTextview.setTextColor(
@@ -157,11 +167,11 @@ class DetailRecyclerViewAdapter(
     companion object {
         val diffComparator = object : DiffUtil.ItemCallback<BasicThread>() {
             override fun areItemsTheSame(oldItem: BasicThread, newItem: BasicThread): Boolean {
-                return oldItem.ThreadId == newItem.ThreadId
+                return oldItem.replyThreadId == newItem.replyThreadId
             }
 
             override fun areContentsTheSame(oldItem: BasicThread, newItem: BasicThread): Boolean {
-                return oldItem.ThreadId == newItem.ThreadId
+                return oldItem.replyThreadId == newItem.replyThreadId
             }
 
         }

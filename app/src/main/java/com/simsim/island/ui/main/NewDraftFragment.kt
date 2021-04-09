@@ -9,8 +9,9 @@ import androidx.navigation.fragment.NavHostFragment
 import com.simsim.island.MainActivity
 import com.simsim.island.R
 import com.simsim.island.databinding.NewDraftFragmentBinding
+import dagger.hilt.android.AndroidEntryPoint
 
-
+@AndroidEntryPoint
 class NewDraftFragment(val target: String,val targetKeyWord: String) : Fragment() {
     private val viewModel:MainViewModel by activityViewModels()
     private lateinit var binding:NewDraftFragmentBinding

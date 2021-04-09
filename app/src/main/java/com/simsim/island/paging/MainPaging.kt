@@ -9,7 +9,7 @@ import com.simsim.island.model.PoThread
 import com.simsim.island.repository.AislandRepo
 import com.simsim.island.service.AislandNetworkService
 
-class IslandMainPaging(private val service: AislandNetworkService, private val section: String) :
+class MainPaging(private val service: AislandNetworkService, private val section: String) :
     PagingSource<Int, PoThread>() {
     companion object {
         private const val baseUrl = "https://adnmb3.com/m/f/%s?page=%d"

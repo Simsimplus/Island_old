@@ -19,9 +19,11 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.simsim.island.R
 import com.simsim.island.adapter.DetailRecyclerViewAdapter
 import com.simsim.island.databinding.DetailDialogfragmentBinding
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class DetailDialogFragment : DialogFragment() {
     private val viewModel: MainViewModel by activityViewModels()
     private val args: DetailDialogFragmentArgs by navArgs()
@@ -56,10 +58,22 @@ class DetailDialogFragment : DialogFragment() {
         }
         setupRecyclerView()
         setupSwipeRefreshLayout()
-
         observeRecyclerViewFlow()
+        lifecycleScope.launch {
+            viewModel.database.threadDao().getFlowPoThread(args.ThreadId).collectLatest {
+                val starItem=binding.detailDialogToolbar.menu.findItem(R.id.detail_fragment_menu_star)
+                if (it.isStar){
+                    starItem.title="取消收藏"
+                }else{
+                    starItem.title="收藏"
+                }
+            }
+        }
+
         return binding.root
     }
+
+
 
     private fun showReferenceDialog(reference: String) {
         Log.e("Simsim", "create reference dialog with reference: $reference")
@@ -113,7 +127,8 @@ class DetailDialogFragment : DialogFragment() {
     private fun setupToolbar() {
         val toolbar = binding.detailDialogToolbar
         toolbar.setNavigationIcon(R.drawable.ic_round_arrow_back_24)
-        toolbar.title = "No." + args.ThreadId
+        toolbar.subtitle = "No." + args.ThreadId
+        toolbar.title="adnmb.com"
         toolbar.setNavigationOnClickListener {
             dismiss()
         }
@@ -128,6 +143,19 @@ class DetailDialogFragment : DialogFragment() {
                     true
                 }
                 R.id.detail_fragment_menu_share -> {
+                    true
+                }
+                R.id.detail_fragment_menu_star->{
+                    viewModel.starPoThread(args.ThreadId)
+//                    val starItem = toolbar.menu.findItem(R.id.detail_fragment_menu_star)
+//                    when(starItem.title){
+//                        "收藏"->{
+//                            starItem.title="取消收藏"
+//                        }
+//                        "取消收藏"->{
+//                            starItem.title="收藏"
+//                        }
+//                    }
                     true
                 }
                 else -> {

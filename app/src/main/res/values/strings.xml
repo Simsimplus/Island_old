@@ -21,4 +21,5 @@
     <string name="draft_menu_image_pick">image_pick</string>
     <string name="emoji">颜文字</string>
     <string name="image_share">share</string>
+    <string name="detail_menu_star">收藏</string>
 </resources>

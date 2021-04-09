@@ -11,9 +11,12 @@
         android:id="@+id/detail_fragment_menu_share"
         android:icon="@drawable/ic_round_share_24"
         android:title="@string/menu_share_title"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/detail_fragment_menu_report"
         android:title="@string/thread_report_menu_item"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/detail_fragment_menu_star"
+        android:title="@string/detail_menu_star" />
 </menu>
