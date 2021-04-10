@@ -40,7 +40,8 @@ data class BasicThread(
         var isPo: Boolean = false,
         var commentsNumber: String = "0",
         var section: String,
-        var references: String = ""
+        var references: String = "",
+        var fId:String,
 )
 
 @Entity
@@ -60,7 +61,7 @@ data class PoThread constructor(
         var section: String,
         var references: String = "",
         var collectTime: LocalDateTime = LocalDateTime.now(),
-
+        var fId:String
 
         ){
         @Ignore

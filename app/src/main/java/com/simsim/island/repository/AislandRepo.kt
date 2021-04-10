@@ -7,8 +7,11 @@ import com.simsim.island.service.AislandNetworkService
 import com.simsim.island.util.firstNumberPlus5
 import com.simsim.island.util.referenceStringSpliterator
 import com.simsim.island.util.removeQueryTail
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import java.lang.IllegalArgumentException
 import java.time.LocalDateTime
 import javax.inject.Inject
 
@@ -22,9 +25,9 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
 //                Log.e("Simsim:success", response)
                 val doc = Jsoup.parse(response)
                 val divs = doc.select("div[class=uk-container h-threads-container]")
-
+                val fId =doc.selectFirst("input[name=fid]")?.attr("value")?:throw IllegalArgumentException("can not find fid")
                 divs.forEach { poDiv ->
-                    val poBasicThread = divToBasicThread(div = poDiv, isPo = true, section = section,poThreadId = 0)
+                    val poBasicThread = divToBasicThread(div = poDiv, isPo = true, section = section,poThreadId = 0,fId = fId)
                     val replyDivs =
                         poDiv.select("div[class=uk-container h-threads-reply-container]")
                     val replyThreads = mutableListOf<BasicThread>()
@@ -34,7 +37,8 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                                 div = replyDiv,
                                 isPo = false,
                                 section = section,
-                                poThreadId = poBasicThread.replyThreadId
+                                poThreadId = poBasicThread.replyThreadId,
+                                fId = fId
                             )
                         )
                     }
@@ -55,8 +59,8 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
             }
         }
 
-        fun divToBasicThread(div: Element, isPo: Boolean, section: String,poThreadId:Long): BasicThread {
-            val basicThread = BasicThread(section = section, isPo = isPo,poThreadId =poThreadId,replyThreadId = 0)
+        fun divToBasicThread(div: Element, isPo: Boolean, section: String,poThreadId:Long,fId:String): BasicThread {
+            val basicThread = BasicThread(section = section, isPo = isPo,poThreadId =poThreadId,replyThreadId = 0,fId = fId)
             val pTags = div.select("p")
             val divClassName = div.className()
             val img = div.selectFirst("img")
@@ -145,12 +149,28 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
             commentsNumber=basicThread.commentsNumber,
             section=basicThread.section,
             references=basicThread.references,
+                fId = basicThread.fId
             ).apply {
                 this.replyThreads=replyThreads
             }
         }
     }
+    suspend fun getSectionList(): Flow<String> {
+        val sectionList= mutableListOf<String>()
+        val response=service.getHtmlStringByPage("https://adnmb3.com/Forum")
+        response?.let { rp->
+             val doc=Jsoup.parse(rp)
+            val listTags=doc.select("li")
 
+            listTags.forEach { li->
+                val section=li.select("a[href~=[/f]{3,}.*]")
+                if (section.isNotEmpty()){
+                    sectionList.add(section.attr("href"))
+                }
+            }
+        }
+        return sectionList.asFlow()
+    }
 //    internal val threadLiveData = MutableLiveData<List<IslandThread>?>()
 //    suspend fun getThreadsByPage(section: String, page: Int) {
 //        val response: String? = service.getHtmlStringByPage(baseUrl.format(section, page))

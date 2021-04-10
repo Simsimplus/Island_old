@@ -47,7 +47,7 @@ class DetailPaging(
                 }
                 val replyDivs = doc.select("div[class=uk-container h-threads-reply-container]")
                 replyDivs.forEach { replyDiv ->
-                    replyThreads.add(AislandRepo.divToBasicThread(div=replyDiv,isPo = false,section = poThread.section,poThreadId = poThread.threadId))
+                    replyThreads.add(AislandRepo.divToBasicThread(div=replyDiv,isPo = false,section = poThread.section,poThreadId = poThread.threadId,fId = poThread.fId))
                 }
                 replyThreads.removeIf {
                     it.uid.isBlank()

@@ -1,9 +1,15 @@
 package com.simsim.island.ui.main
 
 import android.app.Application
+import android.net.Uri
 import android.util.Log
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.paging.*
 import com.bumptech.glide.Glide
@@ -15,14 +21,16 @@ import com.simsim.island.paging.DetailPaging
 import com.simsim.island.paging.DetailRemoteMediator
 import com.simsim.island.paging.MainRemoteMediator
 import com.simsim.island.repository.AislandRepo
+import com.simsim.island.sectionDataStore
 import com.simsim.island.service.AislandNetworkService
 import com.simsim.island.util.LOG_TAG
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.IOException
 import javax.inject.Inject
 
 
@@ -43,7 +51,31 @@ class MainViewModel @Inject constructor(
     var actionBarHeight = 1
     var refreshMainRecyclerView: MutableLiveData<Boolean> = MutableLiveData()
     private val glide = Glide.get(application.applicationContext)
-//    private val networkService=AislandNetworkService()
+
+    private val dataStore=application.applicationContext.sectionDataStore
+    suspend fun getSectionLocal()=
+        dataStore.data.catch {
+            if (it is IOException) {
+                it.printStackTrace()
+                emit(emptyPreferences())
+            } else {
+                throw it
+            }
+        }.map {
+            it[stringPreferencesKey("sectionList")]?:""
+        }
+
+
+    suspend fun getSectionList():Flow<String>{
+        val sectionList=repo.getSectionList().map {
+            Uri.decode(it.replace("/f/".toRegex(), ""))
+        }
+//        dataStore.edit {
+//            it[stringPreferencesKey("sectionList")]=sectionList.toList(mutableListOf()).joinToString("|")
+//        }
+        Log.e(LOG_TAG,sectionList.toList(mutableListOf()).joinToString("|"))
+        return sectionList
+    }
 
 
     @OptIn(ExperimentalPagingApi::class)

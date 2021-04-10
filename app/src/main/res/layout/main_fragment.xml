@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
             <variable
@@ -25,13 +26,25 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 />
-            <!--            app:navigationIcon="@drawable/ic_round_menu_24"-->
-            <!--            app:layout_scrollFlags="scroll|enterAlways|snap"-->
-            <!--            style="@style/Widget.MaterialComponents.Toolbar.Primary"-->
-            <!--            android:theme="@style/ThemeOverlay.AppCompat.ActionBar"-->
-            <!--            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"-->
         </com.google.android.material.appbar.AppBarLayout>
 
+        <HorizontalScrollView
+            android:id="@+id/chip_scroll_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:visibility="gone">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/main_fragment_chips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:selectionRequired="true"
+                app:singleLine="true"
+                app:singleSelection="true">
+
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
         <com.google.android.material.progressindicator.LinearProgressIndicator
             android:id="@+id/main_progress_indicator"
             android:layout_width="match_parent"

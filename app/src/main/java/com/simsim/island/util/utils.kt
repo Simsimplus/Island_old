@@ -63,6 +63,7 @@ fun PoThread.toBasicThread(): BasicThread = BasicThread(
     commentsNumber = this.commentsNumber,
     section = this.section,
     references = this.references,
+    fId = this.fId
 )
 
 //fun PoThread.toSavedPoThread():SavedPoThread=SavedPoThread(

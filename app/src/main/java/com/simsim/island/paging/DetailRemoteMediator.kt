@@ -88,7 +88,8 @@ class DetailRemoteMediator(
                             div = replyDiv,
                             isPo = false,
                             section = poThread.section,
-                            poThreadId = poThread.threadId
+                            poThreadId = poThread.threadId,
+                            fId = poThread.fId
                         )
                     )
                 }
