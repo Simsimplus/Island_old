@@ -44,7 +44,7 @@ class DetailRecyclerViewAdapter(
 //            Log.e("Simsim", it.toString())
             binding.uidTextview.text = handleThreadId(it.uid)
             binding.timeTextview.text = handleThreadTime(it.time)
-            binding.threadIdTextview.text = it.replyThreadId
+            binding.threadIdTextview.text = it.replyThreadId.toString()
             binding.contentTextview.text = it.content
             // set po id highlighted
             if (it.uid == poId) {

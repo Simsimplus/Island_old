@@ -8,7 +8,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.simsim.island.model.*
 
-@Database(entities = [BasicThread::class,PoThread::class,MainRemoteKey::class,DetailRemoteKey::class],version = 3,exportSchema = false)
+@Database(entities = [BasicThread::class,PoThread::class,MainRemoteKey::class,DetailRemoteKey::class,StaredPoThreads::class],version = 1,exportSchema = false)
 @TypeConverters(Converter::class)
 abstract class IslandDatabase: RoomDatabase() {
     abstract fun keyDao():RemoteKeyDao

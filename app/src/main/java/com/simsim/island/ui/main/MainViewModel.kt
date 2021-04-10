@@ -1,6 +1,7 @@
 package com.simsim.island.ui.main
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -9,116 +10,155 @@ import com.bumptech.glide.Glide
 import com.simsim.island.database.IslandDatabase
 import com.simsim.island.model.BasicThread
 import com.simsim.island.model.PoThread
+import com.simsim.island.model.StaredPoThreads
 import com.simsim.island.paging.DetailPaging
+import com.simsim.island.paging.DetailRemoteMediator
 import com.simsim.island.paging.MainRemoteMediator
 import com.simsim.island.repository.AislandRepo
 import com.simsim.island.service.AislandNetworkService
+import com.simsim.island.util.LOG_TAG
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 @HiltViewModel
-class MainViewModel @Inject constructor(application: Application,
-                                        private val repo: AislandRepo,
-                                        val database:IslandDatabase,
-                                        private val networkService: AislandNetworkService
-                                        ) : AndroidViewModel(application) {
-//    private val database:IslandDatabase= IslandDatabase.newInstance(application.applicationContext)
-    internal val currentSection=MutableLiveData<String>("综合版1")
-//    var currentSection="综合版1"
-    var mainFlow: Flow<PagingData<PoThread>> =setMainFlow("综合版1")
-    var detailFlow:Flow<PagingData<BasicThread>> = emptyFlow()
-    val isMainFragment=MutableLiveData(true)
-    var windowHeight=1
-    var actionBarHeight=1
-    var refreshMainRecyclerView:MutableLiveData<Boolean> = MutableLiveData()
-    private val context=application.applicationContext
+class MainViewModel @Inject constructor(
+    application: Application,
+    private val repo: AislandRepo,
+    val database: IslandDatabase,
+    private val networkService: AislandNetworkService
+) : AndroidViewModel(application) {
+    //    private val database:IslandDatabase= IslandDatabase.newInstance(application.applicationContext)
+    internal val currentSection = MutableLiveData<String>("综合版1")
+    var currentPoThread: PoThread? = null
+    var mainFlow: Flow<PagingData<PoThread>> = setMainFlow("综合版1")
+    var detailFlow: Flow<PagingData<BasicThread>> = emptyFlow()
+    val isMainFragment = MutableLiveData(true)
+    var windowHeight = 1
+    var actionBarHeight = 1
+    var refreshMainRecyclerView: MutableLiveData<Boolean> = MutableLiveData()
+    private val glide = Glide.get(application.applicationContext)
 //    private val networkService=AislandNetworkService()
-
-
-
-
 
 
     @OptIn(ExperimentalPagingApi::class)
     fun setMainFlow(section: String): Flow<PagingData<PoThread>> {
-        mainFlow= Pager(
+        mainFlow = Pager(
             PagingConfig(
                 pageSize = 50,
                 enablePlaceholders = false,
                 maxSize = 9999,
-                initialLoadSize = 100,
+                initialLoadSize = 150,
             ),
-            remoteMediator = MainRemoteMediator(service = networkService,section = section,
+            remoteMediator = MainRemoteMediator(
+                service = networkService,
+                section = section,
                 database = database
             )
-        ){
+        ) {
             database.threadDao().getAllPoThreadsBySection(section)
-        }.flow.map{ pagingData ->
-            pagingData.map {
-                it.replyThreads=database.threadDao().getAllReplyThreads(it.ThreadId)
-                it
-            }
-        }.cachedIn(viewModelScope)
+        }.flow
+//            .map{ pagingData ->
+//            pagingData.map {
+//                it.replyThreads=database.threadDao().getAllReplyThreads(it.threadId)
+//                it
+//            }
+//        }
+            .cachedIn(viewModelScope)
         return mainFlow
     }
 
+    @OptIn(ExperimentalPagingApi::class)
     fun setDetailFlow(poThread: PoThread): Flow<PagingData<BasicThread>> {
         detailFlow=Pager(
             PagingConfig(
-                pageSize = 10,
+                pageSize = 50,
                 enablePlaceholders = false,
-                maxSize = 300,
-                initialLoadSize = 10
-            )
+                maxSize = 999999,
+                initialLoadSize = 150
+            ),
+            remoteMediator = DetailRemoteMediator(service = networkService,poThread = poThread,database=database)
         ){
-            DetailPaging(networkService,poThread)
-        }.flow.cachedIn(viewModelScope)
+            database.threadDao().getAllReplyThreads(poThreadId = poThread.threadId)
+        }.flow
+            .cachedIn(viewModelScope)
         return detailFlow
     }
 
 
-    fun starPoThread(poThreadId:String){
+    fun starPoThread(poThreadId: Long) {
         viewModelScope.launch {
-           val poThread= database.threadDao().getPoThread(poThreadId)
-            val isStar=!poThread.isStar
-            poThread.isStar=isStar
-            database.threadDao().updatePoThread(poThread = poThread)
+//            if (currentPoThread!=null) {
+//                val poThread= currentPoThread!!
+//                if (poThread.threadId==poThreadId){
+//                    val isStar=!poThread.isStar
+//                    poThread.isStar=isStar
+//                    database.threadDao().updatePoThread(poThread = poThread)
+//                }
+//            }
+            val poThread = database.threadDao().getPoThread(poThreadId)
+            poThread?.let {
+                val staredPoThreads=StaredPoThreads(poThreadId=it.threadId)
+                database.threadDao().addStarRecord(staredPoThreads)
+                val isStar = !poThread.isStar
+                poThread.isStar = isStar
+                database.threadDao().updatePoThread(poThread = poThread)
+            }
         }
     }
 
-    fun doWhenDestroy(){
+    fun doWhenDestroy() {
         viewModelScope.launch {
-            Glide.get(this@MainViewModel.context).clearDiskCache()
-            Glide.get(this@MainViewModel.context).clearMemory()
-            database.threadDao().clearAllPoThread()
-            database.keyDao().clearMainKeys()
-            database.keyDao().clearDetailKeys()
+            CoroutineScope(Dispatchers.IO).launch {
+                Log.e(LOG_TAG, "vm do destroy work")
+                glide.clearDiskCache()
+//                database.threadDao().clearAllPoThread()
+            }
+            CoroutineScope(Dispatchers.Main).launch {
+                Log.e(LOG_TAG, "vm do destroy work")
+
+                glide.clearMemory()
+            }
+
+//            database.keyDao().clearMainKeys()
+//            database.keyDao().clearReplyThreadsKeys()
         }
     }
-//
+
+    //
 //
 //    fun setMainFlow(section: String): Flow<PagingData<PoThread>> {
 //        mainFlow= Pager(
 //        PagingConfig(
-//            pageSize = 10,
+//            pageSize = 50,
 //            enablePlaceholders = false,
 //            maxSize = 300,
-//            initialLoadSize = 10
+//            initialLoadSize = 100
 //        )
 //    ){
 //        MainPaging(networkService,section = section)
 //    }.flow.cachedIn(viewModelScope)
 //        return mainFlow
 //    }
-
-
-
-
+//    fun setDetailFlow(poThread: PoThread): Flow<PagingData<BasicThread>> {
+//        detailFlow = Pager(
+//            PagingConfig(
+//                pageSize = 100,
+//                prefetchDistance = 100,
+//                enablePlaceholders = false,
+//                maxSize = 300,
+//                initialLoadSize = 200
+//            )
+//        ) {
+//            DetailPaging(networkService, poThread)
+//        }.flow.cachedIn(viewModelScope)
+//        return detailFlow
+//    }
 
 
 }

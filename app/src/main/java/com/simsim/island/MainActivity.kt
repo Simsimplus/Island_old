@@ -7,18 +7,27 @@ import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.whenCreated
+import com.bumptech.glide.Glide
+import com.simsim.island.database.IslandDatabase
 import com.simsim.island.databinding.MainActivityBinding
 import com.simsim.island.ui.main.MainViewModel
+import com.simsim.island.util.LOG_TAG
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding:MainActivityBinding
     private val viewModel:MainViewModel by viewModels()
+    @Inject lateinit var database:IslandDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,6 +37,12 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
                 Log.e("Simsim", "network connected: ${checkNetwork()}")
         }
+        lifecycleScope.launchWhenCreated {
+            viewModel.doWhenDestroy()
+        }
+
+
+
 
     }
 
@@ -46,6 +61,10 @@ class MainActivity : AppCompatActivity() {
         val networkInfo: NetworkInfo? = connMgr.activeNetworkInfo
         return networkInfo?.isConnected == true
     }
+
+
+
+
 
 
 }

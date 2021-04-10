@@ -15,7 +15,7 @@ import com.simsim.island.adapter.MainLoadStateAdapter.*
 
 class MainLoadStateAdapter(private val retry:()->Unit) :LoadStateAdapter<MainLoadStateViewHolder>(){
     inner class MainLoadStateViewHolder(view: View):RecyclerView.ViewHolder(view){
-        val indicator: CircularProgressIndicator =view.findViewById(R.id.load_state_progress_indicator)
+        val indicator: LinearProgressIndicator =view.findViewById(R.id.load_state_progress_indicator)
         val indicatorTextView:TextView=view.findViewById(R.id.load_state_indicator_textview)
     }
 

@@ -4,7 +4,6 @@ import android.util.Log
 import com.simsim.island.model.BasicThread
 import com.simsim.island.model.PoThread
 import com.simsim.island.service.AislandNetworkService
-import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.firstNumberPlus5
 import com.simsim.island.util.referenceStringSpliterator
 import com.simsim.island.util.removeQueryTail
@@ -25,7 +24,7 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                 val divs = doc.select("div[class=uk-container h-threads-container]")
 
                 divs.forEach { poDiv ->
-                    val poBasicThread = divToBasicThread(div = poDiv, isPo = true, section = section,poThreadId = "")
+                    val poBasicThread = divToBasicThread(div = poDiv, isPo = true, section = section,poThreadId = 0)
                     val replyDivs =
                         poDiv.select("div[class=uk-container h-threads-reply-container]")
                     val replyThreads = mutableListOf<BasicThread>()
@@ -56,8 +55,8 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
             }
         }
 
-        fun divToBasicThread(div: Element, isPo: Boolean, section: String,poThreadId:String): BasicThread {
-            val basicThread = BasicThread(section = section, isPo = isPo,poThreadId =poThreadId)
+        fun divToBasicThread(div: Element, isPo: Boolean, section: String,poThreadId:Long): BasicThread {
+            val basicThread = BasicThread(section = section, isPo = isPo,poThreadId =poThreadId,replyThreadId = 0)
             val pTags = div.select("p")
             val divClassName = div.className()
             val img = div.selectFirst("img")
@@ -79,7 +78,7 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                                     "h-threads-id" -> {
                                         basicThread.link = child.attr("href").removeQueryTail()
                                         basicThread.replyThreadId =
-                                            child.ownText().replace("\\D".toRegex(), "")
+                                            child.ownText().replace("\\D".toRegex(), "").toLong()
                                     }
                                 }
                             }
@@ -134,7 +133,7 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
         private fun basicThreadToPoThread(basicThread: BasicThread, replyThreads:List<BasicThread>):PoThread{
             return PoThread(
                 isManager = basicThread.isManager,
-                ThreadId=basicThread.replyThreadId,
+                threadId=basicThread.replyThreadId,
                 title=basicThread.title,
             name=basicThread.name,
             link=basicThread.link,

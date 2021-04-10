@@ -18,7 +18,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.simsim.island.R
 import com.simsim.island.adapter.DetailRecyclerViewAdapter
+import com.simsim.island.adapter.MainLoadStateAdapter
 import com.simsim.island.databinding.DetailDialogfragmentBinding
+import com.simsim.island.util.LOG_TAG
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -53,19 +55,21 @@ class DetailDialogFragment : DialogFragment() {
             },
             referenceClickListener = { reference ->
                 showReferenceDialog(reference)
-            }) {
+            },{
 
-        }
+            })
         setupRecyclerView()
         setupSwipeRefreshLayout()
         observeRecyclerViewFlow()
         lifecycleScope.launch {
             viewModel.database.threadDao().getFlowPoThread(args.ThreadId).collectLatest {
-                val starItem=binding.detailDialogToolbar.menu.findItem(R.id.detail_fragment_menu_star)
-                if (it.isStar){
-                    starItem.title="取消收藏"
-                }else{
-                    starItem.title="收藏"
+                it?.let {
+                    val starItem=binding.detailDialogToolbar.menu.findItem(R.id.detail_fragment_menu_star)
+                    if (it.isStar){
+                        starItem.title="取消收藏"
+                    }else{
+                        starItem.title="收藏"
+                    }
                 }
             }
         }
@@ -87,12 +91,13 @@ class DetailDialogFragment : DialogFragment() {
             viewModel.detailFlow.collectLatest {
                 Log.e("Simsim", "got thread detail data:$it")
                 adapter.submitData(it)
+                Log.e(LOG_TAG,"detail threads:${it}")
             }
         }
     }
 
     private fun setupRecyclerView() {
-        binding.detailDialogRecyclerView.adapter = adapter
+        binding.detailDialogRecyclerView.adapter = adapter .withLoadStateHeader(MainLoadStateAdapter { adapter.retry() })
         layoutManager = LinearLayoutManager(context)
         binding.detailDialogRecyclerView.layoutManager = layoutManager
         binding.detailDialogRecyclerView.addItemDecoration(
@@ -170,7 +175,7 @@ class DetailDialogFragment : DialogFragment() {
         parentFragmentManager.commit {
             add(
                 R.id.nv_host_fragment_container,
-                NewDraftFragment.newInstance(target = "thread", targetKeyWord = args.ThreadId),
+                NewDraftFragment.newInstance(target = "thread", targetKeyWord = args.ThreadId.toString()),
                 "reply"
             )
             addToBackStack("reply")

@@ -14,17 +14,20 @@ interface RemoteKeyDao {
     suspend fun insertMainKeys(keysMain:List<MainRemoteKey>)
 
     @Query("select * from MainRemoteKey where poThreadId=:poThreadId")
-    suspend fun getMainKey(poThreadId:String):MainRemoteKey
+    suspend fun getMainKey(poThreadId:Long):MainRemoteKey
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDetailKeys(keysDetail:List<DetailRemoteKey>)
 
+//    @Insert(onConflict = OnConflictStrategy.REPLACE)
+//    suspend fun insertDetailKey(keysDetail:DetailRemoteKey)
+
     @Query("select * from DetailRemoteKey where threadId=:threadId")
-    suspend fun getDetailKey(threadId:String):DetailRemoteKey
+    suspend fun getDetailKey(threadId:Long):DetailRemoteKey?
 
     @Query("delete from MainRemoteKey")
     suspend fun clearMainKeys()
 
     @Query("delete from DetailRemoteKey")
-    suspend fun clearDetailKeys()
+    suspend fun clearReplyThreadsKeys()
 }

@@ -13,13 +13,11 @@ import com.bumptech.glide.Glide
 import com.simsim.island.R
 import com.simsim.island.adapter.MainRecyclerViewAdapter.*
 import com.simsim.island.databinding.MainRecyclerviewViewholderBinding
-import com.simsim.island.model.BasicThread
 import com.simsim.island.model.PoThread
 import com.simsim.island.ui.main.MainFragment
 import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.handleThreadId
 import com.simsim.island.util.handleThreadTime
-import com.simsim.island.util.toBasicThread
 
 class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imageClickListener: (imageUrl:String)->Unit,private val clickListener: (poThread:PoThread)->Unit):PagingDataAdapter<PoThread, IslandThreadViewHolder>(diffComparator) {
     inner class IslandThreadViewHolder(view: View):RecyclerView.ViewHolder(view){
@@ -36,7 +34,7 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imag
         val thread=getItem(position)
         thread?.let { poThread->
 //            val poThread=thread.toBasicThread()
-            Log.e(LOG_TAG,poThread.toString())
+//            Log.e(LOG_TAG,poThread.toString())
             holder.binding.uidTextview.text= handleThreadId(poThread.uid)
             if (poThread.isManager){
                 holder.binding.uidTextview.setTypeface(null, Typeface.BOLD)
@@ -56,7 +54,7 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imag
                 )
             }
             holder.binding.timeTextview.text= handleThreadTime(poThread.time)
-            holder.binding.threadIdTextview.text= poThread.ThreadId
+            holder.binding.threadIdTextview.text= poThread.threadId.toString()
             holder.binding.contentTextview.text=poThread.content
             holder.binding.commentNumber.text=poThread.commentsNumber
             if (poThread.imageUrl.isNotBlank()){
@@ -106,11 +104,11 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imag
     companion object{
         val diffComparator=object : DiffUtil.ItemCallback<PoThread>() {
             override fun areItemsTheSame(oldItem: PoThread, newItem: PoThread): Boolean {
-                return oldItem.ThreadId==newItem.ThreadId
+                return oldItem.threadId==newItem.threadId
             }
 
             override fun areContentsTheSame(oldItem: PoThread, newItem: PoThread): Boolean {
-                return oldItem.ThreadId==newItem.ThreadId
+                return oldItem.threadId==newItem.threadId
             }
 
         }

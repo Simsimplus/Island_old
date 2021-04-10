@@ -19,14 +19,16 @@ class Converter {
 @Entity(
         foreignKeys = [ForeignKey(
                 entity = PoThread::class,
-                parentColumns = ["ThreadId"],
+                parentColumns = ["threadId"],
                 childColumns = ["poThreadId"],
                 onDelete = ForeignKey.CASCADE
         )]
 )
 data class BasicThread(
-        @PrimaryKey var replyThreadId: String="",
-        var poThreadId: String = "",
+        @ColumnInfo(index = true)
+        @PrimaryKey var replyThreadId: Long,
+        @ColumnInfo(index = true)
+        var poThreadId: Long,
         var title: String = "",
         var name: String = "",
         var link: String = "",
@@ -43,7 +45,7 @@ data class BasicThread(
 
 @Entity
 data class PoThread constructor(
-        @PrimaryKey var ThreadId: String="",
+        @PrimaryKey var threadId: Long,
         var isManager:Boolean,
         var title: String = "",
         var name: String = "",
@@ -60,21 +62,50 @@ data class PoThread constructor(
         var collectTime: LocalDateTime = LocalDateTime.now(),
 
 
-){
+        ){
         @Ignore
         var replyThreads: List<BasicThread> = listOf()
 }
 
-@Entity
+@Entity(
+//        foreignKeys = [ForeignKey(
+//                entity = PoThread::class,
+//                parentColumns = ["threadId"],
+//                childColumns = ["FKpoThreadId"],
+//                onDelete = ForeignKey.CASCADE
+//        )]
+)
 data class MainRemoteKey(
-        @PrimaryKey var poThreadId: String,
+        @ColumnInfo(index = true)
+        @PrimaryKey
+        var poThreadId: Long,
+//        @ColumnInfo(index = true)
+//        var FKpoThreadId: String,
+        var previousKey: Int?,
+        var nextKey: Int?,
+)
+
+@Entity(
+//        foreignKeys = [ForeignKey(
+//                entity = BasicThread::class,
+//                parentColumns = ["replyThreadId"],
+//                childColumns = ["FkthreadId"],
+//                onDelete = ForeignKey.CASCADE
+//        )]
+)
+data class DetailRemoteKey(
+        @ColumnInfo(index = true)
+        @PrimaryKey
+        var threadId: Long,
+//        @ColumnInfo(index = true)
+//        var FkthreadId: String,
         var previousKey: Int?,
         var nextKey: Int?,
 )
 
 @Entity
-data class DetailRemoteKey(
-        @PrimaryKey var threadId: String,
-        var previousKey: Int?,
-        var nextKey: Int?,
+data class StaredPoThreads(
+        @ColumnInfo(index = true)
+        @PrimaryKey
+        var poThreadId: Long
 )

@@ -31,7 +31,7 @@
             app:argType="string" />
         <argument
             android:name="ThreadId"
-            app:argType="string" />
+            app:argType="long" />
         <argument
             android:name="isManager"
             app:argType="boolean"

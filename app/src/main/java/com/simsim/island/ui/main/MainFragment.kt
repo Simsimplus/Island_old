@@ -1,5 +1,6 @@
 package com.simsim.island.ui.main
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -52,7 +53,8 @@ class MainFragment : Fragment() {
             val action=MainFragmentDirections.actionGlobalImageDetailFragment(imageUrl)
             findNavController().navigate(action)
         }) { poThread ->
-            val action=MainFragmentDirections.actionMainFragmentToDetailDialogFragment(poThread.uid,poThread.ThreadId)
+            viewModel.currentPoThread=poThread
+            val action=MainFragmentDirections.actionMainFragmentToDetailDialogFragment(poThread.uid,poThread.threadId)
             findNavController().navigate(action)
             viewModel.setDetailFlow(poThread)
             viewModel.isMainFragment.value = false
@@ -129,10 +131,7 @@ class MainFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
     }
 
-    override fun onDestroy() {
-        viewModel.doWhenDestroy()
-        super.onDestroy()
-    }
+
     private fun setupToolbar() {
         val toolbar = binding.mainToolbar
         toolbar.setNavigationIcon(R.drawable.ic_round_menu_24)

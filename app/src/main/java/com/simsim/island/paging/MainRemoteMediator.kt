@@ -25,29 +25,22 @@ class MainRemoteMediator(
         loadType: LoadType,
         state: PagingState<Int, PoThread>
     ): MediatorResult {
-        Log.e(LOG_TAG,"LoadType:$loadType")
+        Log.e(LOG_TAG, "LoadType:$loadType")
         val page: Int = when (loadType) {
             LoadType.REFRESH -> {
                 1
             }
             LoadType.PREPEND -> {
-//                val remoteKey =
-//                    state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
-//                        ?.let { poThread ->
-//                            database.keyDao().getMainKey(poThread.ThreadId)
-//                        }
-//                val previousKey = remoteKey?.previousKey
-//                previousKey ?: return MediatorResult.Success(endOfPaginationReached = false)
-//                previousKey
                 return MediatorResult.Success(endOfPaginationReached = true)
             }
             LoadType.APPEND -> {
                 val remoteKey = state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
                     ?.let { poThread ->
-                        database.keyDao().getMainKey(poThread.ThreadId)
+                            database.keyDao().getMainKey(poThread.threadId)
                     }
                 val nextKey = remoteKey?.nextKey
-                nextKey ?: return MediatorResult.Success(endOfPaginationReached = false)
+                Log.e(LOG_TAG,"nextKey:$nextKey")
+                nextKey?:return MediatorResult.Success(endOfPaginationReached = true)
                 nextKey
             }
         }
@@ -59,7 +52,8 @@ class MainRemoteMediator(
             } else {
                 null
             }
-            val endOfPaginationReached = threadList.isNullOrEmpty()
+//            val endOfPaginationReached = threadList.isNullOrEmpty()
+
             if (threadList != null && threadList.isNotEmpty()) {
                 database.withTransaction {
                     if (loadType == LoadType.REFRESH) {
@@ -67,19 +61,21 @@ class MainRemoteMediator(
                         database.threadDao().clearAllPoThread()
                     }
                     val previousKey = if (page == 1) null else page - 1
-                    val nextKey = if (endOfPaginationReached) null else page + 1
+                    val nextKey = page + 1
                     val keys = threadList.map {
-                        MainRemoteKey(it.ThreadId, previousKey, nextKey)
+                        MainRemoteKey(it.threadId, previousKey, nextKey)
                     }
                     database.keyDao().insertMainKeys(keys)
+                    threadList.forEach {
+                        if (database.threadDao().isPoThreadStared(it.threadId)){
+                            it.isStar=true
+                            }
+                    }
                     database.threadDao().insertAllPoThreads(threadList)
-                    database.threadDao().insertAllReplyThreads(
-                        threadList.flatMap {
-                            it.replyThreads
-                        }
-                    )
+                    //insert po threads first to give main remote key right foreign key
+
                 }
-                return MediatorResult.Success(endOfPaginationReached)
+                return MediatorResult.Success(endOfPaginationReached = false)
             } else {
                 return MediatorResult.Success(endOfPaginationReached = false)
             }
