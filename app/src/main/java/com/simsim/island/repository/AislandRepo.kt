@@ -45,7 +45,7 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                     var commentsNumber = poDiv.select("font").find { font ->
                         "回应有\\s*(\\d+)\\s*篇被省略.*".toRegex().matches(font.ownText())
                     }?.ownText()?.firstNumberPlus5() ?: replyThreads.size.toString()
-                    if (commentsNumber.length >= 4) commentsNumber = "999+"
+                    if (commentsNumber.length >= 4) commentsNumber = "1k+"
                     poBasicThread.commentsNumber = commentsNumber
                     val poThread= basicThreadToPoThread(poBasicThread,replyThreads)
                     poThreads.add(poThread)

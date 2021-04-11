@@ -33,6 +33,10 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imag
     override fun onBindViewHolder(holder: IslandThreadViewHolder, position: Int) {
         val thread=getItem(position)
         thread?.let { poThread->
+            holder.binding.firstRowMain.visibility=View.VISIBLE
+            holder.binding.secondRowMain.visibility=View.VISIBLE
+            holder.binding.firstRowMainPlaceholder.visibility=View.GONE
+            holder.binding.secondRowMainPlaceholder.visibility=View.GONE
 //            val poThread=thread.toBasicThread()
 //            Log.e(LOG_TAG,poThread.toString())
             holder.binding.uidTextview.text= handleThreadId(poThread.uid)
@@ -94,6 +98,11 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imag
     //                holder.imagePosted.setBackgroundResource(R.drawable.image_shape)
     //                holder.imagePosted.clipToOutline=true
     //            }
+        }?: kotlin.run {
+            holder.binding.firstRowMain.visibility=View.GONE
+            holder.binding.secondRowMain.visibility=View.GONE
+            holder.binding.firstRowMainPlaceholder.visibility=View.VISIBLE
+            holder.binding.secondRowMainPlaceholder.visibility=View.VISIBLE
         }
     }
 

@@ -66,6 +66,3 @@ fun PoThread.toBasicThread(): BasicThread = BasicThread(
     fId = this.fId
 )
 
-//fun PoThread.toSavedPoThread():SavedPoThread=SavedPoThread(
-//
-//)

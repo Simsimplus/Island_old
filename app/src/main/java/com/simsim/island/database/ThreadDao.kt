@@ -25,8 +25,14 @@ interface ThreadDao  {
     @Query("select * from PoThread where threadId=:poThreadId")
     fun getFlowPoThread(poThreadId: Long):Flow<PoThread?>
 
+    @Query("select * from poThread where section=:section order by collectTime desc limit 1")
+    suspend fun getLastPoThread(section:String):PoThread?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllPoThreads(poThreads:List<PoThread>)
+
+    @Query("select exists(select * from PoThread where threadId=:poThreadId)")
+    fun isPoThreadCollected(poThreadId: Long):Boolean
 
     @Query("select * from poThread where section=:section order by collectTime asc")
     fun getAllPoThreadsBySection(section:String):PagingSource<Int,PoThread>

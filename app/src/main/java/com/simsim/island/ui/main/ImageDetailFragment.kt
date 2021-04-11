@@ -2,6 +2,7 @@ package com.simsim.island.ui.main
 
 import android.app.Dialog
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.DragEvent
@@ -87,7 +88,8 @@ class ImageDetailFragment() : DialogFragment() {
             }
 
         }
-        Glide.with(binding.root).load(args.imageUrl).addListener(
+        val imageUrl=if (args.isURI) Uri.parse(args.imageUrl) else args.imageUrl
+        Glide.with(binding.root).load(imageUrl).addListener(
             imageRequestListener
             ).placeholder(circularProgress).into(binding.imageDetail)
 
@@ -97,7 +99,7 @@ class ImageDetailFragment() : DialogFragment() {
     }
     override fun onDetach() {
         super.onDetach()
-        viewModel.isMainFragment.value=true
+        viewModel.isMainFragment.value=true//todo
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

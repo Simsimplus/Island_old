@@ -8,18 +8,35 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.simsim.island.model.*
 
-@Database(entities = [BasicThread::class,PoThread::class,MainRemoteKey::class,DetailRemoteKey::class,StaredPoThreads::class],version = 2,exportSchema = false)
+@Database(
+    entities = [
+        BasicThread::class,
+        PoThread::class,
+        MainRemoteKey::class,
+        DetailRemoteKey::class,
+        StaredPoThreads::class,
+        Section::class,
+        Emoji::class,
+    ],
+    version = 2,
+    exportSchema = false
+)
 @TypeConverters(Converter::class)
-abstract class IslandDatabase: RoomDatabase() {
-    abstract fun keyDao():RemoteKeyDao
-    abstract fun threadDao():ThreadDao
-    companion object{
+abstract class IslandDatabase : RoomDatabase() {
+    abstract fun keyDao(): RemoteKeyDao
+    abstract fun threadDao(): ThreadDao
+    abstract fun sectionDao(): SectionDao
+    abstract fun emojiDao(): EmojiDao
+
+    companion object {
         @Volatile
-        private var INSTANCE:IslandDatabase?=null
-        fun newInstance(context: Context):IslandDatabase= INSTANCE?: synchronized(this){
-            Log.e("Simsim",context.toString())
-            val instance= Room.databaseBuilder(context,IslandDatabase::class.java,"IslandDatabase").fallbackToDestructiveMigration().build()
-            INSTANCE=instance
+        private var INSTANCE: IslandDatabase? = null
+        fun newInstance(context: Context): IslandDatabase = INSTANCE ?: synchronized(this) {
+            Log.e("Simsim", context.toString())
+            val instance =
+                Room.databaseBuilder(context, IslandDatabase::class.java, "IslandDatabase")
+                    .fallbackToDestructiveMigration().build()
+            INSTANCE = instance
             instance
         }
     }

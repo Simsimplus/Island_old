@@ -1,5 +1,6 @@
 package com.simsim.island.ui.main
 
+import android.Manifest
 import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
@@ -16,6 +17,7 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.simsim.island.MainActivity
 import com.simsim.island.R
 import com.simsim.island.adapter.DetailRecyclerViewAdapter
 import com.simsim.island.adapter.MainLoadStateAdapter
@@ -58,6 +60,10 @@ class DetailDialogFragment : DialogFragment() {
             },{
 
             })
+        (requireActivity() as MainActivity).requestPermission.launch(arrayOf(
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.CAMERA))
         setupRecyclerView()
         setupSwipeRefreshLayout()
         observeRecyclerViewFlow()
@@ -141,7 +147,7 @@ class DetailDialogFragment : DialogFragment() {
         toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.detail_fragment_menu_add -> {
-                    //                newThreadReply()
+                                    newThreadReply()
                     true
                 }
                 R.id.detail_fragment_menu_report -> {
@@ -172,15 +178,9 @@ class DetailDialogFragment : DialogFragment() {
 
 
     private fun newThreadReply() {
-        parentFragmentManager.commit {
-            add(
-                R.id.nv_host_fragment_container,
-                NewDraftFragment.newInstance(target = "thread", targetKeyWord = args.ThreadId.toString()),
-                "reply"
-            )
-            addToBackStack("reply")
-            viewModel.isMainFragment.value = false
-        }
+        val action=DetailDialogFragmentDirections.actionGlobalNewDraftFragment("thread",args.ThreadId.toString())
+        findNavController().navigate(action)
+        viewModel.isMainFragment.value = false
     }
 
     override fun onDetach() {

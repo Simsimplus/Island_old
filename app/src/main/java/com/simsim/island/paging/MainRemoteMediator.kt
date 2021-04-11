@@ -34,10 +34,15 @@ class MainRemoteMediator(
                 return MediatorResult.Success(endOfPaginationReached = true)
             }
             LoadType.APPEND -> {
-                val remoteKey = state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
+                var remoteKey = state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
                     ?.let { poThread ->
                             database.keyDao().getMainKey(poThread.threadId)
                     }
+                if (remoteKey == null) {
+                    remoteKey =database.threadDao().getLastPoThread(section)?.let {
+                            database.keyDao().getMainKey(it.threadId)
+                        }
+                }
                 val nextKey = remoteKey?.nextKey
                 Log.e(LOG_TAG,"nextKey:$nextKey")
                 nextKey?:return MediatorResult.Success(endOfPaginationReached = true)
@@ -70,6 +75,12 @@ class MainRemoteMediator(
                         if (database.threadDao().isPoThreadStared(it.threadId)){
                             it.isStar=true
                             }
+                        if (database.threadDao().isPoThreadCollected(it.threadId)){
+                            val collectedPoThread=database.threadDao().getPoThread(it.threadId)
+                            collectedPoThread?.let {
+                                it.collectTime=collectedPoThread.collectTime
+                            }
+                        }
                     }
                     database.threadDao().insertAllPoThreads(threadList)
                     //insert po threads first to give main remote key right foreign key

@@ -9,87 +9,92 @@
                 type="com.simsim.island.ui.main.MainViewModel" />
     </data>
 
-    <LinearLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/main"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
+
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appBarLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            >
+            android:layout_height="wrap_content">
 
             <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/main_toolbar"
                 style="@style/Widget.MaterialComponents.Toolbar.Primary"
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                />
+                android:layout_height="?attr/actionBarSize" />
         </com.google.android.material.appbar.AppBarLayout>
 
-        <HorizontalScrollView
-            android:id="@+id/chip_scroll_view"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:scrollbars="none"
-            android:visibility="gone">
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/main_fragment_chips"
-                android:layout_width="wrap_content"
+            <HorizontalScrollView
+                android:id="@+id/chip_scroll_view"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:selectionRequired="true"
-                app:singleLine="true"
-                app:singleSelection="true">
+                android:scrollbars="none"
+                android:visibility="gone"
+                >
 
-            </com.google.android.material.chip.ChipGroup>
-        </HorizontalScrollView>
-        <com.google.android.material.progressindicator.LinearProgressIndicator
-            android:id="@+id/main_progress_indicator"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:indeterminate="true"
-            android:visibility="visible" />
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/main_fragment_chips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:selectionRequired="true"
+                    app:singleLine="true"
+                    app:singleSelection="true">
 
-        <ImageView
-            android:id="@+id/loading_image"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:adjustViewBounds="true"
-            android:contentDescription="@string/loading_image"
-            android:visibility="visible"
-            tools:srcCompat="@drawable/ic_blue_ocean1" />
+                </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
 
-        <TextView
-            android:id="@+id/indicator_textview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="@string/indicator_text"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:textColor="#646464"
-            android:textSize="25sp"
-            android:visibility="gone" />
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/main_progress_indicator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:indeterminate="true"
+                android:visibility="gone" />
 
+            <ImageView
+                android:id="@+id/loading_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/loading_image"
+                android:visibility="gone"
+                tools:srcCompat="@drawable/ic_blue_ocean1" />
 
-<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:id="@+id/swipe_fresh_layout">
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/main_recycler_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="@dimen/md_card_margin"
-        android:background="@color/white"
-        android:visibility="visible" />
-
-</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+            <TextView
+                android:id="@+id/indicator_textview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="@string/indicator_text"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textColor="#646464"
+                android:textSize="25sp"
+                android:visibility="gone" />
 
 
+            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+                android:id="@+id/swipe_fresh_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/main_recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="@dimen/md_card_margin"
+                    android:background="@color/white"
+                    android:visibility="visible" />
+
+            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        </LinearLayout>
 
 
-
-    </LinearLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

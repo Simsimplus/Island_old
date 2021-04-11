@@ -16,11 +16,6 @@
             app:enterAnim="@android:anim/fade_in"
             app:exitAnim="@android:anim/fade_out" />
     </fragment>
-    <fragment
-        android:id="@+id/newDraftFragment"
-        android:name="com.simsim.island.ui.main.NewDraftFragment"
-        android:label="new_draft_fragment"
-        tools:layout="@layout/new_draft_fragment" />
     <dialog
         android:id="@+id/detailDialogFragment"
         android:name="com.simsim.island.ui.main.DetailDialogFragment"
@@ -45,10 +40,31 @@
         <argument
             android:name="imageUrl"
             app:argType="string" />
+        <argument
+            android:name="isURI"
+            app:argType="boolean"
+            android:defaultValue="false" />
     </dialog>
     <action
         android:id="@+id/action_global_imageDetailFragment"
         app:destination="@id/imageDetailFragment"
+        app:enterAnim="@android:anim/fade_in"
+        app:exitAnim="@android:anim/fade_out" />
+    <dialog
+        android:id="@+id/newDraftFragment"
+        android:name="com.simsim.island.ui.main.NewDraftFragment"
+        android:label="new_draft_fragment"
+        tools:layout="@layout/new_draft_fragment" >
+        <argument
+            android:name="target"
+            app:argType="string" />
+        <argument
+            android:name="keyWord"
+            app:argType="string" />
+    </dialog>
+    <action
+        android:id="@+id/action_global_newDraftFragment"
+        app:destination="@id/newDraftFragment"
         app:enterAnim="@android:anim/fade_in"
         app:exitAnim="@android:anim/fade_out" />
 </navigation>

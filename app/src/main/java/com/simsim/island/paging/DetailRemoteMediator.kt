@@ -135,7 +135,7 @@ class DetailRemoteMediator(
             }
 
         } catch (e: Exception) {
-            Log.e("Simsim", "main remote mediator error:${e.stackTraceToString()}")
+            Log.e("Simsim", "detail remote mediator error:${e.stackTraceToString()}")
             return MediatorResult.Error(e)
         }
     }

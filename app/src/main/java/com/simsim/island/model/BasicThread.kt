@@ -110,3 +110,20 @@ data class StaredPoThreads(
         @PrimaryKey
         var poThreadId: Long
 )
+
+@Entity(tableName = "sectionList")
+data class Section(
+        var sectionIndex:Int,
+        @ColumnInfo(index = true)
+        @PrimaryKey
+        var sectionName:String,
+        var isShow:Boolean=true,
+)
+
+@Entity
+data class Emoji(
+        var emojiIndex:Int,
+        @ColumnInfo(index = true)
+        @PrimaryKey
+        var emoji:String,
+)
