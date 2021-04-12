@@ -1,7 +1,10 @@
 package com.simsim.island
 
+import android.Manifest
+import android.content.ContentValues
 import android.content.Context
-import android.content.Intent
+import android.graphics.Bitmap
+import android.media.MediaScannerConnection
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.Uri
@@ -15,6 +18,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.core.graphics.BitmapCompat
 import androidx.lifecycle.lifecycleScope
 import com.simsim.island.database.IslandDatabase
 import com.simsim.island.databinding.MainActivityBinding
@@ -24,7 +28,9 @@ import com.simsim.island.util.LOG_TAG
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
+import java.io.OutputStream
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -56,6 +62,8 @@ class MainActivity : AppCompatActivity() {
     internal val pickPicture=registerForActivityResult(ActivityResultContracts.GetContent()){ uri->
         viewModel.pictureUri.value=uri
     }
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -113,20 +121,66 @@ class MainActivity : AppCompatActivity() {
     }
     @Throws(IOException::class)
     internal fun createImageFile(): Uri {
-        // Create an image file name
+        requestPermission.launch(arrayOf(Manifest.permission.CAMERA,Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE))
         val timeStamp: String = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-        val storageDir: File = getExternalFilesDir(Environment.DIRECTORY_PICTURES)!!
+        val displayName="Camera_${timeStamp}_.jpg"
+        val photoUri=if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            val resolver = contentResolver
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg")
+
+                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DCIM)
+
+            }
+            resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,contentValues)!!
+        }else{
+        val storageDir: File = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
         val photoFile= File.createTempFile(
-            "JPEG_${timeStamp}_", /* prefix */
+            "Camera_${timeStamp}_", /* prefix */
             ".jpg", /* suffix */
             storageDir /* directory */
         ).apply {
             // Save a file: path for use with ACTION_VIEW intents
             viewModel.picturePath.value = absolutePath
+            Log.e(LOG_TAG,"photo absolute path: $absolutePath")
         }
-        val photoUri= FileProvider.getUriForFile(this,"com.simsim.fileProvider",photoFile)
+            FileProvider.getUriForFile(this,"com.simsim.fileProvider",photoFile)
+        }
+//        val photoUri= FileProvider.getUriForFile(this,"com.simsim.fileProvider",photoFile)
         Log.e(LOG_TAG,"take picture,and it's uri:$photoUri")
         return photoUri
+    }
+
+    internal fun saveImage(type:String="jpg"):OutputStream{
+        requestPermission.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE))
+        val timeStamp: String = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        val displayName="Camera_${timeStamp}_.jpg"
+        val photoStream=if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            val resolver = contentResolver
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+                put(MediaStore.MediaColumns.MIME_TYPE, "image/$type")
+
+                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+
+            }
+            val uri=resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,contentValues)!!
+            resolver.openOutputStream(uri)!!
+        }else{
+            val storageDir: File = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+            val photoFile= File.createTempFile(
+                "Camera_${timeStamp}_", /* prefix */
+                ".$type", /* suffix */
+                storageDir /* directory */
+            ).apply {
+                // Save a file: path for use with ACTION_VIEW intents
+                Log.e(LOG_TAG,"photo absolute path: $absolutePath")
+            }
+            FileOutputStream(photoFile)
+        }
+        return  photoStream
+//        val photoUri= FileProvider.getUriForFile(this,"com.simsim.fileProvider",photoFile)
     }
 
 

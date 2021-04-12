@@ -55,9 +55,27 @@ class NewDraftFragment : DialogFragment() {
                 emojiList=it
             }
         }
-
         return binding.root
     }
+
+//    private fun showEmojiBottomSheet() {
+//        val gridView=binding.emojiGridView
+//        val gridList:List<String> = if (this::emojiList.isInitialized) emojiList else mutableListOf()
+//        gridView.adapter=ArrayAdapter(requireContext(),R.layout.emoji_viewholder,gridList)
+//        gridView.numColumns=3
+//        gridView.setOnItemClickListener { parent, view, position, id ->
+//            view as TextView
+//            val emojiString=view.text
+//            val input=binding.newInputContent
+//            val start= input.selectionStart.coerceAtLeast(0)
+//            val end= input.selectionEnd.coerceAtLeast(0)
+//            Log.e(LOG_TAG,"start:$start,end:$end")
+//            Log.e(LOG_TAG,"inputText:${input.text}")
+//            input.text?.let { inputText->
+//                inputText.replace(start,end,emojiString)
+//            }
+//        }
+//    }
 
     override fun onDetach() {
         super.onDetach()
@@ -65,6 +83,12 @@ class NewDraftFragment : DialogFragment() {
             "thread"->{viewModel.isMainFragment.value=false}
             "section"->{viewModel.isMainFragment.value=true}
         }
+    }
+
+    override fun onDismiss(dialog: DialogInterface) {
+        viewModel.pictureUri.removeObservers(viewLifecycleOwner)
+        viewModel.cameraTakePictureSuccess.removeObservers(viewLifecycleOwner)
+        super.onDismiss(dialog)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -83,6 +107,7 @@ class NewDraftFragment : DialogFragment() {
         toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.draft_menu_send -> {
+
                     Log.e(LOG_TAG,"draft_menu_send")
                     true
                 }
@@ -127,7 +152,7 @@ class NewDraftFragment : DialogFragment() {
             Log.e(LOG_TAG,"start:$start,end:$end")
             Log.e(LOG_TAG,"inputText:${input.text}")
             input.text?.let { inputText->
-                inputText.insert(start,emojiString)
+                inputText.replace(start,end,emojiString)
             }
         }
         MaterialAlertDialogBuilder(requireContext()).setView(gridView).show()
@@ -137,15 +162,19 @@ class NewDraftFragment : DialogFragment() {
     private fun takePictureFromGallery() {
         viewModel.shouldTakePicture.value="gallery"
         val activity=requireActivity() as MainActivity
-        activity.pickPicture.launch("image/gif,image/jpg,image/png")
+        activity.pickPicture.launch("image/*")
         viewModel.pictureUri.observe(viewLifecycleOwner){photoUri->
+            viewModel.gallertTakePictureSuccess.value=true
             Glide.with(this).load(photoUri).into(binding.newImagePosted)
-            binding.newImagePosted.isVisible = true
+            binding.postViewLauout.isVisible = true
+            binding.cancleButton.setOnClickListener {
+                binding.postViewLauout.visibility = View.GONE
+                Glide.with(this).clear(binding.newImagePosted)
+            }
             binding.newImagePosted.setOnClickListener {
                 val action=NewDraftFragmentDirections.actionGlobalImageDetailFragment(imageUrl = photoUri.toString(),isURI = true)
                 findNavController().navigate(action)
             }
-            viewModel.pictureUri.removeObservers(viewLifecycleOwner)
         }
     }
 
@@ -156,14 +185,19 @@ class NewDraftFragment : DialogFragment() {
         activity.takePicture.launch(photoUri)
         viewModel.cameraTakePictureSuccess.observe(viewLifecycleOwner){ success ->
             if (success){
+                viewModel.pictureUri.value=photoUri
                 Glide.with(this).load(photoUri).into(binding.newImagePosted)
-                binding.newImagePosted.isVisible = true
+                binding.postViewLauout.isVisible = true
+                binding.cancleButton.setOnClickListener {
+                    binding.postViewLauout.visibility = View.GONE
+                    Glide.with(this).clear(binding.newImagePosted)
+                }
                 binding.newImagePosted.setOnClickListener {
                     val action=NewDraftFragmentDirections.actionGlobalImageDetailFragment(imageUrl = photoUri.toString(),isURI = true)
                     findNavController().navigate(action)
                 }
             }
-            viewModel.cameraTakePictureSuccess.removeObservers(viewLifecycleOwner)
+
         }
     }
 

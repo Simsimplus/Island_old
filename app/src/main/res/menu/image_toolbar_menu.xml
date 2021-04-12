@@ -3,6 +3,11 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
+        android:id="@+id/image_save_menu_item"
+        android:icon="@drawable/ic_round_save_24"
+        android:title="@string/image_save"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/image_share_menu_item"
         android:icon="@drawable/ic_round_share_24"
         android:title="@string/image_share"

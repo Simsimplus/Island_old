@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-files-path name="my_images" path="Pictures" />
-
+<paths>
+    <external-files-path
+        name="my_images"
+        path="Pictures" />
+    <external-files-path
+        name="my_dcim"
+        path="DCIM" />
+    <external-path
+        name="public_dcim"
+        path="DCIM" />
+    <cache-path
+        name="imageCache"
+        path="IslandImageCache"/>
 </paths>

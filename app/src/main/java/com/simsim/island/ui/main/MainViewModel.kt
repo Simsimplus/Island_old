@@ -48,6 +48,7 @@ class MainViewModel @Inject constructor(
     }
 
     var cameraTakePictureSuccess=MutableLiveData<Boolean>()
+    var gallertTakePictureSuccess=MutableLiveData<Boolean>()
     var picturePath=MutableLiveData<String>()
     var pictureUri=MutableLiveData<Uri>()
     var shouldTakePicture=MutableLiveData<String>()
