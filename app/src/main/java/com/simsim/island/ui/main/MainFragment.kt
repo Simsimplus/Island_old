@@ -137,6 +137,7 @@ class MainFragment : Fragment() {
                 if (loadStates.refresh is LoadState.Loading) {
                     binding.mainProgressIndicator.visibility = View.VISIBLE
                     binding.loadingImage.visibility = View.VISIBLE
+                    binding.fabAdd.visibility = View.INVISIBLE
                     val loadingImageId = when ((1..12).random()) {
                         1 -> R.drawable.ic_blue_ocean1
                         2 -> R.drawable.ic_blue_ocean2
@@ -160,6 +161,7 @@ class MainFragment : Fragment() {
                     binding.indicatorTextview.visibility = View.GONE
                     binding.loadingImage.visibility = View.GONE
                     binding.chipScrollView.visibility = View.VISIBLE
+                    binding.fabAdd.visibility = View.VISIBLE
                 }
                 if (loadStates.refresh is LoadState.Error) {
                     binding.indicatorTextview.isVisible = true

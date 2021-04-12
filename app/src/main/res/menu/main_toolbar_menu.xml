@@ -8,6 +8,11 @@
 <!--        android:title="@string/menu_item_search"-->
 <!--        app:actionViewClass="android.widget.SearchView"-->
 <!--        app:showAsAction="ifRoom" />-->
+<!--    <item-->
+<!--        android:id="@+id/main_fragment_menu_add"-->
+<!--        android:icon="@drawable/ic_round_add_24"-->
+<!--        android:title="@string/menu_add"-->
+<!--        app:showAsAction="ifRoom" />-->
     <item
         android:id="@+id/menu_item_refresh"
         android:icon="@drawable/ic_baseline_refresh_24"
