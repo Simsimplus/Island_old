@@ -1,6 +1,7 @@
 package com.simsim.island.adapter
 
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +11,10 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import com.simsim.island.R
 import com.simsim.island.adapter.MainRecyclerViewAdapter.*
 import com.simsim.island.databinding.MainRecyclerviewViewholderBinding
@@ -64,15 +69,39 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imag
             if (poThread.imageUrl.isNotBlank()){
                 val imageUrl=poThread.imageUrl
     //                val imagePosted=holder.binding.imagePosted
-                if (imageUrl.endsWith("gif")){
-                    Glide.with(holder.itemView).asGif().load(imageUrl).placeholder(R.drawable.image_loading)
-                        .error(R.drawable.image_load_failed)
-                        .into(holder.binding.imagePosted)
-                }else{
-                    Glide.with(holder.itemView).asBitmap().load(imageUrl).placeholder(R.drawable.image_loading)
-                        .error(R.drawable.image_load_failed).dontAnimate()
-                        .into(holder.binding.imagePosted)
-                }
+//                if (imageUrl.endsWith("gif")){
+//                    Glide.with(holder.itemView).asGif().load(imageUrl).placeholder(R.drawable.image_loading)
+//                        .error(R.drawable.image_load_failed)
+//                        .into(holder.binding.imagePosted)
+//                }else{
+//                    Glide.with(holder.itemView).asBitmap().load(imageUrl).placeholder(R.drawable.image_loading)
+//                        .error(R.drawable.image_load_failed).dontAnimate()
+//                        .into(holder.binding.imagePosted)
+//                }
+                Glide.with(holder.itemView).asDrawable().listener(object :RequestListener<Drawable>{
+                    override fun onLoadFailed(
+                        e: GlideException?,
+                        model: Any?,
+                        target: Target<Drawable>?,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        Log.e(LOG_TAG,"glide exception:${e?.stackTraceToString()?:"no exception report"}")
+                        return false
+                    }
+
+                    override fun onResourceReady(
+                        resource: Drawable?,
+                        model: Any?,
+                        target: Target<Drawable>?,
+                        dataSource: DataSource?,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        return false
+                    }
+
+                }).load(imageUrl).placeholder(R.drawable.image_loading)
+                    .error(R.drawable.image_load_failed)
+                    .into(holder.binding.imagePosted)
                 holder.binding.imagePosted.visibility=View.VISIBLE
                 holder.binding.imagePosted.setBackgroundResource(R.drawable.image_shape)
                 holder.binding.imagePosted.clipToOutline=true

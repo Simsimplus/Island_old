@@ -1,6 +1,7 @@
 package com.simsim.island.ui.main
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -17,9 +18,11 @@ import com.bumptech.glide.Glide
 import com.google.android.material.chip.Chip
 import com.simsim.island.MainActivity
 import com.simsim.island.R
+import com.simsim.island.adapter.DrawerRecyclerViewAdapter
 import com.simsim.island.adapter.MainRecyclerViewAdapter
 import com.simsim.island.databinding.MainFragmentBinding
 import com.simsim.island.util.LOG_TAG
+import com.simsim.island.util.OnSwipeListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -29,6 +32,7 @@ import kotlinx.coroutines.launch
 class MainFragment : Fragment() {
     private lateinit var binding: MainFragmentBinding
     internal lateinit var adapter: MainRecyclerViewAdapter
+    private lateinit var drawAdapter: DrawerRecyclerViewAdapter
     internal lateinit var layoutManager: LinearLayoutManager
     private lateinit var mainFlowJob: Job
 
@@ -41,6 +45,7 @@ class MainFragment : Fragment() {
     private val viewModel: MainViewModel by activityViewModels()
 
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -55,33 +60,74 @@ class MainFragment : Fragment() {
                 Manifest.permission.CAMERA
             )
         )
+        binding.fabAdd.setOnTouchListener(OnSwipeListener(
+            requireContext(),
+            onSwipeBottom = {
+                layoutManager.scrollToPosition(0)
+            },
+            onSwipeLeft = {
+
+                adapter.refresh()
+            },
+            onSwipeRight =  {
+                Log.e(LOG_TAG,"swipe left")
+                binding.drawerLayout.openDrawer(binding.navigationView)
+            },
+            onSwipeTop = {}
+            ))
         return binding.root
     }
 
     private fun setupSectionChips() {
         lifecycleScope.launch {
-
-            viewModel.database.sectionDao().getAllSection().distinctUntilChanged()
+            viewModel.database.sectionDao().getAllSection().map {
+                it.map { section ->
+                    section.sectionName
+                }
+            }.distinctUntilChanged()
                 .collect { sectionList ->
-                    sectionList.forEach { section ->
-                        val sectionString = section.sectionName
-                        Log.e(LOG_TAG, "section:$sectionString")
-                        val chip = layoutInflater.inflate(
-                            R.layout.navigation_top_chip_view,
-                            binding.mainFragmentChips,
-                            false
-                        ) as Chip
-                        chip.text = sectionString
-                        binding.mainFragmentChips.addView(chip)
-                        binding.mainFragmentChips.isSingleSelection = true
+                    val drawerLayout = binding.drawerLayout
+                    val drawer = binding.navigationView
+                    val drawerMenu = binding.navigationView.menu
+                    sectionList.forEach { sectionName ->
+                        drawerMenu.add(sectionName)
                     }
+                    drawer.setNavigationItemSelectedListener { menuItem ->
+                        drawer.setCheckedItem(menuItem)
+                        drawerLayout.close()
+                        binding.mainToolbar.title = menuItem.title
+                        viewModel.setMainFlow(menuItem.title.toString())
+                        observeMainFlow()
+                        true
+                    }
+
+//                        drawAdapter=DrawerRecyclerViewAdapter(null){ sectionName ->
+//                            binding.navigationView
+//                            binding.drawerLayout.close()
+//                            binding.mainToolbar.title=sectionName
+//                            viewModel.setMainFlow(sectionName)
+//                            observeMainFlow()
+//                        }
+//                        drawAdapter.submitList(sectionList)
+//                        binding.drawerRecyclerView.adapter=drawAdapter
+//                        binding.drawerRecyclerView.layoutManager=LinearLayoutManager(requireContext())
+//                        Log.e(LOG_TAG, "section:$sectionString")
+//                        val chip = layoutInflater.inflate(
+//                            R.layout.navigation_top_chip_view,
+//                            binding.mainFragmentChips,
+//                            false
+//                        ) as Chip
+//                        chip.text = sectionString
+//                        binding.mainFragmentChips.addView(chip)
+//                        binding.mainFragmentChips.isSingleSelection = true
+
                 }
         }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         setupRecyclerView()
-        setupSwipeRefresh()
+//        setupSwipeRefresh()
         setupSectionChips()
 
         observingDataChange()
@@ -103,13 +149,13 @@ class MainFragment : Fragment() {
         viewModel.currentSection.observe(viewLifecycleOwner) {
             viewModel.setMainFlow(it)
         }
-        viewModel.refreshMainRecyclerView.observe(viewLifecycleOwner) {
-            if (it) {
-                Log.e("Simsim", "main recycler view refresh by viewModel.refreshMainRecyclerView")
-                adapter.refresh()
-                viewModel.refreshMainRecyclerView.value = false
-            }
-        }
+//        viewModel.refreshMainRecyclerView.observe(viewLifecycleOwner) {
+//            if (it) {
+//                Log.e("Simsim", "main recycler view refresh by viewModel.refreshMainRecyclerView")
+//                adapter.refresh()
+//                viewModel.refreshMainRecyclerView.value = false
+//            }
+//        }
         observeMainFlow()
         viewModel.isMainFragment.observe(viewLifecycleOwner) {
             binding.mainRecyclerView.suppressLayout(!it)
@@ -160,7 +206,8 @@ class MainFragment : Fragment() {
                     binding.mainProgressIndicator.visibility = View.GONE
                     binding.indicatorTextview.visibility = View.GONE
                     binding.loadingImage.visibility = View.GONE
-                    binding.chipScrollView.visibility = View.VISIBLE
+//                    binding.chipScrollView.visibility = View.VISIBLE
+                    //todo
                     binding.fabAdd.visibility = View.VISIBLE
                 }
                 if (loadStates.refresh is LoadState.Error) {
@@ -174,15 +221,20 @@ class MainFragment : Fragment() {
         }
     }
 
-    private fun setupSwipeRefresh() {
-        val swipeRefreshLayout = binding.swipeFreshLayout
-        swipeRefreshLayout.setOnRefreshListener {
-            Log.e("Simsim", "main recycler view refresh by swipeRefreshLayout")
-            adapter.refresh()
-            if (swipeRefreshLayout.isRefreshing) {
-                swipeRefreshLayout.isRefreshing = false
-            }
-        }
+//    private fun setupSwipeRefresh() {
+//        val swipeRefreshLayout = binding.swipeFreshLayout
+//        swipeRefreshLayout.setOnRefreshListener {
+//            Log.e("Simsim", "main recycler view refresh by swipeRefreshLayout")
+//            adapter.refresh()
+//            if (swipeRefreshLayout.isRefreshing) {
+//                swipeRefreshLayout.isRefreshing = false
+//            }
+//        }
+//    }
+
+    private fun setupDrawerRecyclerView() {
+
+
     }
 
     private fun setupRecyclerView() {
@@ -209,6 +261,18 @@ class MainFragment : Fragment() {
     private fun setupToolbar() {
         val toolbar = binding.mainToolbar
         toolbar.setNavigationIcon(R.drawable.ic_round_menu_24)
+        toolbar.setNavigationOnClickListener {
+            if (binding.drawerLayout.isDrawerOpen(binding.navigationView)) {
+                binding.drawerLayout.closeDrawer(binding.navigationView)
+            } else {
+                binding.drawerLayout.openDrawer(binding.navigationView)
+            }
+        }
+        binding.navigationView.setNavigationItemSelectedListener {
+            it.isChecked = true
+            binding.drawerLayout.close()
+            true
+        }
         toolbar.title = viewModel.currentSection.value
         toolbar.inflateMenu(R.menu.main_toolbar_menu)
         toolbar.setOnMenuItemClickListener {
