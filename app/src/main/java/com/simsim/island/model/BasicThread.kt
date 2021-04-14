@@ -24,6 +24,10 @@ class Converter {
                 onDelete = ForeignKey.CASCADE
         )]
 )
+
+//todo
+//todo add index
+//todo if collected before just abort it
 data class BasicThread(
         @ColumnInfo(index = true)
         @PrimaryKey var replyThreadId: Long,

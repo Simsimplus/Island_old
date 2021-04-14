@@ -1,6 +1,7 @@
 package com.simsim.island.ui.main
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
@@ -23,6 +24,7 @@ import com.simsim.island.adapter.DetailRecyclerViewAdapter
 import com.simsim.island.adapter.MainLoadStateAdapter
 import com.simsim.island.databinding.DetailDialogfragmentBinding
 import com.simsim.island.util.LOG_TAG
+import com.simsim.island.util.OnSwipeListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -43,46 +45,58 @@ class DetailDialogFragment : DialogFragment() {
         setStyle(STYLE_NORMAL, R.style.fullscreenDialog)
     }
 
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
         binding = DetailDialogfragmentBinding.inflate(inflater, container, false)
-        adapter = DetailRecyclerViewAdapter(this,
-            poId = args.poId,
-            imageClickListener = { imageUrl ->
-                val action = MainFragmentDirections.actionGlobalImageDetailFragment(imageUrl)
-                findNavController().navigate(action)
-            },
-            referenceClickListener = { reference ->
-                showReferenceDialog(reference)
-            },{
 
-            })
-        (requireActivity() as MainActivity).requestPermission.launch(arrayOf(
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.CAMERA))
+//        (requireActivity() as MainActivity).requestPermission.launch(arrayOf(
+//            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+//            Manifest.permission.READ_EXTERNAL_STORAGE,
+//            Manifest.permission.CAMERA))
         setupRecyclerView()
         setupSwipeRefreshLayout()
         observeRecyclerViewFlow()
-        lifecycleScope.launch {
-            viewModel.database.threadDao().getFlowPoThread(args.ThreadId).collectLatest {
-                it?.let {
-                    val starItem=binding.detailDialogToolbar.menu.findItem(R.id.detail_fragment_menu_star)
-                    if (it.isStar){
-                        starItem.title="取消收藏"
-                    }else{
-                        starItem.title="收藏"
-                    }
-                }
-            }
-        }
+        observeThreadStarStatus()
+        setupFAB()
 
         return binding.root
     }
 
+    private fun observeThreadStarStatus() {
+        lifecycleScope.launch {
+            viewModel.database.threadDao().getFlowPoThread(args.ThreadId).collectLatest {
+                it?.let {
+                    val starItem =
+                        binding.detailDialogToolbar.menu.findItem(R.id.detail_fragment_menu_star)
+                    if (it.isStar) {
+                        starItem.title = "取消收藏"
+                    } else {
+                        starItem.title = "收藏"
+                    }
+                }
+            }
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupFAB() {
+        binding.detailFabAdd.setOnClickListener {
+            newThreadReply()
+        }
+        binding.detailFabAdd.setOnTouchListener(
+            OnSwipeListener(
+                requireContext(),
+                onSwipeTop = {},
+                onSwipeRight = {},
+                onSwipeLeft = {},
+                onSwipeBottom = {},
+            )
+        )
+    }
 
 
     private fun showReferenceDialog(reference: String) {
@@ -103,6 +117,17 @@ class DetailDialogFragment : DialogFragment() {
     }
 
     private fun setupRecyclerView() {
+        adapter = DetailRecyclerViewAdapter(this,
+            poId = args.poId,
+            imageClickListener = { imageUrl ->
+                val action = MainFragmentDirections.actionGlobalImageDetailFragment(imageUrl)
+                findNavController().navigate(action)
+            },
+            referenceClickListener = { reference ->
+                showReferenceDialog(reference)
+            },{
+
+            })
         binding.detailDialogRecyclerView.adapter = adapter .withLoadStateHeader(MainLoadStateAdapter { adapter.retry() })
         layoutManager = LinearLayoutManager(context)
         binding.detailDialogRecyclerView.layoutManager = layoutManager
@@ -146,10 +171,10 @@ class DetailDialogFragment : DialogFragment() {
         toolbar.inflateMenu(R.menu.detail_fragment_toolbar_menu)
         toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
-                R.id.detail_fragment_menu_add -> {
-                                    newThreadReply()
-                    true
-                }
+//                R.id.detail_fragment_menu_add -> {
+//                                    newThreadReply()
+//                    true
+//                }
                 R.id.detail_fragment_menu_report -> {
                     true
                 }

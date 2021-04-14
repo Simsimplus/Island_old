@@ -127,7 +127,7 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         setupRecyclerView()
-//        setupSwipeRefresh()
+        setupSwipeRefresh()
         setupSectionChips()
 
         observingDataChange()
@@ -221,16 +221,16 @@ class MainFragment : Fragment() {
         }
     }
 
-//    private fun setupSwipeRefresh() {
-//        val swipeRefreshLayout = binding.swipeFreshLayout
-//        swipeRefreshLayout.setOnRefreshListener {
-//            Log.e("Simsim", "main recycler view refresh by swipeRefreshLayout")
-//            adapter.refresh()
-//            if (swipeRefreshLayout.isRefreshing) {
-//                swipeRefreshLayout.isRefreshing = false
-//            }
-//        }
-//    }
+    private fun setupSwipeRefresh() {
+        val swipeRefreshLayout = binding.swipeFreshLayout
+        swipeRefreshLayout.setOnRefreshListener {
+            Log.e("Simsim", "main recycler view refresh by swipeRefreshLayout")
+            adapter.refresh()
+            if (swipeRefreshLayout.isRefreshing) {
+                swipeRefreshLayout.isRefreshing = false
+            }
+        }
+    }
 
     private fun setupDrawerRecyclerView() {
 
@@ -277,12 +277,12 @@ class MainFragment : Fragment() {
         toolbar.inflateMenu(R.menu.main_toolbar_menu)
         toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
-                R.id.menu_item_refresh -> {
-                    adapter.refresh()
-                    layoutManager.scrollToPosition(0)
-                    Log.e("Simsim", "refresh item pressed")
-                    true
-                }
+//                R.id.menu_item_refresh -> {
+////                    adapter.refresh()
+////                    layoutManager.scrollToPosition(0)
+//                    Log.e("Simsim", "refresh item pressed")
+//                    true
+//                }
 //            R.id.menu_item_search->{}
                 else -> false
             }

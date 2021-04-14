@@ -52,13 +52,14 @@ class MainRemoteMediator(
         try {
             val url = "https://adnmb3.com/m/f/%s?page=%d".format(section, page)
             val response = service.getHtmlStringByPage(url)
+
             val threadList: List<PoThread>? = if (response != null) {
                 AislandRepo.responseToThreadList(Uri.decode(section), response)
             } else {
                 null
             }
 //            val endOfPaginationReached = threadList.isNullOrEmpty()
-
+            Log.e(LOG_TAG,"threadList:$threadList")
             if (threadList != null && threadList.isNotEmpty()) {
                 database.withTransaction {
                     if (loadType == LoadType.REFRESH) {

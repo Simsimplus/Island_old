@@ -1,6 +1,7 @@
 package com.simsim.island.adapter
 
 import android.graphics.Typeface
+import android.graphics.drawable.Animatable
 import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.LayoutInflater
@@ -14,7 +15,10 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.target.Target
+import com.bumptech.glide.request.transition.Transition
 import com.simsim.island.R
 import com.simsim.island.adapter.MainRecyclerViewAdapter.*
 import com.simsim.island.databinding.MainRecyclerviewViewholderBinding
@@ -68,16 +72,21 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imag
             holder.binding.commentNumber.text=poThread.commentsNumber
             if (poThread.imageUrl.isNotBlank()){
                 val imageUrl=poThread.imageUrl
-    //                val imagePosted=holder.binding.imagePosted
-//                if (imageUrl.endsWith("gif")){
-//                    Glide.with(holder.itemView).asGif().load(imageUrl).placeholder(R.drawable.image_loading)
-//                        .error(R.drawable.image_load_failed)
-//                        .into(holder.binding.imagePosted)
-//                }else{
-//                    Glide.with(holder.itemView).asBitmap().load(imageUrl).placeholder(R.drawable.image_loading)
-//                        .error(R.drawable.image_load_failed).dontAnimate()
-//                        .into(holder.binding.imagePosted)
-//                }
+//                Glide.with(holder.itemView).load(imageUrl).placeholder(R.drawable.image_loading).error(R.drawable.image_load_failed).into(object:CustomTarget<Drawable>(){
+//                    override fun onResourceReady(
+//                        resource: Drawable,
+//                        transition: Transition<in Drawable>?
+//                    ) {
+//                        if (resource is Animatable){
+//                            resource.start()
+//                        }
+//                        holder.binding.contentTextview.setCompoundDrawables(resource,null,null,null)
+//                    }
+//
+//                    override fun onLoadCleared(placeholder: Drawable?) {
+//                        holder.binding.contentTextview.setCompoundDrawables(placeholder,null,null,null)
+//                    }
+//                })
                 Glide.with(holder.itemView).asDrawable().listener(object :RequestListener<Drawable>{
                     override fun onLoadFailed(
                         e: GlideException?,
@@ -105,11 +114,14 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imag
                 holder.binding.imagePosted.visibility=View.VISIBLE
                 holder.binding.imagePosted.setBackgroundResource(R.drawable.image_shape)
                 holder.binding.imagePosted.clipToOutline=true
+
                 holder.binding.imagePosted.setOnClickListener {
                     imageClickListener(imageUrl.replace("thumb","image"))
     //                    (fragment.requireActivity() as MainActivity).showImageDetailFragment(imageUrl.replace("thumb","image"))
                 }
             }else{
+//                holder.binding.contentTextview.setCompoundDrawables(null,null,null,null)
+////                holder.binding.contentTextview.Drawable
                 Glide.with(fragment).clear(holder.binding.imagePosted)
                 holder.binding.imagePosted.visibility=View.GONE
             }
