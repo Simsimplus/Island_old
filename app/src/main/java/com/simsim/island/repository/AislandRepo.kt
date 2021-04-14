@@ -112,7 +112,7 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                         }
                         "h-threads-content" -> {
                             val referenceTags = try {
-                                p.select("font")
+                                p.select("font[color=#789922]")
                             } catch (e: Exception) {
                                 Log.e("Simsim", e.stackTraceToString())
                                 null

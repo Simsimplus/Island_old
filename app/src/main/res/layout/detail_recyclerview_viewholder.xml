@@ -1,99 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-<com.google.android.material.card.MaterialCardView android:id="@+id/detail_md_card"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/detail_md_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/detail_md_card_margin"
+    android:layout_marginBottom="@dimen/detail_md_card_margin"
     app:cardBackgroundColor="#FFFFFF"
     app:cardCornerRadius="2dp"
     app:cardElevation="2dp"
     app:contentPadding="1dp"
     app:contentPaddingBottom="5dp"
-    app:contentPaddingTop="5dp"
-    xmlns:tools="http://schemas.android.com/tools"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    app:contentPaddingTop="5dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp">
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/uid_textview"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_weight="1"
+                android:gravity="start"
+                android:textColor="@color/first_col_font_color"
+                android:textSize="@dimen/first_col_font_size" />
+
+            <TextView
+                android:id="@+id/thread_id_textview"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:textColor="@color/first_col_font_color"
+                android:textSize="@dimen/first_col_font_size" />
+
+            <TextView
+                android:id="@+id/time_textview"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:textColor="@color/first_col_font_color"
+                android:textSize="@dimen/first_col_font_size" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/detail_fragment_content_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp">
+
+            <!--                <TextView-->
+            <!--                    android:id="@+id/content_reference_textview"-->
+            <!--                    android:layout_width="match_parent"-->
+            <!--                    android:layout_height="wrap_content"-->
+            <!--                    android:paddingTop="8dp"-->
+            <!--                    android:paddingBottom="8dp"-->
+            <!--                    android:textColor="@color/thread_reference"-->
+            <!--                    android:textSize="@dimen/content_font_size"-->
+            <!--                    android:visibility="gone" />-->
+
+            <TextView
+                android:id="@+id/content_textview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingStart="5dp"
-                android:paddingEnd="5dp">
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:textColor="@color/content_font_color"
+                android:textSize="@dimen/content_font_size" />
 
-                <TextView
-                    android:id="@+id/uid_textview"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:layout_weight="1"
-                    android:gravity="start"
-                    android:textColor="@color/first_col_font_color"
-                    android:textSize="@dimen/first_col_font_size" />
-
-                <TextView
-                    android:id="@+id/thread_id_textview"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:textColor="@color/first_col_font_color"
-                    android:textSize="@dimen/first_col_font_size" />
-
-                <TextView
-                    android:id="@+id/time_textview"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:layout_weight="1"
-                    android:gravity="end"
-                    android:textColor="@color/first_col_font_color"
-                    android:textSize="@dimen/first_col_font_size" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/detail_fragment_content_layout"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:paddingStart="5dp"
-                android:paddingEnd="5dp">
-
-<!--                <TextView-->
-<!--                    android:id="@+id/content_reference_textview"-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:paddingTop="8dp"-->
-<!--                    android:paddingBottom="8dp"-->
-<!--                    android:textColor="@color/thread_reference"-->
-<!--                    android:textSize="@dimen/content_font_size"-->
-<!--                    android:visibility="gone" />-->
-
-                <TextView
-                    android:id="@+id/content_textview"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="8dp"
-                    android:paddingBottom="8dp"
-                    android:textColor="@color/content_font_color"
-                    android:textSize="@dimen/content_font_size" />
-
-                <ImageView
-                    android:id="@+id/image_posted"
-                    android:layout_width="wrap_content"
-                    android:layout_height="@dimen/image_thumb_size"
-                    android:adjustViewBounds="true"
-                    android:background="#FFFFFF"
-                    android:contentDescription="@string/posted_image"
-                    android:visibility="gone"
-                    tools:srcCompat="@tools:sample/avatars" />
-            </LinearLayout>
-
+            <ImageView
+                android:id="@+id/image_posted"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/image_thumb_size"
+                android:adjustViewBounds="true"
+                android:background="#FFFFFF"
+                android:contentDescription="@string/posted_image"
+                android:visibility="gone"
+                tools:srcCompat="@tools:sample/avatars" />
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

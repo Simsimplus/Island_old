@@ -99,7 +99,7 @@ class NewDraftFragment : DialogFragment() {
     private fun setupToolbar() {
         val toolbar = binding.newDraftDialogToolbar
         toolbar.setNavigationIcon(R.drawable.ic_round_arrow_back_24)
-        toolbar.title = "No." + args.keyWord
+        toolbar.title = if (args.target=="thread") "No." + args.keyWord else args.keyWord
         toolbar.setNavigationOnClickListener {
             dismiss()
         }

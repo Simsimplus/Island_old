@@ -31,17 +31,17 @@ class MainViewModel @Inject constructor(
     application: Application,
     private val repo: AislandRepo,
     val database: IslandDatabase,
-    private val networkService: AislandNetworkService
+    val networkService: AislandNetworkService
 ) : AndroidViewModel(application) {
-    //    private val database:IslandDatabase= IslandDatabase.newInstance(application.applicationContext)
-    internal val currentSection = MutableLiveData<String>("综合版1")
     var currentPoThread: PoThread? = null
-    var mainFlow: Flow<PagingData<PoThread>> = setMainFlow("综合版1")
+    var currentSectionId:String?=null
+    var currentSectionName:String?=null
+    var currentReplyThreads = mutableListOf<BasicThread>()
+    var mainFlow: Flow<PagingData<PoThread>> = emptyFlow()
     var detailFlow: Flow<PagingData<BasicThread>> = emptyFlow()
     val isMainFragment = MutableLiveData(true)
     var windowHeight = 1
     var actionBarHeight = 1
-    var refreshMainRecyclerView: MutableLiveData<Boolean> = MutableLiveData()
     private val glide = Glide.get(application.applicationContext)
     init {
         viewModelScope.launch { getSectionList() }
@@ -56,7 +56,7 @@ class MainViewModel @Inject constructor(
 
 
 
-    suspend fun getSectionList(){
+    private suspend fun getSectionList(){
         val sectionList=repo.getSectionList().map {
             Uri.decode(it.replace("/f/".toRegex(), ""))
         }
@@ -69,6 +69,7 @@ class MainViewModel @Inject constructor(
 
     @OptIn(ExperimentalPagingApi::class)
     fun setMainFlow(section: String): Flow<PagingData<PoThread>> {
+
         mainFlow = Pager(
             PagingConfig(
                 pageSize = 50,
@@ -84,18 +85,20 @@ class MainViewModel @Inject constructor(
         ) {
             database.threadDao().getAllPoThreadsBySection(section)
         }.flow
-//            .map{ pagingData ->
-//            pagingData.map {
-//                it.replyThreads=database.threadDao().getAllReplyThreads(it.threadId)
-//                it
-//            }
-//        }
+            .map{ pagingData ->
+            pagingData.map {
+                currentSectionId=it.fId
+                currentSectionName=it.section
+                    it
+            }
+        }
             .cachedIn(viewModelScope)
         return mainFlow
     }
 
     @OptIn(ExperimentalPagingApi::class)
     fun setDetailFlow(poThread: PoThread): Flow<PagingData<BasicThread>> {
+        currentReplyThreads= mutableListOf()
         detailFlow=Pager(
             PagingConfig(
                 pageSize = 50,
@@ -106,7 +109,12 @@ class MainViewModel @Inject constructor(
             remoteMediator = DetailRemoteMediator(service = networkService,poThread = poThread,database=database)
         ){
             database.threadDao().getAllReplyThreads(poThreadId = poThread.threadId)
-        }.flow
+        }.flow.map { pagingData ->
+            pagingData.map {
+                currentReplyThreads.add(it)
+                it
+            }
+        }
             .cachedIn(viewModelScope)
         return detailFlow
     }

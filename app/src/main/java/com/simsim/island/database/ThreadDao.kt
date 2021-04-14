@@ -13,6 +13,9 @@ interface ThreadDao  {
     @Query("select * from basicThread where poThreadId =:poThreadId and replyThreadId !=9999999 order by replyThreadId asc ")
     fun getAllReplyThreads(poThreadId:Long): PagingSource<Int,BasicThread>
 
+    @Query("select * from BasicThread where replyThreadId=:threadId limit 1")
+    fun getReplyThread(threadId:Long):BasicThread
+
     @Query("select * from BasicThread where poThreadId =:poThreadId order by replyThreadId desc limit 1")
     suspend fun getLastReplyThread(poThreadId:Long):BasicThread?
 

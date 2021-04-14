@@ -25,8 +25,10 @@ import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.OnSwipeListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlin.properties.Delegates
 
 @AndroidEntryPoint
 class MainFragment : Fragment() {
@@ -35,17 +37,14 @@ class MainFragment : Fragment() {
     private lateinit var drawAdapter: DrawerRecyclerViewAdapter
     internal lateinit var layoutManager: LinearLayoutManager
     private lateinit var mainFlowJob: Job
+    private var loadingImageId =R.drawable.ic_blue_ocean1
 
 
-    companion object {
-        fun newInstance() = MainFragment()
-    }
 
 
     private val viewModel: MainViewModel by activityViewModels()
 
 
-    @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -53,13 +52,50 @@ class MainFragment : Fragment() {
         binding = MainFragmentBinding.inflate(inflater, container, false)
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
+        requestPermissions()
+        setupFAB()
+        randomRefreshImage()
+        return binding.root
+    }
+
+    private fun randomRefreshImage() {
+        lifecycleScope.launch {
+            while (true) {
+                delay(2000)
+                if (isDetached) {
+                    break
+                }
+                loadingImageId = when ((1..12).random()) {
+                    1 -> R.drawable.ic_blue_ocean1
+                    2 -> R.drawable.ic_blue_ocean2
+                    3 -> R.drawable.ic_blue_ocean3
+                    4 -> R.drawable.ic_blue_ocean4
+                    5 -> R.drawable.ic_blue_ocean5
+                    6 -> R.drawable.ic_blue_ocean6
+                    7 -> R.drawable.ic_blue_ocean7
+                    8 -> R.drawable.ic_blue_ocean8
+                    9 -> R.drawable.ic_blue_ocean9
+                    10 -> R.drawable.ic_blue_ocean10
+                    11 -> R.drawable.ic_blue_ocean11
+                    12 -> R.drawable.ic_blue_ocean12
+                    else -> R.drawable.image_load_failed
+                }
+                Log.e("Simsim", "get loading image id :$loadingImageId")
+            }
+        }
+    }
+
+    private fun requestPermissions() {
         (requireActivity() as MainActivity).requestPermission.launch(
             arrayOf(
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.CAMERA
             )
         )
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupFAB() {
         binding.fabAdd.setOnTouchListener(OnSwipeListener(
             requireContext(),
             onSwipeBottom = {
@@ -69,16 +105,24 @@ class MainFragment : Fragment() {
 
                 adapter.refresh()
             },
-            onSwipeRight =  {
-                Log.e(LOG_TAG,"swipe left")
+            onSwipeRight = {
+                Log.e(LOG_TAG, "swipe left")
                 binding.drawerLayout.openDrawer(binding.navigationView)
             },
             onSwipeTop = {}
-            ))
-        return binding.root
+        ))
+        binding.fabAdd.setOnClickListener {
+            newThread()
+        }
     }
 
-    private fun setupSectionChips() {
+    private fun newThread() {
+        val action=MainFragmentDirections.actionGlobalNewDraftFragment(target = "section",keyWord = viewModel.currentSectionName?:"")
+        findNavController().navigate(action)
+        viewModel.isMainFragment.value = false
+    }
+
+    private fun setupDrawerSections() {
         lifecycleScope.launch {
             viewModel.database.sectionDao().getAllSection().map {
                 it.map { section ->
@@ -101,39 +145,26 @@ class MainFragment : Fragment() {
                         true
                     }
 
-//                        drawAdapter=DrawerRecyclerViewAdapter(null){ sectionName ->
-//                            binding.navigationView
-//                            binding.drawerLayout.close()
-//                            binding.mainToolbar.title=sectionName
-//                            viewModel.setMainFlow(sectionName)
-//                            observeMainFlow()
-//                        }
-//                        drawAdapter.submitList(sectionList)
-//                        binding.drawerRecyclerView.adapter=drawAdapter
-//                        binding.drawerRecyclerView.layoutManager=LinearLayoutManager(requireContext())
-//                        Log.e(LOG_TAG, "section:$sectionString")
-//                        val chip = layoutInflater.inflate(
-//                            R.layout.navigation_top_chip_view,
-//                            binding.mainFragmentChips,
-//                            false
-//                        ) as Chip
-//                        chip.text = sectionString
-//                        binding.mainFragmentChips.addView(chip)
-//                        binding.mainFragmentChips.isSingleSelection = true
-
                 }
         }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        setupToolbar()
+        initialMainFlow()
         setupRecyclerView()
         setupSwipeRefresh()
-        setupSectionChips()
-
+        setupDrawerSections()
         observingDataChange()
         handleLaunchLoading()
+        setupChips()
+
+        super.onViewCreated(view, savedInstanceState)
+    }
+
+    private fun setupChips() {
         binding.mainFragmentChips.setOnCheckedChangeListener { group, checkedId ->
-//            group.check(checkedId)
+    //            group.check(checkedId)
             val chip = group.findViewById<Chip>(checkedId)
             Log.e(LOG_TAG, "chip tapped:${chip.text}")
 
@@ -141,24 +172,25 @@ class MainFragment : Fragment() {
             observeMainFlow()
 
         }
-        setupToolbar()
-        super.onViewCreated(view, savedInstanceState)
     }
 
+
     private fun observingDataChange() {
-        viewModel.currentSection.observe(viewLifecycleOwner) {
-            viewModel.setMainFlow(it)
-        }
-//        viewModel.refreshMainRecyclerView.observe(viewLifecycleOwner) {
-//            if (it) {
-//                Log.e("Simsim", "main recycler view refresh by viewModel.refreshMainRecyclerView")
-//                adapter.refresh()
-//                viewModel.refreshMainRecyclerView.value = false
-//            }
-//        }
-        observeMainFlow()
+
         viewModel.isMainFragment.observe(viewLifecycleOwner) {
             binding.mainRecyclerView.suppressLayout(!it)
+        }
+    }
+
+    private fun initialMainFlow() {
+        lifecycleScope.launch {
+            viewModel.database.sectionDao().getAllSection().take(1).collect {
+                val sectionName = it[0].sectionName
+                Log.e(LOG_TAG, "first sectionName:$sectionName")
+                viewModel.setMainFlow(sectionName)
+                observeMainFlow()
+                binding.mainToolbar.title = sectionName
+            }
         }
     }
 
@@ -184,22 +216,7 @@ class MainFragment : Fragment() {
                     binding.mainProgressIndicator.visibility = View.VISIBLE
                     binding.loadingImage.visibility = View.VISIBLE
                     binding.fabAdd.visibility = View.INVISIBLE
-                    val loadingImageId = when ((1..12).random()) {
-                        1 -> R.drawable.ic_blue_ocean1
-                        2 -> R.drawable.ic_blue_ocean2
-                        3 -> R.drawable.ic_blue_ocean3
-                        4 -> R.drawable.ic_blue_ocean4
-                        5 -> R.drawable.ic_blue_ocean5
-                        6 -> R.drawable.ic_blue_ocean6
-                        7 -> R.drawable.ic_blue_ocean7
-                        8 -> R.drawable.ic_blue_ocean8
-                        9 -> R.drawable.ic_blue_ocean9
-                        10 -> R.drawable.ic_blue_ocean10
-                        11 -> R.drawable.ic_blue_ocean11
-                        12 -> R.drawable.ic_blue_ocean12
-                        else -> R.drawable.image_load_failed
-                    }
-                    Log.e("Simsim", "get loading image id :$loadingImageId")
+
                     Glide.with(this@MainFragment).load(loadingImageId).into(binding.loadingImage)
 
                 } else {
@@ -273,7 +290,9 @@ class MainFragment : Fragment() {
             binding.drawerLayout.close()
             true
         }
-        toolbar.title = viewModel.currentSection.value
+//        toolbar.title = viewModel.currentSection.value
+
+
         toolbar.inflateMenu(R.menu.main_toolbar_menu)
         toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
