@@ -54,7 +54,7 @@ class MainRemoteMediator(
             val response = service.getHtmlStringByPage(url)
 
             val threadList: List<PoThread>? = if (response != null) {
-                AislandRepo.responseToThreadList(Uri.decode(section), response)
+                AislandRepo.responseToThreadList(Uri.decode(section), response,page)
             } else {
                 null
             }
@@ -80,6 +80,7 @@ class MainRemoteMediator(
                             val collectedPoThread=database.threadDao().getPoThread(it.threadId)
                             collectedPoThread?.let {
                                 it.collectTime=collectedPoThread.collectTime
+                                it.pageIndex=collectedPoThread.pageIndex
                             }
                         }
                     }

@@ -51,6 +51,7 @@ data class BasicThread(
 @Entity
 data class PoThread constructor(
         @PrimaryKey var threadId: Long,
+        var pageIndex:Int,
         var isManager:Boolean,
         var title: String = "",
         var name: String = "",

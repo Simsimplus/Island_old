@@ -83,15 +83,18 @@ class DetailRemoteMediator(
                 }
                 val replyDivs = doc.select("div[class=uk-container h-threads-reply-container]")
                 replyDivs.forEach { replyDiv ->
-                    replyThreads.add(
-                        AislandRepo.divToBasicThread(
-                            div = replyDiv,
-                            isPo = false,
-                            section = poThread.section,
-                            poThreadId = poThread.threadId,
-                            fId = poThread.fId
-                        )
+                    val replyThread=AislandRepo.divToBasicThread(
+                        div = replyDiv,
+                        isPo = false,
+                        section = poThread.section,
+                        poThreadId = poThread.threadId,
+                        fId = poThread.fId,
+                        poUid = poThread.uid
                     )
+                    replyThreads.add(
+                        replyThread
+                    )
+                    Log.e(LOG_TAG,"poUid=${poThread.uid},${replyThread}")
                 }
                 replyThreads.removeIf {
                     it.uid.isBlank()

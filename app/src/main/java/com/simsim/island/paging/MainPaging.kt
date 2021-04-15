@@ -22,7 +22,7 @@ class MainPaging(private val service: AislandNetworkService, private val section
             val nextPageNumber = params.key ?: 1
             val response = service.getHtmlStringByPage(baseUrl.format(section, nextPageNumber))
             val threadList: List<PoThread>? = if (response != null) {
-                AislandRepo.responseToThreadList(Uri.decode(section), response)
+                AislandRepo.responseToThreadList(Uri.decode(section), response,nextPageNumber)
             } else {
                 null
             }

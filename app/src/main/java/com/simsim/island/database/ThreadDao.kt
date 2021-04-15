@@ -22,7 +22,7 @@ interface ThreadDao  {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllReplyThreads(replyThreads:List<BasicThread>)
 
-    @Query("select * from PoThread where threadId=:poThreadId order by collectTime desc")
+    @Query("select * from PoThread where threadId=:poThreadId order by pageIndex desc")
     suspend fun getPoThread(poThreadId: Long):PoThread?
 
     @Query("select * from PoThread where threadId=:poThreadId")

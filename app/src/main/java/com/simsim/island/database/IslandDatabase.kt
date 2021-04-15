@@ -18,7 +18,7 @@ import com.simsim.island.model.*
         Section::class,
         Emoji::class,
     ],
-    version = 2,
+    version = 1,
     exportSchema = false
 )
 @TypeConverters(Converter::class)

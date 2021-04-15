@@ -153,7 +153,7 @@
                     android:textColor="@color/content_font_color"
                     android:textSize="@dimen/content_font_size" />
 
-                <LinearLayout
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="end"
@@ -161,15 +161,17 @@
 
                     <ImageView
                         android:id="@+id/image_posted"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="@dimen/image_thumb_size"
                         android:layout_gravity="start"
-                        android:layout_weight="1"
                         android:adjustViewBounds="true"
                         android:background="#FFFFFF"
                         android:contentDescription="@string/posted_image"
                         android:scaleType="fitStart"
                         android:visibility="gone"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
                         tools:srcCompat="@tools:sample/avatars"
                         tools:visibility="visible" />
 
@@ -178,13 +180,18 @@
                         android:id="@+id/comment_number"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="bottom|left"
-                        android:gravity="center|end"
+                        android:layout_gravity="bottom|right"
+                        android:layout_weight="1"
+                        android:drawablePadding="2dp"
+                        android:drawingCacheQuality="high"
+                        android:gravity="end"
                         android:text="@string/initial_comment_number"
                         android:textColor="@color/first_col_font_color"
                         android:textSize="@dimen/first_col_font_size"
-                        app:drawableLeftCompat="@drawable/ic_outline_mode_comment_16" />
-                </LinearLayout>
+                        app:drawableLeftCompat="@drawable/ic_outline_mode_comment_16"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
             </LinearLayout>
 

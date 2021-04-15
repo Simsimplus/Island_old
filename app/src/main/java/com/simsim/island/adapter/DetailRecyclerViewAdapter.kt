@@ -66,7 +66,7 @@ class DetailRecyclerViewAdapter(
         binding.threadIdTextview.text = it.replyThreadId.toString()
         binding.contentTextview.text = it.content
         // set po id highlighted
-        if (it.uid == poId) {
+        if (it.isPo) {
             binding.uidTextview.setTypeface(null, Typeface.BOLD)
             if (it.isManager) {
                 binding.uidTextview.setTextColor(
@@ -97,7 +97,9 @@ class DetailRecyclerViewAdapter(
         //add text view to hold reference
         if (it.references.isNotBlank()) {
             val references = it.references.split(referenceStringSpliterator).reversed()
-            val layoutParams = binding.contentTextview.layoutParams
+            val layoutParams = binding.contentTextview.layoutParams.apply {
+                width=ViewGroup.LayoutParams.WRAP_CONTENT
+            }
     //                val textSize = fragment.resources.getDimension(R.dimen.content_font_size)
             references.forEach { reference ->
                 val textView = LayoutInflater.from(fragment.requireContext())

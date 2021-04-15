@@ -185,7 +185,8 @@ class MainFragment : Fragment() {
     private fun initialMainFlow() {
         lifecycleScope.launch {
             viewModel.database.sectionDao().getAllSection().take(1).collect {
-                val sectionName = it[0].sectionName
+
+                val sectionName =if (it.isNotEmpty()) it[0].sectionName else "综合版1"
                 Log.e(LOG_TAG, "first sectionName:$sectionName")
                 viewModel.setMainFlow(sectionName)
                 observeMainFlow()
