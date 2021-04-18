@@ -22,7 +22,6 @@ import com.simsim.island.util.referenceStringSpliterator
 
 class DetailRecyclerViewAdapter(
     private val fragment: Fragment,
-    private val poId: String,
     private val imageClickListener: (imageUrl: String) -> Unit,
     private val referenceClickListener:(reference:String)->Unit,
     private val itemClickListener: () -> Unit

@@ -12,7 +12,7 @@
 
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:id="@+id/main"
+        android:id="@+id/main_coordinator_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true">
@@ -104,47 +104,19 @@
                     </com.google.android.material.chip.ChipGroup>
                 </HorizontalScrollView>
 
-                <TextView
-                    android:id="@+id/indicator_textview"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:text="@string/indicator_text"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
-                    android:textColor="#646464"
-                    android:textSize="25sp"
-                    android:visibility="gone"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    tools:visibility="visible" />
-
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:id="@+id/main_progress_indicator"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:indeterminate="true"
-                    android:visibility="gone"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    tools:visibility="visible" />
-
                 <ImageView
                     android:id="@+id/loading_image"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:adjustViewBounds="true"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
                     android:background="@color/white"
                     android:contentDescription="@string/loading_image"
-                    android:visibility="gone"
+
+                    android:scaleType="fitCenter"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/main_progress_indicator"
-                    tools:srcCompat="@drawable/ic_blue_ocean1"
-                    tools:visibility="visible" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:srcCompat="@drawable/ic_loading_page_failed" />
 
 
             </androidx.constraintlayout.widget.ConstraintLayout>

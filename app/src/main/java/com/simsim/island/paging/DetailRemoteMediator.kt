@@ -9,7 +9,6 @@ import androidx.room.withTransaction
 import com.simsim.island.database.IslandDatabase
 import com.simsim.island.model.BasicThread
 import com.simsim.island.model.DetailRemoteKey
-import com.simsim.island.model.PoThread
 import com.simsim.island.repository.AislandRepo
 import com.simsim.island.service.AislandNetworkService
 import com.simsim.island.util.LOG_TAG
@@ -20,7 +19,7 @@ import org.jsoup.Jsoup
 @OptIn(ExperimentalPagingApi::class)
 class DetailRemoteMediator(
     private val service: AislandNetworkService,
-    private val poThread: PoThread,
+    private val poThreadId: Long,
     private val database: IslandDatabase
 ) : RemoteMediator<Int, BasicThread>() {
     override suspend fun load(
@@ -37,21 +36,21 @@ class DetailRemoteMediator(
             }
             LoadType.APPEND -> {
                 Log.e(LOG_TAG, "detail state.lastItemOrNull():${state.lastItemOrNull() ?: "null"}")
-                var remoteKey= state.lastItemOrNull()
-                        ?.let { replyThread ->
-                            Log.e(LOG_TAG, "fetch detail remote key from db")
-                            var result: DetailRemoteKey?
-                            while (true) {
-                                result = database.keyDao().getDetailKey(replyThread.replyThreadId)
-                                if (result != null) {
-                                    break
-                                }
+                var remoteKey = state.lastItemOrNull()
+                    ?.let { replyThread ->
+                        Log.e(LOG_TAG, "fetch detail remote key from db")
+                        var result: DetailRemoteKey?
+                        while (true) {
+                            result = database.keyDao().getDetailKey(replyThread.replyThreadId)
+                            if (result != null) {
+                                break
                             }
-                            result
                         }
+                        result
+                    }
                 if (remoteKey == null) {
                     remoteKey =
-                        database.threadDao().getLastReplyThread(poThread.threadId)?.let {
+                        database.threadDao().getLastReplyThread(poThreadId)?.let {
                             database.keyDao().getDetailKey(it.replyThreadId)
                         }
                 }
@@ -64,42 +63,58 @@ class DetailRemoteMediator(
         }
         try {
             val maxPage: Int?
-            val url = "https://adnmb3.com/" + poThread.link + "?page=$page"
+            val url = "https://adnmb3.com/m/t/$poThreadId?page=$page"
             Log.e("Simsim", "request for thread detail:$url")
-            val response =
-                service.getHtmlStringByPage(url)
+            val response = service.getHtmlStringByPage(url)
             val threadList: List<BasicThread>? = if (response != null) {
                 val doc = Jsoup.parse(response)
+                val poThreadDiv = doc.selectFirst("div[class=uk-container h-threads-container]")
                 val pages = doc.select("[href~=.*page=[0-9]+]")
                 maxPage = try {
                     pages.last().attr("href").findPageNumber().toInt()
                 } catch (e: Exception) {
                     999
                 }
-                Log.e("Simsim", "max page:$maxPage")
-                val replyThreads = mutableListOf<BasicThread>()
-                if (page == 1) {
-                    replyThreads.add(poThread.toBasicThread())
-                }
-                val replyDivs = doc.select("div[class=uk-container h-threads-reply-container]")
-                replyDivs.forEach { replyDiv ->
-                    val replyThread=AislandRepo.divToBasicThread(
-                        div = replyDiv,
-                        isPo = false,
-                        section = poThread.section,
-                        poThreadId = poThread.threadId,
-                        fId = poThread.fId,
-                        poUid = poThread.uid
+                poThreadDiv?.let {
+                    val poThread = AislandRepo.basicThreadToPoThread(
+                        AislandRepo.divToBasicThread(
+                            poThreadDiv,
+                            section = "",
+                            poThreadId = poThreadId,
+                            fId = "",
+                            isPo = true
+                        ),
+                        mutableListOf(), 1
                     )
-                    replyThreads.add(
-                        replyThread
-                    )
-                    Log.e(LOG_TAG,"poUid=${poThread.uid},${replyThread}")
-                }
-                replyThreads.removeIf {
-                    it.uid.isBlank()
-                }
-                replyThreads
+                    Log.e(LOG_TAG, "detailRM poThred:$poThread")
+
+                    Log.e("Simsim", "max page:$maxPage")
+                    val replyThreads = mutableListOf<BasicThread>()
+                    if (page == 1) {
+                        Log.e(LOG_TAG, "detailRM poThredToBasicThread:${poThread.toBasicThread()}")
+                        replyThreads.add(poThread.toBasicThread())
+                    }
+                    val replyDivs = doc.select("div[class=uk-container h-threads-reply-container]")
+                    replyDivs.forEach { replyDiv ->
+                        val replyThread = AislandRepo.divToBasicThread(
+                            div = replyDiv,
+                            isPo = false,
+                            section = poThread.section,
+                            poThreadId = poThread.threadId,
+                            fId = poThread.fId,
+                            poUid = poThread.uid
+                        )
+                        replyThreads.add(
+                            replyThread
+                        )
+                        Log.e(LOG_TAG, "poUid=${poThread.uid},${replyThread}")
+                    }
+                    replyThreads.removeIf {
+                        it.uid.isBlank()
+                    }
+                    replyThreads
+                } ?: null
+
             } else {
                 maxPage = 999
                 null
@@ -123,7 +138,7 @@ class DetailRemoteMediator(
 //                        database.threadDao().clearAllReplyThreads(poThread.threadId)
                     }
                     val previousKey = if (page == 1) null else page - 1
-                    val nextKey = if (endOfPaginationReached) null else page + 1
+                    val nextKey = if (endOfPaginationReached) maxPage else page + 1
                     val keys = threadList.map {
                         val key = DetailRemoteKey(it.replyThreadId, previousKey, nextKey)
 //                        database.keyDao().insertDetailKey(key)

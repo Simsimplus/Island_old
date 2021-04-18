@@ -18,6 +18,8 @@
         <item name="actionModeBackground">?attr/colorPrimary</item>
         <item name="actionModeCloseDrawable">@drawable/ic_round_arrow_back_24</item>
         <item name="actionBarTheme">@style/ThemeOverlay.MaterialComponents.Dark.ActionBar</item>
+<!--        <item name="editTextColor">@color/white</item>-->
+<!--        <item name="android:textColorHint">@color/white</item>-->
 
     </style>
 

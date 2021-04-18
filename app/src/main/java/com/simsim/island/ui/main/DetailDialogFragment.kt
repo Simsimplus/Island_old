@@ -13,8 +13,10 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.simsim.island.R
 import com.simsim.island.adapter.DetailRecyclerViewAdapter
 import com.simsim.island.adapter.MainLoadStateAdapter
@@ -52,16 +54,37 @@ class DetailDialogFragment : DialogFragment() {
     ): View? {
         // Inflate the layout for this fragment
         binding = DetailDialogfragmentBinding.inflate(inflater, container, false)
-
-//        (requireActivity() as MainActivity).requestPermission.launch(arrayOf(
-//            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-//            Manifest.permission.READ_EXTERNAL_STORAGE,
-//            Manifest.permission.CAMERA))
         setupRecyclerView()
         setupSwipeRefreshLayout()
         observeRecyclerViewFlow()
         observeThreadStarStatus()
         setupFAB()
+        lifecycleScope.launch {
+            adapter.loadStateFlow.collectLatest { loadStates->
+                when(loadStates.refresh){
+                     is LoadState.Loading->{
+                         binding.detailLoadingImage.setImageResource(viewModel.randomLoadingImage)
+//                         binding.detailLoadingImage.visibility=View.VISIBLE
+//                         binding.detailFabAdd.visibility=View.INVISIBLE
+                     }
+                    is LoadState.Error->{
+                        binding.detailLoadingImage.setImageResource(R.drawable.ic_loading_page_failed)
+                        binding.detailLoadingImage.visibility=View.VISIBLE
+                        Snackbar
+                            .make(binding.root,R.string.loading_page_fail_info,Snackbar.LENGTH_INDEFINITE)
+                            .setAction(getString(R.string.loading_fail_retry)){
+                                adapter.retry()
+                            }
+                            .show()
+                        binding.detailFabAdd.visibility=View.INVISIBLE
+                    }
+                    else->{
+                        binding.detailLoadingImage.visibility=View.INVISIBLE
+                        binding.detailFabAdd.visibility=View.VISIBLE
+                    }
+                }
+            }
+        }
 
         return binding.root
     }
@@ -92,7 +115,9 @@ class DetailDialogFragment : DialogFragment() {
                 requireContext(),
                 onSwipeTop = {},
                 onSwipeRight = {},
-                onSwipeLeft = {},
+                onSwipeLeft = {
+                              adapter.refresh()
+                },
                 onSwipeBottom = {},
             )
         )
@@ -173,7 +198,6 @@ private fun observeRecyclerViewFlow() {
 
 private fun setupRecyclerView() {
     adapter = DetailRecyclerViewAdapter(this,
-        poId = args.poId,
         imageClickListener = { imageUrl ->
             val action = MainFragmentDirections.actionGlobalImageDetailFragment(imageUrl)
             findNavController().navigate(action)
@@ -258,10 +282,11 @@ private fun setupToolbar() {
 }
 
 
-private fun newThreadReply() {
+private fun newThreadReply(prefill:String="") {
     val action = DetailDialogFragmentDirections.actionGlobalNewDraftFragment(
-        "thread",
-        args.ThreadId.toString()
+        target = "thread",
+        threadId= args.ThreadId,
+        prefillText = prefill
     )
     findNavController().navigate(action)
     viewModel.isMainFragment.value = false

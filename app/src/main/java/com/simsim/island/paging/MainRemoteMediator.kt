@@ -43,6 +43,7 @@ class MainRemoteMediator(
                             database.keyDao().getMainKey(it.threadId)
                         }
                 }
+                Log.e(LOG_TAG,"main remote key:$remoteKey")
                 val nextKey = remoteKey?.nextKey
                 Log.e(LOG_TAG,"nextKey:$nextKey")
                 nextKey?:return MediatorResult.Success(endOfPaginationReached = true)

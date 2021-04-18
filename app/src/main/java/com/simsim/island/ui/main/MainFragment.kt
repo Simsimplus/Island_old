@@ -2,11 +2,15 @@ package com.simsim.island.ui.main
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.SearchManager
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.SearchView
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -16,6 +20,7 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.google.android.material.chip.Chip
+import com.google.android.material.snackbar.Snackbar
 import com.simsim.island.MainActivity
 import com.simsim.island.R
 import com.simsim.island.adapter.DrawerRecyclerViewAdapter
@@ -23,6 +28,7 @@ import com.simsim.island.adapter.MainRecyclerViewAdapter
 import com.simsim.island.databinding.MainFragmentBinding
 import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.OnSwipeListener
+import com.simsim.island.util.threadIdPattern
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -37,7 +43,7 @@ class MainFragment : Fragment() {
     private lateinit var drawAdapter: DrawerRecyclerViewAdapter
     internal lateinit var layoutManager: LinearLayoutManager
     private lateinit var mainFlowJob: Job
-    private var loadingImageId =R.drawable.ic_blue_ocean1
+//    private var loadingImageId =R.drawable.ic_blue_ocean1
 
 
 
@@ -54,36 +60,23 @@ class MainFragment : Fragment() {
         binding.lifecycleOwner = this
         requestPermissions()
         setupFAB()
-        randomRefreshImage()
+//        randomRefreshImage()
+//        viewModel.newSearchQuery.observe(viewLifecycleOwner){query->
+//            if (!query.matches(threadIdPattern)){
+//                Snackbar.make(binding.mainCoordinatorLayout,"请直接输入串号，如337845818", Snackbar.LENGTH_SHORT).show()
+//            }else{
+//                Log.e(LOG_TAG,"receive query thread id:$query")
+//                val action = MainFragmentDirections.actionMainFragmentToDetailDialogFragment(
+//                    query.toLong()
+//                )
+//                findNavController().navigate(action)
+//                viewModel.setDetailFlow(query.toLong())
+//                viewModel.isMainFragment.value = false
+//            }
+//        }
         return binding.root
     }
 
-    private fun randomRefreshImage() {
-        lifecycleScope.launch {
-            while (true) {
-                delay(2000)
-                if (isDetached) {
-                    break
-                }
-                loadingImageId = when ((1..12).random()) {
-                    1 -> R.drawable.ic_blue_ocean1
-                    2 -> R.drawable.ic_blue_ocean2
-                    3 -> R.drawable.ic_blue_ocean3
-                    4 -> R.drawable.ic_blue_ocean4
-                    5 -> R.drawable.ic_blue_ocean5
-                    6 -> R.drawable.ic_blue_ocean6
-                    7 -> R.drawable.ic_blue_ocean7
-                    8 -> R.drawable.ic_blue_ocean8
-                    9 -> R.drawable.ic_blue_ocean9
-                    10 -> R.drawable.ic_blue_ocean10
-                    11 -> R.drawable.ic_blue_ocean11
-                    12 -> R.drawable.ic_blue_ocean12
-                    else -> R.drawable.image_load_failed
-                }
-                Log.e("Simsim", "get loading image id :$loadingImageId")
-            }
-        }
-    }
 
     private fun requestPermissions() {
         (requireActivity() as MainActivity).requestPermission.launch(
@@ -117,7 +110,7 @@ class MainFragment : Fragment() {
     }
 
     private fun newThread() {
-        val action=MainFragmentDirections.actionGlobalNewDraftFragment(target = "section",keyWord = viewModel.currentSectionName?:"")
+        val action=MainFragmentDirections.actionGlobalNewDraftFragment(target = "section",sectionName = viewModel.currentSectionName?:"",fId =viewModel.currentSectionId?:"" )
         findNavController().navigate(action)
         viewModel.isMainFragment.value = false
     }
@@ -157,22 +150,22 @@ class MainFragment : Fragment() {
         setupDrawerSections()
         observingDataChange()
         handleLaunchLoading()
-        setupChips()
+//        setupChips()
 
         super.onViewCreated(view, savedInstanceState)
     }
 
-    private fun setupChips() {
-        binding.mainFragmentChips.setOnCheckedChangeListener { group, checkedId ->
-    //            group.check(checkedId)
-            val chip = group.findViewById<Chip>(checkedId)
-            Log.e(LOG_TAG, "chip tapped:${chip.text}")
-
-            viewModel.setMainFlow(chip.text.toString())
-            observeMainFlow()
-
-        }
-    }
+//    private fun setupChips() {
+//        binding.mainFragmentChips.setOnCheckedChangeListener { group, checkedId ->
+//    //            group.check(checkedId)
+//            val chip = group.findViewById<Chip>(checkedId)
+//            Log.e(LOG_TAG, "chip tapped:${chip.text}")
+//
+//            viewModel.setMainFlow(chip.text.toString())
+//            observeMainFlow()
+//
+//        }
+//    }
 
 
     private fun observingDataChange() {
@@ -185,7 +178,6 @@ class MainFragment : Fragment() {
     private fun initialMainFlow() {
         lifecycleScope.launch {
             viewModel.database.sectionDao().getAllSection().take(1).collect {
-
                 val sectionName =if (it.isNotEmpty()) it[0].sectionName else "综合版1"
                 Log.e(LOG_TAG, "first sectionName:$sectionName")
                 viewModel.setMainFlow(sectionName)
@@ -213,26 +205,28 @@ class MainFragment : Fragment() {
     private fun handleLaunchLoading() {
         lifecycleScope.launch {
             adapter.loadStateFlow.collectLatest { loadStates ->
-                if (loadStates.refresh is LoadState.Loading) {
-                    binding.mainProgressIndicator.visibility = View.VISIBLE
-                    binding.loadingImage.visibility = View.VISIBLE
-                    binding.fabAdd.visibility = View.INVISIBLE
+                when(loadStates.refresh){
+                    is LoadState.Loading->{
+                        binding.loadingImage.visibility = View.VISIBLE
+                        binding.fabAdd.visibility = View.INVISIBLE
 
-                    Glide.with(this@MainFragment).load(loadingImageId).into(binding.loadingImage)
-
-                } else {
-                    binding.mainProgressIndicator.visibility = View.GONE
-                    binding.indicatorTextview.visibility = View.GONE
-                    binding.loadingImage.visibility = View.GONE
-//                    binding.chipScrollView.visibility = View.VISIBLE
-                    //todo
-                    binding.fabAdd.visibility = View.VISIBLE
-                }
-                if (loadStates.refresh is LoadState.Error) {
-                    binding.indicatorTextview.isVisible = true
-                    binding.indicatorTextview.text = "错误，点击重试!"
-                    binding.indicatorTextview.setOnClickListener {
-                        adapter.retry()
+                        Glide.with(this@MainFragment).load(viewModel.randomLoadingImage).into(binding.loadingImage)
+                    }
+                    is LoadState.Error->{
+                        binding.loadingImage.visibility = View.VISIBLE
+                        binding.fabAdd.visibility = View.INVISIBLE
+                        Glide.with(this@MainFragment).load(R.drawable.ic_loading_page_failed).into(binding.loadingImage)
+                        Snackbar
+                            .make(binding.root,R.string.loading_page_fail_info,Snackbar.LENGTH_INDEFINITE)
+                            .setAction(getString(R.string.loading_fail_retry)){
+                                adapter.retry()
+                            }
+                            .show()
+                    }
+                    else->{
+                        binding.loadingImage.visibility = View.GONE
+                        binding.fabAdd.visibility = View.VISIBLE
+                        binding.fabAdd.visibility = View.VISIBLE
                     }
                 }
             }
@@ -262,11 +256,10 @@ class MainFragment : Fragment() {
         }) { poThread ->
             viewModel.currentPoThread = poThread
             val action = MainFragmentDirections.actionMainFragmentToDetailDialogFragment(
-                poThread.uid,
                 poThread.threadId
             )
             findNavController().navigate(action)
-            viewModel.setDetailFlow(poThread)
+            viewModel.setDetailFlow(poThread.threadId)
             viewModel.isMainFragment.value = false
         }
         binding.mainRecyclerView.adapter = adapter
@@ -278,6 +271,7 @@ class MainFragment : Fragment() {
 
     private fun setupToolbar() {
         val toolbar = binding.mainToolbar
+
         toolbar.setNavigationIcon(R.drawable.ic_round_menu_24)
         toolbar.setNavigationOnClickListener {
             if (binding.drawerLayout.isDrawerOpen(binding.navigationView)) {
@@ -295,6 +289,19 @@ class MainFragment : Fragment() {
 
 
         toolbar.inflateMenu(R.menu.main_toolbar_menu)
+//        val searchManager = requireActivity().getSystemService(Context.SEARCH_SERVICE) as SearchManager
+//        val searchItem=toolbar.menu.findItem(R.id.menu_item_search)
+//        val searchView=searchItem.actionView as SearchView
+//        searchView.apply {
+//            setSearchableInfo(searchManager.getSearchableInfo(requireActivity().componentName))
+//            isIconified=true
+//            setOnQueryTextFocusChangeListener { _, hasFocus ->
+//                if (!hasFocus){
+//                    searchItem.collapseActionView()
+//                    searchView.setQuery("",false)
+//                }
+//            }
+//        }
         toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
 //                R.id.menu_item_refresh -> {

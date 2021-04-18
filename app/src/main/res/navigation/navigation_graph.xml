@@ -22,9 +22,6 @@
         android:label="DetailDialogFragment"
         tools:layout="@layout/detail_dialogfragment">
         <argument
-            android:name="poId"
-            app:argType="string" />
-        <argument
             android:name="ThreadId"
             app:argType="long" />
         <argument
@@ -62,8 +59,22 @@
             android:name="target"
             app:argType="string" />
         <argument
-            android:name="keyWord"
-            app:argType="string" />
+            android:name="prefillText"
+            app:argType="string"
+            android:defaultValue=""/>
+        <argument
+            android:name="threadId"
+            app:argType="long"
+            android:defaultValue="0L" />
+        <argument
+            android:name="fId"
+            app:argType="string"
+            android:defaultValue=""/>
+        <argument
+            android:name="sectionName"
+            app:argType="string"
+
+            android:defaultValue=""/>
     </dialog>
     <action
         android:id="@+id/action_global_newDraftFragment"

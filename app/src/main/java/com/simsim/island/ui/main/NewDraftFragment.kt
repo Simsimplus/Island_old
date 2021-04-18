@@ -11,6 +11,7 @@ import android.widget.ArrayAdapter
 import android.widget.GridView
 import android.widget.TextView
 import androidx.core.view.isVisible
+import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -28,12 +29,17 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.InputStream
 
 @AndroidEntryPoint
 class NewDraftFragment : DialogFragment() {
     private val viewModel:MainViewModel by activityViewModels()
     private lateinit var binding:NewDraftFragmentBinding
     private val args:NewDraftFragmentArgs by navArgs()
+    private var postImage: InputStream? = null
+    private var imageType:String?=null
+    private var imageName:String?=null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NORMAL, R.style.fullscreenDialog)
@@ -99,7 +105,7 @@ class NewDraftFragment : DialogFragment() {
     private fun setupToolbar() {
         val toolbar = binding.newDraftDialogToolbar
         toolbar.setNavigationIcon(R.drawable.ic_round_arrow_back_24)
-        toolbar.title = if (args.target=="thread") "No." + args.keyWord else args.keyWord
+        toolbar.title = if (args.target=="thread") "No.${args.threadId}" else args.sectionName
         toolbar.setNavigationOnClickListener {
             dismiss()
         }
@@ -107,21 +113,64 @@ class NewDraftFragment : DialogFragment() {
         toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.draft_menu_send -> {
-
+                    when(args.target){
+                        "thread"->{viewModel.doReply(
+                            cookie = "%D8%A9%AE%99%1BKc%BC%16iDt%94%7B%DDm%86%15%81%AA%8Ct%3E%BB",
+                            poThreadId = args.threadId,
+                            content = binding.newInputContent.text.toString(),
+                            image = postImage,
+                            imageType=imageType,
+                            imageName=imageName,
+                            waterMark = binding.toggleButton.isChecked,
+                        )}
+                        "section"->{viewModel.doPost(
+                            cookie = "%D8%A9%AE%99%1BKc%BC%16iDt%94%7B%DDm%86%15%81%AA%8Ct%3E%BB",
+//                            poThreadId = args.threadId,
+                            content = binding.newInputContent.text.toString(),
+                            image = postImage,
+                            imageType=imageType,
+                            imageName=imageName,
+                            waterMark = binding.toggleButton.isChecked,
+                            fId = args.fId,
+                        )}
+                    }
+                    dismiss()
                     Log.e(LOG_TAG,"draft_menu_send")
                     true
                 }
                 R.id.draft_menu_image_pick -> {
-                    Log.e(LOG_TAG,"draft_menu_image_pick")
-                    MaterialAlertDialogBuilder(requireContext()).setTitle("选择").setNegativeButton("取消"){ dialogInterface: DialogInterface, buttonId: Int ->
+                    Log.e(LOG_TAG, "draft_menu_image_pick")
+                    MaterialAlertDialogBuilder(requireContext()).setTitle("选择")
+                        .setNegativeButton("取消") { dialogInterface: DialogInterface, buttonId: Int ->
                             dialogInterface.dismiss()
-                    }.setItems(arrayOf("拍照","相册")){ dialogInterface: DialogInterface, itemIndex: Int ->
-                        dialogInterface.dismiss()
-                        when(itemIndex){
-                            0-> takePictureFromCamera()
-                            1-> takePictureFromGallery()
-                        }
-                    }.show()
+                        }.setItems(
+                            arrayOf(
+                                "拍照",
+                                "相册"
+                            )
+                        ) { dialogInterface: DialogInterface, itemIndex: Int ->
+                            dialogInterface.dismiss()
+                            when (itemIndex) {
+                                0 -> {
+                                    val uri=takePictureFromCamera()
+                                    viewModel.cameraTakePictureSuccess.observe(viewLifecycleOwner){ success ->
+                                        if (success){
+                                            postImage=requireActivity().contentResolver.openInputStream(uri)?.buffered()
+                                            imageType=requireActivity().contentResolver.getType(uri)
+                                            imageName=DocumentFile.fromSingleUri(requireContext(),uri)?.name
+                                        }
+                                    }
+                                }
+                                1 -> {
+                                    takePictureFromGallery()
+                                    viewModel.pictureUri.observe(viewLifecycleOwner){uri->
+                                        postImage=requireActivity().contentResolver.openInputStream(uri)?.buffered()
+                                        imageType=requireActivity().contentResolver.getType(uri)
+                                        imageName=DocumentFile.fromSingleUri(requireContext(),uri)?.name
+                                    }
+                                }
+                            }
+                        }.show()
 //                    ImagePicker.with(this).crop().compress(2048).start()
                     true
                 }
@@ -137,6 +186,9 @@ class NewDraftFragment : DialogFragment() {
             }
         }
     }
+
+
+
 
     private fun showEmojiDialog() {
         val gridView=GridView(requireContext())
@@ -178,7 +230,7 @@ class NewDraftFragment : DialogFragment() {
         }
     }
 
-    private fun takePictureFromCamera() {
+    private fun takePictureFromCamera()  :Uri{
         viewModel.shouldTakePicture.value="camera"
         val activity=requireActivity() as MainActivity
         val photoUri=activity.createImageFile()
@@ -199,6 +251,7 @@ class NewDraftFragment : DialogFragment() {
             }
 
         }
+        return photoUri
     }
 
 

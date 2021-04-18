@@ -13,8 +13,8 @@ import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.math.abs
 
-val referencePattern = ".*>>No\\.\\d+.*".toRegex()
-val referenceStringSpliterator = "\n"
+val threadIdPattern = "\\d+".toRegex()
+const val referenceStringSpliterator = "\n"
 val LOG_TAG = "Simsim "
 fun handleThreadId(id: String): String {
     val regex = "ID:([\\s0-9a-zA-Z]+)".toRegex()

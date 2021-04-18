@@ -10,6 +10,7 @@ import com.simsim.island.util.referenceStringSpliterator
 import com.simsim.island.util.removeQueryTail
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.emptyFlow
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import java.lang.IllegalArgumentException
@@ -112,7 +113,19 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                                         }
 
                                     }
+                                    "h-threads-info-uid"->{
+                                        val isManager= child.selectFirst("font[color=red]")!=null
+                                        basicThread.isManager=isManager
+                                        basicThread.uid = child.text()
+                                        if (basicThread.uid == poUid){
+                                            basicThread.isPo=true
+                                        }
+
+                                    }
                                 }
+                            }
+                            if (p.text().contains("PO主")){
+                                basicThread.isPo=true
                             }
                         }
                         "h-threads-content" -> {
@@ -136,10 +149,10 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                 }
 
             }
-        Log.e("Simsim", "poUid:$poUid  $basicThread")
+//        Log.e("Simsim", "poUid:$poUid  $basicThread")
             return basicThread
         }
-        private fun basicThreadToPoThread(basicThread: BasicThread, replyThreads:List<BasicThread>,pageIndex:Int):PoThread{
+        fun basicThreadToPoThread(basicThread: BasicThread, replyThreads:List<BasicThread>,pageIndex:Int):PoThread{
             return PoThread(
                 isManager = basicThread.isManager,
                 threadId=basicThread.replyThreadId,
@@ -163,25 +176,24 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
     }
     suspend fun getSectionList(): Flow<String> {
         val sectionList= mutableListOf<String>()
-        val response=service.getHtmlStringByPage("https://adnmb3.com/Forum")
-        response?.let { rp->
-             val doc=Jsoup.parse(rp)
-            val listTags=doc.select("li")
+        return try {
+            val response=service.getHtmlStringByPage("https://adnmb3.com/Forum")
+            response?.let { rp->
+                val doc=Jsoup.parse(rp)
+                val listTags=doc.select("li")
 
-            listTags.forEach { li->
-                val section=li.select("a[href~=[/f]{3,}.*]")
-                if (section.isNotEmpty()){
-                    sectionList.add(section.attr("href"))
+                listTags.forEach { li->
+                    val section=li.select("a[href~=[/f]{3,}.*]")
+                    if (section.isNotEmpty()){
+                        sectionList.add(section.attr("href"))
+                    }
                 }
             }
+            sectionList.asFlow()
+        }catch (e:Exception){
+            Log.e(LOG_TAG,"getSectionList ${e.stackTraceToString()}")
+            emptyFlow()
         }
-        return sectionList.asFlow()
+
     }
-//    internal val threadLiveData = MutableLiveData<List<IslandThread>?>()
-//    suspend fun getThreadsByPage(section: String, page: Int) {
-//        val response: String? = service.getHtmlStringByPage(baseUrl.format(section, page))
-//        threadLiveData.value=responseToThreadList(section,response)
-//    }
-
-
 }
