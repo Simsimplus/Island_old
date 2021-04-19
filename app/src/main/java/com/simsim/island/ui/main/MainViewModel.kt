@@ -10,10 +10,7 @@ import androidx.paging.*
 import com.bumptech.glide.Glide
 import com.simsim.island.R
 import com.simsim.island.database.IslandDatabase
-import com.simsim.island.model.BasicThread
-import com.simsim.island.model.PoThread
-import com.simsim.island.model.Section
-import com.simsim.island.model.StaredPoThreads
+import com.simsim.island.model.*
 import com.simsim.island.paging.DetailRemoteMediator
 import com.simsim.island.paging.MainRemoteMediator
 import com.simsim.island.repository.AislandRepo
@@ -23,13 +20,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.io.File
 import java.io.InputStream
+import java.time.Duration
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 
@@ -46,6 +41,7 @@ class MainViewModel @Inject constructor(
     var currentSectionId: String? = null
     var currentSectionName: String? = null
     var currentReplyThreads = mutableListOf<BasicThread>()
+    var sectionList = database.sectionDao().getAllSection()
     var mainFlow: Flow<PagingData<PoThread>> = emptyFlow()
     var detailFlow: Flow<PagingData<BasicThread>> = emptyFlow()
     val isMainFragment = MutableLiveData(true)
@@ -54,10 +50,9 @@ class MainViewModel @Inject constructor(
     private val glide = Glide.get(application.applicationContext)
 
     init {
-        viewModelScope.launch { getSectionList() }
+        doUpdate()
         randomLoadingImage()
     }
-
 
     var cameraTakePictureSuccess = MutableLiveData<Boolean>()
     var gallertTakePictureSuccess = MutableLiveData<Boolean>()
@@ -65,7 +60,19 @@ class MainViewModel @Inject constructor(
     var pictureUri = MutableLiveData<Uri>()
     var shouldTakePicture = MutableLiveData<String>()
 
-
+    fun doUpdate(){
+        viewModelScope.launch {
+            val record=database.recordDao().getRecord()
+            if (record==null){
+                getSectionList()
+                database.recordDao().insertRecord(UpdateRecord(lastUpdateTime =  LocalDateTime.now()))
+            }else{
+                if (Duration.between(record.lastUpdateTime,LocalDateTime.now()).toDays()>=30){
+                    getSectionList()
+                }
+            }
+        }
+    }
     private fun randomLoadingImage() {
         viewModelScope.launch {
             while (true) {
@@ -91,18 +98,14 @@ class MainViewModel @Inject constructor(
     }
 
     private suspend fun getSectionList() {
-        val sectionList = repo.getSectionList().map {
-            Uri.decode(it.replace("/f/".toRegex(), ""))
-        }
-        val sections = sectionList.toList(mutableListOf()).mapIndexed { index, s ->
-            Section(sectionIndex = index, sectionName = s)
-        }
+        val sectionList = repo.getSectionList()
+        val sections = sectionList.toList(mutableListOf())
         database.sectionDao().insertAllSection(sections)
     }
 
 
     @OptIn(ExperimentalPagingApi::class)
-    fun setMainFlow(section: String): Flow<PagingData<PoThread>> {
+    fun setMainFlow(sectionName: String, sectionUrl:String): Flow<PagingData<PoThread>> {
 
         mainFlow = Pager(
             PagingConfig(
@@ -113,15 +116,15 @@ class MainViewModel @Inject constructor(
             ),
             remoteMediator = MainRemoteMediator(
                 service = networkService,
-                section = section,
+                sectionName = sectionName,
+                sectionUrl=sectionUrl,
                 database = database
             )
         ) {
-            database.threadDao().getAllPoThreadsBySection(section)
+            database.threadDao().getAllPoThreadsBySection(sectionName)
         }.flow
             .map { pagingData ->
                 pagingData.map {
-                    currentSectionId = it.fId
                     currentSectionName = it.section
                     it
                 }

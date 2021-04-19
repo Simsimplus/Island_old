@@ -17,8 +17,9 @@ import com.simsim.island.model.*
         StaredPoThreads::class,
         Section::class,
         Emoji::class,
+        UpdateRecord::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converter::class)
@@ -27,6 +28,7 @@ abstract class IslandDatabase : RoomDatabase() {
     abstract fun threadDao(): ThreadDao
     abstract fun sectionDao(): SectionDao
     abstract fun emojiDao(): EmojiDao
+    abstract fun recordDao():RecordDao
 
     companion object {
         @Volatile

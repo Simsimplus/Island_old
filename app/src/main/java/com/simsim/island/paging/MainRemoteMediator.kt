@@ -17,7 +17,8 @@ import com.simsim.island.util.LOG_TAG
 @OptIn(ExperimentalPagingApi::class)
 class MainRemoteMediator(
     private val service: AislandNetworkService,
-    private val section: String,
+    private val sectionName: String,
+    private val sectionUrl:String,
     private val database: IslandDatabase
 ) : RemoteMediator<Int, PoThread>() {
 
@@ -39,7 +40,7 @@ class MainRemoteMediator(
                             database.keyDao().getMainKey(poThread.threadId)
                     }
                 if (remoteKey == null) {
-                    remoteKey =database.threadDao().getLastPoThread(section)?.let {
+                    remoteKey =database.threadDao().getLastPoThread(sectionName)?.let {
                             database.keyDao().getMainKey(it.threadId)
                         }
                 }
@@ -51,11 +52,15 @@ class MainRemoteMediator(
             }
         }
         try {
-            val url = "https://adnmb3.com/m/f/%s?page=%d".format(section, page)
+            val url=if (sectionUrl.contains("timeline")){
+                "$sectionUrl/page/$page.html"
+            }else{
+                "$sectionUrl?page=$page"
+            }
             val response = service.getHtmlStringByPage(url)
 
             val threadList: List<PoThread>? = if (response != null) {
-                AislandRepo.responseToThreadList(Uri.decode(section), response,page)
+                AislandRepo.responseToThreadList(Uri.decode(sectionName), response,page)
             } else {
                 null
             }

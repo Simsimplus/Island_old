@@ -13,11 +13,12 @@ import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.math.abs
 
+const val islandUrl="https://adnmb3.com"
 val threadIdPattern = "\\d+".toRegex()
 const val referenceStringSpliterator = "\n"
 val LOG_TAG = "Simsim "
 fun handleThreadId(id: String): String {
-    val regex = "ID:([\\s0-9a-zA-Z]+)".toRegex()
+    val regex = "I?D?:?([\\s0-9a-zA-Z]+)".toRegex()
     return regex.matchEntire(id)?.groupValues?.get(1)?.trim() ?: ""
 }
 
@@ -53,8 +54,8 @@ fun handleThreadTime(time: LocalDateTime): String {
     }
 }
 
-fun String.firstNumberPlus5(): String =
-    ((".*?(\\d+).*?".toRegex().matchEntire(this)?.groupValues?.get(1)?.toInt() ?: 0) + 5).toString()
+fun String.firstNumber(): Int =
+    ((".*?(\\d+).*?".toRegex().matchEntire(this)?.groupValues?.get(1)?.toInt() ?: 0) + 0)
 
 fun String.findPageNumber(): String =
     ".*page=(\\d+).*".toRegex().matchEntire(this)?.groupValues?.get(1) ?: "99"
@@ -76,7 +77,7 @@ fun PoThread.toBasicThread(): BasicThread = BasicThread(
     commentsNumber = this.commentsNumber,
     section = this.section,
     references = this.references,
-    fId = this.fId
+    timelineActualSection = this.timelineActualSection
 )
 
 class OnSwipeListener(

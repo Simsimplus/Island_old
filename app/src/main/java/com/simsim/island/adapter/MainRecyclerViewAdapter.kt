@@ -67,7 +67,11 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imag
                 )
             }
             holder.binding.timeTextview.text= handleThreadTime(poThread.time)
-            holder.binding.threadIdTextview.text= poThread.threadId.toString()
+            if (poThread.timelineActualSection.isNotBlank()){
+                holder.binding.threadIdTextview.text= poThread.timelineActualSection
+            }else{
+                holder.binding.threadIdTextview.text= poThread.threadId.toString()
+            }
             holder.binding.contentTextview.text=poThread.content
             holder.binding.commentNumber.text=poThread.commentsNumber
             if (poThread.imageUrl.isNotBlank()){

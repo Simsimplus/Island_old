@@ -63,12 +63,12 @@ class DetailRemoteMediator(
         }
         try {
             val maxPage: Int?
-            val url = "https://adnmb3.com/m/t/$poThreadId?page=$page"
+            val url = "https://adnmb3.com/t/$poThreadId?page=$page"
             Log.e("Simsim", "request for thread detail:$url")
             val response = service.getHtmlStringByPage(url)
             val threadList: List<BasicThread>? = if (response != null) {
                 val doc = Jsoup.parse(response)
-                val poThreadDiv = doc.selectFirst("div[class=uk-container h-threads-container]")
+                val poThreadDiv = doc.selectFirst("div[class=h-threads-item-main]")
                 val pages = doc.select("[href~=.*page=[0-9]+]")
                 maxPage = try {
                     pages.last().attr("href").findPageNumber().toInt()
@@ -81,12 +81,11 @@ class DetailRemoteMediator(
                             poThreadDiv,
                             section = "",
                             poThreadId = poThreadId,
-                            fId = "",
                             isPo = true
                         ),
                         mutableListOf(), 1
                     )
-                    Log.e(LOG_TAG, "detailRM poThred:$poThread")
+                    Log.e(LOG_TAG, "detailRM poThread:$poThread")
 
                     Log.e("Simsim", "max page:$maxPage")
                     val replyThreads = mutableListOf<BasicThread>()
@@ -94,14 +93,13 @@ class DetailRemoteMediator(
                         Log.e(LOG_TAG, "detailRM poThredToBasicThread:${poThread.toBasicThread()}")
                         replyThreads.add(poThread.toBasicThread())
                     }
-                    val replyDivs = doc.select("div[class=uk-container h-threads-reply-container]")
+                    val replyDivs = doc.select("div[class=h-threads-item-reply-main]")
                     replyDivs.forEach { replyDiv ->
                         val replyThread = AislandRepo.divToBasicThread(
                             div = replyDiv,
                             isPo = false,
                             section = poThread.section,
                             poThreadId = poThread.threadId,
-                            fId = poThread.fId,
                             poUid = poThread.uid
                         )
                         replyThreads.add(
@@ -113,7 +111,7 @@ class DetailRemoteMediator(
                         it.uid.isBlank()
                     }
                     replyThreads
-                } ?: null
+                }
 
             } else {
                 maxPage = 999

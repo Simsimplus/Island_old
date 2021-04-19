@@ -37,6 +37,7 @@ class NewDraftFragment : DialogFragment() {
     private val viewModel:MainViewModel by activityViewModels()
     private lateinit var binding:NewDraftFragmentBinding
     private val args:NewDraftFragmentArgs by navArgs()
+    private var fId=args.fId
     private var postImage: InputStream? = null
     private var imageType:String?=null
     private var imageName:String?=null
@@ -52,16 +53,35 @@ class NewDraftFragment : DialogFragment() {
         savedInstanceState: Bundle?
     ): View? {
         binding= NewDraftFragmentBinding.inflate(inflater, container, false)
+        getEmojiList()
+
         lifecycleScope.launch {
-            viewModel.database.emojiDao().getAllEmojis().map { emojis->
+            val spinner=binding.sectionSelector
+            val sectionList=viewModel.sectionList.collectLatest { sectionList->
+                if (fId.isNotBlank()){
+
+                }
+                spinner.adapter=ArrayAdapter(requireContext(),R.layout.spinner_viewholder,sectionList)
+                spinner.setOnItemClickListener { parent, view, position, id ->
+                    fId=sectionList[position].sectionName
+                    spinner.setSelection(position)
+                }
+
+            }
+        }
+        return binding.root
+    }
+
+    private fun getEmojiList() {
+        lifecycleScope.launch {
+            viewModel.database.emojiDao().getAllEmojis().map { emojis ->
                 emojis.map { emoji ->
                     emoji.emoji
                 }
             }.collectLatest {
-                emojiList=it
+                emojiList = it
             }
         }
-        return binding.root
     }
 
 //    private fun showEmojiBottomSheet() {
@@ -131,7 +151,7 @@ class NewDraftFragment : DialogFragment() {
                             imageType=imageType,
                             imageName=imageName,
                             waterMark = binding.toggleButton.isChecked,
-                            fId = args.fId,
+                            fId = fId,
                         )}
                     }
                     dismiss()

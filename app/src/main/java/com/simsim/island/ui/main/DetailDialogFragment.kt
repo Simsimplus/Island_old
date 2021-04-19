@@ -156,20 +156,19 @@ class DetailDialogFragment : DialogFragment() {
                         val poThreadDiv =
                             doc.selectFirst("div[class=uk-container h-threads-container]")
                         if (poThreadDiv==null){
-                            BasicThread(replyThreadId = 888, poThreadId = 888, section = "", fId = "")
+                            BasicThread(replyThreadId = 888, poThreadId = 888, section = "")
                         }else{
                             val poThread = AislandRepo.divToBasicThread(
                                 poThreadDiv,
                                 isPo = true,
                                 section = "",
                                 poThreadId = 0L,
-                                fId = ""
                             )
                             poThread
                         }
 
                     } else {
-                        BasicThread(replyThreadId = 888, poThreadId = 888, section = "", fId = "")
+                        BasicThread(replyThreadId = 888, poThreadId = 888, section = "")
                     }
                     adapter.bindHolder(
                         holder = DetailRecyclerViewAdapter.BasicThreadViewHolder(

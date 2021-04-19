@@ -24,10 +24,6 @@ class Converter {
                 onDelete = ForeignKey.CASCADE
         )]
 )
-
-//todo
-//todo add index
-//todo if collected before just abort it
 data class BasicThread(
         @ColumnInfo(index = true)
         @PrimaryKey var replyThreadId: Long,
@@ -45,7 +41,7 @@ data class BasicThread(
         var commentsNumber: String = "0",
         var section: String,
         var references: String = "",
-        var fId:String,
+        var timelineActualSection:String="",
 )
 
 @Entity
@@ -66,21 +62,14 @@ data class PoThread constructor(
         var section: String,
         var references: String = "",
         var collectTime: LocalDateTime = LocalDateTime.now(),
-        var fId:String
+        var timelineActualSection:String="",
 
         ){
         @Ignore
         var replyThreads: List<BasicThread> = listOf()
 }
 
-@Entity(
-//        foreignKeys = [ForeignKey(
-//                entity = PoThread::class,
-//                parentColumns = ["threadId"],
-//                childColumns = ["FKpoThreadId"],
-//                onDelete = ForeignKey.CASCADE
-//        )]
-)
+@Entity
 data class MainRemoteKey(
         @ColumnInfo(index = true)
         @PrimaryKey
@@ -91,14 +80,7 @@ data class MainRemoteKey(
         var nextKey: Int?,
 )
 
-@Entity(
-//        foreignKeys = [ForeignKey(
-//                entity = BasicThread::class,
-//                parentColumns = ["replyThreadId"],
-//                childColumns = ["FkthreadId"],
-//                onDelete = ForeignKey.CASCADE
-//        )]
-)
+@Entity
 data class DetailRemoteKey(
         @ColumnInfo(index = true)
         @PrimaryKey
@@ -123,6 +105,10 @@ data class Section(
         @PrimaryKey
         var sectionName:String,
         var isShow:Boolean=true,
+//        var alias:String="",
+        var group:String,
+        var sectionUrl:String,
+        var fId:String,
 )
 
 @Entity
@@ -131,4 +117,12 @@ data class Emoji(
         @ColumnInfo(index = true)
         @PrimaryKey
         var emoji:String,
+)
+
+@Entity
+data class UpdateRecord(
+        @ColumnInfo(index = true)
+        @PrimaryKey()
+        var index:Int=666,
+        var lastUpdateTime:LocalDateTime
 )

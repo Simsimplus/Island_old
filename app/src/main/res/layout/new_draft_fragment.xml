@@ -17,66 +17,78 @@
             android:layout_height="?attr/actionBarSize" />
     </com.google.android.material.appbar.AppBarLayout>
 
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/new_input_content"
+        <Spinner
+            android:id="@+id/section_selector"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:contentDescription="@string/new_thread_content"
-            android:gravity="start|top"
-            android:inputType="text|textMultiLine"
-            android:selectAllOnFocus="true"
-            tools:text="@tools:sample/lorem" />
+            android:orientation="vertical">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/post_view_lauout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            tools:visibility="visible">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/new_input_content"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:contentDescription="@string/new_thread_content"
+                android:gravity="start|top"
+                android:inputType="text|textMultiLine"
+                android:selectAllOnFocus="true"
+                tools:text="@tools:sample/lorem" />
 
-            <ImageView
-                android:id="@+id/new_image_posted"
-                android:layout_width="wrap_content"
-                android:layout_height="222dp"
-                android:contentDescription="@string/post_new_image"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:srcCompat="@tools:sample/avatars" />
-
-            <ImageView
-                android:id="@+id/cancle_button"
-                android:layout_width="wrap_content"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/post_view_lauout"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:layout_marginEnd="5dp"
-                android:contentDescription="@string/cancel_button"
-                app:layout_constraintEnd_toEndOf="@+id/new_image_posted"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/ic_round_cancel_24_red" />
+                android:visibility="gone"
+                tools:visibility="visible">
 
-            <ToggleButton
-                android:id="@+id/toggleButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/water_mark"
-                android:textOff="@string/no_water_mark"
-                android:textOn="@string/has_water_mark"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/new_image_posted" />
+                <ImageView
+                    android:id="@+id/new_image_posted"
+                    android:layout_width="wrap_content"
+                    android:layout_height="222dp"
+                    android:contentDescription="@string/post_new_image"
+                    android:maxWidth="300dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:srcCompat="@tools:sample/avatars" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                <ImageView
+                    android:id="@+id/cancle_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:contentDescription="@string/cancel_button"
+                    app:layout_constraintEnd_toEndOf="@+id/new_image_posted"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/ic_round_cancel_24_red" />
+
+                <ToggleButton
+                    android:id="@+id/toggleButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/water_mark"
+                    android:textOff="@string/no_water_mark"
+                    android:textOn="@string/has_water_mark"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/new_image_posted" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
 
-    </com.google.android.material.textfield.TextInputLayout>
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

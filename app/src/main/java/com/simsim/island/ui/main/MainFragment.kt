@@ -117,23 +117,27 @@ class MainFragment : Fragment() {
 
     private fun setupDrawerSections() {
         lifecycleScope.launch {
-            viewModel.database.sectionDao().getAllSection().map {
-                it.map { section ->
-                    section.sectionName
-                }
-            }.distinctUntilChanged()
+            viewModel.database.sectionDao().getAllSection().distinctUntilChanged()
                 .collect { sectionList ->
                     val drawerLayout = binding.drawerLayout
                     val drawer = binding.navigationView
                     val drawerMenu = binding.navigationView.menu
-                    sectionList.forEach { sectionName ->
-                        drawerMenu.add(sectionName)
+                    val sectionUrlMap= hashMapOf<String,String>()
+                    val sectionIdMap=hashMapOf<String,String>()
+                    sectionList.forEach { section ->
+                        drawerMenu.add(section.sectionName)
+                        sectionUrlMap[section.sectionName]=section.sectionUrl
+                        sectionIdMap[section.sectionName]=section.fId
                     }
                     drawer.setNavigationItemSelectedListener { menuItem ->
                         drawer.setCheckedItem(menuItem)
                         drawerLayout.close()
                         binding.mainToolbar.title = menuItem.title
-                        viewModel.setMainFlow(menuItem.title.toString())
+                        viewModel.currentSectionId=sectionIdMap[menuItem.title.toString()]?:"4"
+                        viewModel.setMainFlow(
+                            menuItem.title.toString(),
+                            sectionUrlMap[menuItem.title.toString()]?:"https://adnmb3.com/m/f/%E7%BB%BC%E5%90%88%E7%89%881"
+                        )
                         observeMainFlow()
                         true
                     }
@@ -178,9 +182,12 @@ class MainFragment : Fragment() {
     private fun initialMainFlow() {
         lifecycleScope.launch {
             viewModel.database.sectionDao().getAllSection().take(1).collect {
+                val sectionId=if (it.isNotEmpty()) it[0].fId else "4"
                 val sectionName =if (it.isNotEmpty()) it[0].sectionName else "综合版1"
+                val sectionUrl=if (it.isNotEmpty()) it[0].sectionUrl else "https://adnmb3.com/m/f/%E7%BB%BC%E5%90%88%E7%89%881"
                 Log.e(LOG_TAG, "first sectionName:$sectionName")
-                viewModel.setMainFlow(sectionName)
+                viewModel.setMainFlow(sectionName=sectionName,sectionUrl =sectionUrl )
+                viewModel.currentSectionId=sectionId
                 observeMainFlow()
                 binding.mainToolbar.title = sectionName
             }

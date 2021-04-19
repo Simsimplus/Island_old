@@ -1,13 +1,7 @@
 package com.simsim.island.service
 
-import android.util.Base64
 import android.util.Log
 import android.webkit.MimeTypeMap
-import com.github.kittinunf.fuel.Fuel
-import com.github.kittinunf.fuel.core.BlobDataPart
-import com.github.kittinunf.fuel.core.InlineDataPart
-import com.github.kittinunf.fuel.core.Method
-import com.github.kittinunf.fuel.coroutines.awaitByteArrayResponseResult
 import com.simsim.island.util.LOG_TAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -17,7 +11,6 @@ import okhttp3.OkHttpClient
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
-import okio.ByteString.Companion.readByteString
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
@@ -97,7 +90,6 @@ class AislandNetworkService @Inject constructor() {
                 val imageDataPart = img.use{
                     val bytes=it.readBytes()
                     bytes
-
                 }.toRequestBody(imageType?.toMediaTypeOrNull())
                 if (waterMark){
                     formData["water"] =
@@ -106,15 +98,14 @@ class AislandNetworkService @Inject constructor() {
 
                 MultipartBody.Part.createFormData("image","nmb.${MimeTypeMap.getSingleton().getExtensionFromMimeType(imageType)?:"jpg"}",imageDataPart)
             }
-            if (name.isNotBlank()) {
                 formData["name"] = name.toRequestBody("text/plain".toMediaTypeOrNull())
-            }
-            if (title.isNotBlank()) {
+
+
                 formData["title"] = title.toRequestBody("text/plain".toMediaTypeOrNull())
-            }
-            if (email.isNotBlank()) {
+
+
                 formData["email"] = email.toRequestBody("text/plain".toMediaTypeOrNull())
-            }
+
             val headers=hashMapOf("cookie" to "userhash=$cookie")
             val call = service.postNewThread(
                 "https://adnmb3.com/Home/Forum/doReplyThread.html",
@@ -167,15 +158,15 @@ class AislandNetworkService @Inject constructor() {
                 }
                 MultipartBody.Part.createFormData("image","nmb.${MimeTypeMap.getSingleton().getExtensionFromMimeType(imageType)?:"jpg"}",imageDataPart)
             }
-            if (name.isNotBlank()) {
+
                 formData["name"] = name.toRequestBody("text/plain".toMediaTypeOrNull())
-            }
-            if (title.isNotBlank()) {
+
+
                 formData["title"] = title.toRequestBody("text/plain".toMediaTypeOrNull())
-            }
-            if (email.isNotBlank()) {
+
+
                 formData["email"] = email.toRequestBody("text/plain".toMediaTypeOrNull())
-            }
+
             val headers=hashMapOf("cookie" to "userhash=$cookie")
             val call = service.postNewThread(
                 "https://adnmb3.com/Home/Forum/doPostThread.html",
@@ -201,169 +192,169 @@ class AislandNetworkService @Inject constructor() {
     }
 
 
-    suspend fun doReplyWithFuel(
-        cookie: String,
-        poThreadId: Long,
-        content: String,
-        image: InputStream?,
-        imageType:String?,
-        imageName:String?,
-        waterMark: Boolean = false,
-        name: String = "",
-        email: String = "",
-        title: String = ""
-    ): Boolean = withContext(Dispatchers.IO) {
-        val water = if (waterMark) "true" else "false"
-        val (request, response, result) = if (image != null) {
-            Fuel
-                .upload(
-                    path = "https://adnmb3.com/Home/Forum/doReplyThread.html",
-                    method = Method.POST,
-//                    parameters = listOf(
-//                        "resto" to poThreadId.toString(),
-//                        "content" to content,
-//                        "water" to water,
-//                        "name" to name,
-//                        "email" to email,
-//                        "title" to title,
-//                    )
-                )
-                .add(
-                    BlobDataPart(
-                        inputStream = image,
-                        name = "image",
-                        filename = "nmb.${
-                            MimeTypeMap.getSingleton().getExtensionFromMimeType(imageType) ?: "jpg"
-                        }",
-                        contentLength = null,
-                        contentType = "application/octet-stream",
-                    ),
-                    InlineDataPart(poThreadId.toString(), "resto"),
-                    InlineDataPart(content, "content"),
-                    InlineDataPart(water, "water"),
-                    InlineDataPart(name, "name"),
-                    InlineDataPart(email, "email"),
-                    InlineDataPart(title, "title"),
-                )
-                .header("cookie", "userhash=$cookie")
-                .awaitByteArrayResponseResult()
-        } else {
-            Fuel
-                .upload(
-                    path = "https://adnmb3.com/Home/Forum/doReplyThread.html",
-                    method = Method.POST,
-//                    parameters = listOf(
-//                        "content" to content,
-//                        "water" to waterMark,
-//                        "name" to name,
-//                        "email" to email,
-//                        "title" to title,
-//                    )
-                )
-                .add(
-                    InlineDataPart(poThreadId.toString(), "resto"),
-                    InlineDataPart(content, "content"),
-                    InlineDataPart(water, "water"),
-                    InlineDataPart(name, "name"),
-                    InlineDataPart(email, "email"),
-                    InlineDataPart(title, "title"),
-                )
-                .header("cookie", "userhash=$cookie")
-                .awaitByteArrayResponseResult()
-        }
-        Log.e(LOG_TAG,"request with fuel:${request.body}")
-        result.fold(
-            {
-                val responseBody=String(it)
-                Log.e(LOG_TAG, "{response with fuel:$responseBody}")
-                responseBody.contains("回复成功")
-            },
-            {
-                Log.e(LOG_TAG,"fuel error ${it.stackTraceToString()}")
-                false
-            }
-        )
-
-    }
-
-    suspend fun doPostWithFuel(
-        cookie: String,
-        content: String,
-        image: InputStream?,
-        imageType:String?,
-        imageName:String?,
-        fId: String,
-        waterMark: Boolean = false,
-        name: String = "",
-        email: String = "",
-        title: String = ""
-    ): Boolean = withContext(Dispatchers.IO) {
-        val water = if (waterMark) "true" else "false"
-        val (request, response, result) = if (image!=null){
-            Fuel
-                .upload(
-                    path = "https://adnmb3.com/Home/Forum/doPostThread.html",
-                    method = Method.POST,
-//                    parameters = listOf(
-//                        "fid" to fId,
-//                        "content" to content,
-//                        "water" to water,
-//                        "name" to name,
-//                        "email" to email,
-//                        "title" to title,
-//                    )
-                )
-                .add(BlobDataPart(
-                    inputStream = image,
-                    name = "image",
-                    filename = "nmb.${MimeTypeMap.getSingleton().getExtensionFromMimeType(imageType)?:"jpg"}",
-                    contentLength = null,
-                    contentType = "application/octet-stream",
-                ),
-                    InlineDataPart(fId,"fid"),
-                    InlineDataPart(content,"content"),
-                    InlineDataPart(water,"water"),
-                    InlineDataPart(name,"name"),
-                    InlineDataPart(email,"email"),
-                    InlineDataPart(title,"title"),
-                )
-                .header("cookie", "userhash=$cookie")
-                .awaitByteArrayResponseResult()
-        }else{
-            Fuel
-                .upload(
-                    path = "https://adnmb3.com/Home/Forum/doReplyThread.html",
-                    method = Method.POST,
-//                    parameters = listOf(
-//                        "content" to content,
-//                        "water" to waterMark,
-//                        "name" to name,
-//                        "email" to email,
-//                        "title" to title,
-//                    )
-                )
-                .add(
-                    InlineDataPart(fId,"fid"),
-                    InlineDataPart(content,"content"),
-                    InlineDataPart(water,"water"),
-                    InlineDataPart(name,"name"),
-                    InlineDataPart(email,"email"),
-                    InlineDataPart(title,"title"),
-                )
-                .header("cookie", "userhash=$cookie")
-                .awaitByteArrayResponseResult()
-        }
-        Log.e(LOG_TAG,"request with fuel:${request.headers}")
-        result.fold(
-            {
-                val responseBody=String(it)
-                Log.e(LOG_TAG, "{response with fuel:$responseBody}")
-                responseBody.contains("回复成功")
-            },
-            {
-                Log.e(LOG_TAG,"fuel error ${it.stackTraceToString()}")
-                false
-            }
-        )
-    }
+//    suspend fun doReplyWithFuel(
+//        cookie: String,
+//        poThreadId: Long,
+//        content: String,
+//        image: InputStream?,
+//        imageType:String?,
+//        imageName:String?,
+//        waterMark: Boolean = false,
+//        name: String = "",
+//        email: String = "",
+//        title: String = ""
+//    ): Boolean = withContext(Dispatchers.IO) {
+//        val water = if (waterMark) "true" else "false"
+//        val (request, response, result) = if (image != null) {
+//            Fuel
+//                .upload(
+//                    path = "https://adnmb3.com/Home/Forum/doReplyThread.html",
+//                    method = Method.POST,
+////                    parameters = listOf(
+////                        "resto" to poThreadId.toString(),
+////                        "content" to content,
+////                        "water" to water,
+////                        "name" to name,
+////                        "email" to email,
+////                        "title" to title,
+////                    )
+//                )
+//                .add(
+//                    BlobDataPart(
+//                        inputStream = image,
+//                        name = "image",
+//                        filename = "nmb.${
+//                            MimeTypeMap.getSingleton().getExtensionFromMimeType(imageType) ?: "jpg"
+//                        }",
+//                        contentLength = null,
+//                        contentType = "application/octet-stream",
+//                    ),
+//                    InlineDataPart(poThreadId.toString(), "resto"),
+//                    InlineDataPart(content, "content"),
+//                    InlineDataPart(water, "water"),
+//                    InlineDataPart(name, "name"),
+//                    InlineDataPart(email, "email"),
+//                    InlineDataPart(title, "title"),
+//                )
+//                .header("cookie", "userhash=$cookie")
+//                .awaitByteArrayResponseResult()
+//        } else {
+//            Fuel
+//                .upload(
+//                    path = "https://adnmb3.com/Home/Forum/doReplyThread.html",
+//                    method = Method.POST,
+////                    parameters = listOf(
+////                        "content" to content,
+////                        "water" to waterMark,
+////                        "name" to name,
+////                        "email" to email,
+////                        "title" to title,
+////                    )
+//                )
+//                .add(
+//                    InlineDataPart(poThreadId.toString(), "resto"),
+//                    InlineDataPart(content, "content"),
+//                    InlineDataPart(water, "water"),
+//                    InlineDataPart(name, "name"),
+//                    InlineDataPart(email, "email"),
+//                    InlineDataPart(title, "title"),
+//                )
+//                .header("cookie", "userhash=$cookie")
+//                .awaitByteArrayResponseResult()
+//        }
+//        Log.e(LOG_TAG,"request with fuel:${request.body}")
+//        result.fold(
+//            {
+//                val responseBody=String(it)
+//                Log.e(LOG_TAG, "{response with fuel:$responseBody}")
+//                responseBody.contains("回复成功")
+//            },
+//            {
+//                Log.e(LOG_TAG,"fuel error ${it.stackTraceToString()}")
+//                false
+//            }
+//        )
+//
+//    }
+//
+//    suspend fun doPostWithFuel(
+//        cookie: String,
+//        content: String,
+//        image: InputStream?,
+//        imageType:String?,
+//        imageName:String?,
+//        fId: String,
+//        waterMark: Boolean = false,
+//        name: String = "",
+//        email: String = "",
+//        title: String = ""
+//    ): Boolean = withContext(Dispatchers.IO) {
+//        val water = if (waterMark) "true" else "false"
+//        val (request, response, result) = if (image!=null){
+//            Fuel
+//                .upload(
+//                    path = "https://adnmb3.com/Home/Forum/doPostThread.html",
+//                    method = Method.POST,
+////                    parameters = listOf(
+////                        "fid" to fId,
+////                        "content" to content,
+////                        "water" to water,
+////                        "name" to name,
+////                        "email" to email,
+////                        "title" to title,
+////                    )
+//                )
+//                .add(BlobDataPart(
+//                    inputStream = image,
+//                    name = "image",
+//                    filename = "nmb.${MimeTypeMap.getSingleton().getExtensionFromMimeType(imageType)?:"jpg"}",
+//                    contentLength = null,
+//                    contentType = "application/octet-stream",
+//                ),
+//                    InlineDataPart(fId,"fid"),
+//                    InlineDataPart(content,"content"),
+//                    InlineDataPart(water,"water"),
+//                    InlineDataPart(name,"name"),
+//                    InlineDataPart(email,"email"),
+//                    InlineDataPart(title,"title"),
+//                )
+//                .header("cookie", "userhash=$cookie")
+//                .awaitByteArrayResponseResult()
+//        }else{
+//            Fuel
+//                .upload(
+//                    path = "https://adnmb3.com/Home/Forum/doReplyThread.html",
+//                    method = Method.POST,
+////                    parameters = listOf(
+////                        "content" to content,
+////                        "water" to waterMark,
+////                        "name" to name,
+////                        "email" to email,
+////                        "title" to title,
+////                    )
+//                )
+//                .add(
+//                    InlineDataPart(fId,"fid"),
+//                    InlineDataPart(content,"content"),
+//                    InlineDataPart(water,"water"),
+//                    InlineDataPart(name,"name"),
+//                    InlineDataPart(email,"email"),
+//                    InlineDataPart(title,"title"),
+//                )
+//                .header("cookie", "userhash=$cookie")
+//                .awaitByteArrayResponseResult()
+//        }
+//        Log.e(LOG_TAG,"request with fuel:${request.headers}")
+//        result.fold(
+//            {
+//                val responseBody=String(it)
+//                Log.e(LOG_TAG, "{response with fuel:$responseBody}")
+//                responseBody.contains("回复成功")
+//            },
+//            {
+//                Log.e(LOG_TAG,"fuel error ${it.stackTraceToString()}")
+//                false
+//            }
+//        )
+//    }
 }
