@@ -1,5 +1,6 @@
 package com.simsim.island.repository
 
+import android.text.Html
 import android.util.Log
 import com.simsim.island.model.BasicThread
 import com.simsim.island.model.PoThread
@@ -128,21 +129,24 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                             }
                         }
                         "h-threads-content" -> {
-                            val referenceTags = try {
-                                divTag.select("font[color=#789922]")
-                            } catch (e: Exception) {
-                                Log.e("Simsim", e.stackTraceToString())
-                                null
-                            }
-                            val references = mutableListOf<String>()
-                            if (!referenceTags.isNullOrEmpty()) {
-                                referenceTags.forEach { reference ->
-                                    references.add(reference.ownText())
-                                }
-                            }
-                            basicThread.references=references.joinToString(
-                                referenceStringSpliterator)
-                            basicThread.content = divTag.ownText()
+//                            val referenceTags = try {
+//                                divTag.select("font[color=#789922]")
+//                            } catch (e: Exception) {
+//                                Log.e("Simsim", e.stackTraceToString())
+//                                null
+//                            }
+//                            val references = mutableListOf<String>()
+//                            if (!referenceTags.isNullOrEmpty()) {
+//                                referenceTags.forEach { reference ->
+//                                    references.add(reference.ownText())
+//                                }
+//                            }
+//                            basicThread.references=references.joinToString(
+//                                referenceStringSpliterator)
+                            val contentOrigin=divTag.wholeText()
+                            basicThread.content = divTag.wholeText().trim()
+//                                .replace("<br>","\n")
+//                                .replace(">>No\\.\\d+\\s?".toRegex(),"")
                         }
                     }
                 }

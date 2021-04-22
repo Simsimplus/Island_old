@@ -76,20 +76,26 @@ class DetailRemoteMediator(
                     999
                 }
                 poThreadDiv?.let {
-                    val poThread = AislandRepo.basicThreadToPoThread(
-                        AislandRepo.divToBasicThread(
-                            poThreadDiv,
-                            section = "",
-                            poThreadId = poThreadId,
-                            isPo = true
-                        ),
-                        mutableListOf(), 1
-                    )
+                    val poThread= database.threadDao().getPoThread(poThreadId)
+                        ?: AislandRepo.basicThreadToPoThread(
+                            AislandRepo.divToBasicThread(
+                                poThreadDiv,
+                                section = "",
+                                poThreadId = poThreadId,
+                                isPo = true
+                            ),
+                            mutableListOf(), 999
+                        ).also {
+                            database.threadDao().insertAllPoThreads(mutableListOf(it))
+                        }
+
                     Log.e(LOG_TAG, "detailRM poThread:$poThread")
 
                     Log.e("Simsim", "max page:$maxPage")
                     val replyThreads = mutableListOf<BasicThread>()
                     if (page == 1) {
+
+
                         Log.e(LOG_TAG, "detailRM poThredToBasicThread:${poThread.toBasicThread()}")
                         replyThreads.add(poThread.toBasicThread())
                     }
@@ -142,6 +148,7 @@ class DetailRemoteMediator(
 //                        database.keyDao().insertDetailKey(key)
                         key
                     }
+
                     database.threadDao().insertAllReplyThreads(threadList)
                     database.keyDao().insertDetailKeys(keys)
                 }

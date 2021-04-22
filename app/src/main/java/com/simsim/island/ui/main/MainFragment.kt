@@ -2,50 +2,47 @@ package com.simsim.island.ui.main
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.SearchManager
-import android.content.Context
+import android.content.DialogInterface
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.SearchView
-import androidx.core.content.ContextCompat.getSystemService
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
+import android.widget.Toast
 import androidx.core.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
-import com.google.android.material.chip.Chip
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.simsim.island.MainActivity
 import com.simsim.island.R
 import com.simsim.island.adapter.DrawerRecyclerViewAdapter
 import com.simsim.island.adapter.MainRecyclerViewAdapter
 import com.simsim.island.databinding.MainFragmentBinding
+import com.simsim.island.model.SectionGroup
 import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.OnSwipeListener
-import com.simsim.island.util.threadIdPattern
+import com.simsim.island.util.TARGET_SECTION
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlin.properties.Delegates
 
 @AndroidEntryPoint
 class MainFragment : Fragment() {
     private lateinit var binding: MainFragmentBinding
     internal lateinit var adapter: MainRecyclerViewAdapter
-    private lateinit var drawAdapter: DrawerRecyclerViewAdapter
     internal lateinit var layoutManager: LinearLayoutManager
     private lateinit var mainFlowJob: Job
 //    private var loadingImageId =R.drawable.ic_blue_ocean1
-
-
 
 
     private val viewModel: MainViewModel by activityViewModels()
@@ -60,20 +57,6 @@ class MainFragment : Fragment() {
         binding.lifecycleOwner = this
         requestPermissions()
         setupFAB()
-//        randomRefreshImage()
-//        viewModel.newSearchQuery.observe(viewLifecycleOwner){query->
-//            if (!query.matches(threadIdPattern)){
-//                Snackbar.make(binding.mainCoordinatorLayout,"请直接输入串号，如337845818", Snackbar.LENGTH_SHORT).show()
-//            }else{
-//                Log.e(LOG_TAG,"receive query thread id:$query")
-//                val action = MainFragmentDirections.actionMainFragmentToDetailDialogFragment(
-//                    query.toLong()
-//                )
-//                findNavController().navigate(action)
-//                viewModel.setDetailFlow(query.toLong())
-//                viewModel.isMainFragment.value = false
-//            }
-//        }
         return binding.root
     }
 
@@ -110,7 +93,11 @@ class MainFragment : Fragment() {
     }
 
     private fun newThread() {
-        val action=MainFragmentDirections.actionGlobalNewDraftFragment(target = "section",sectionName = viewModel.currentSectionName?:"",fId =viewModel.currentSectionId?:"" )
+        val action = MainFragmentDirections.actionGlobalNewDraftFragment(
+            target = TARGET_SECTION,
+            sectionName = viewModel.currentSectionName ?: "",
+            fId = viewModel.currentSectionId
+        )
         findNavController().navigate(action)
         viewModel.isMainFragment.value = false
     }
@@ -121,25 +108,32 @@ class MainFragment : Fragment() {
                 .collect { sectionList ->
                     val drawerLayout = binding.drawerLayout
                     val drawer = binding.navigationView
-                    val drawerMenu = binding.navigationView.menu
-                    val sectionUrlMap= hashMapOf<String,String>()
-                    val sectionIdMap=hashMapOf<String,String>()
-                    sectionList.forEach { section ->
-                        drawerMenu.add(section.sectionName)
-                        sectionUrlMap[section.sectionName]=section.sectionUrl
-                        sectionIdMap[section.sectionName]=section.fId
+                    val adapters = mutableListOf<DrawerRecyclerViewAdapter>()
+                    val concatAdapterConfig=ConcatAdapter
+                        .Config
+                        .Builder()
+                        .setIsolateViewTypes(false)
+                        .build()
+                    val sectionGroupBy = sectionList.groupBy {
+                            it.group
+                        }
+                    sectionGroupBy.forEach { (group, list) ->
+                        val groupAdapter = DrawerRecyclerViewAdapter(SectionGroup(group, list)){ section->
+                            drawerLayout.close()
+                            binding.mainToolbar.title = section.sectionName
+                            viewModel.currentSectionId=section.fId
+                            viewModel.setMainFlow(
+                                section.sectionName,
+                                section.sectionUrl
+                            )
+                            observeMainFlow()
+                        }
+                        adapters.add(groupAdapter)
                     }
-                    drawer.setNavigationItemSelectedListener { menuItem ->
-                        drawer.setCheckedItem(menuItem)
-                        drawerLayout.close()
-                        binding.mainToolbar.title = menuItem.title
-                        viewModel.currentSectionId=sectionIdMap[menuItem.title.toString()]?:"4"
-                        viewModel.setMainFlow(
-                            menuItem.title.toString(),
-                            sectionUrlMap[menuItem.title.toString()]?:"https://adnmb3.com/m/f/%E7%BB%BC%E5%90%88%E7%89%881"
-                        )
-                        observeMainFlow()
-                        true
+                    val concatAdapter=ConcatAdapter(concatAdapterConfig,adapters)
+                    with(binding.drawerRecyclerView){
+                        layoutManager=LinearLayoutManager(requireContext())
+                        adapter=concatAdapter
                     }
 
                 }
@@ -149,27 +143,23 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         setupToolbar()
         initialMainFlow()
+        handleSavedInstanceState()
         setupRecyclerView()
         setupSwipeRefresh()
         setupDrawerSections()
         observingDataChange()
         handleLaunchLoading()
+        doWhenPostSuccess()
 //        setupChips()
 
         super.onViewCreated(view, savedInstanceState)
     }
 
-//    private fun setupChips() {
-//        binding.mainFragmentChips.setOnCheckedChangeListener { group, checkedId ->
-//    //            group.check(checkedId)
-//            val chip = group.findViewById<Chip>(checkedId)
-//            Log.e(LOG_TAG, "chip tapped:${chip.text}")
-//
-//            viewModel.setMainFlow(chip.text.toString())
-//            observeMainFlow()
-//
-//        }
-//    }
+    private fun handleSavedInstanceState() {
+        viewModel.savedInstanceState.observe(viewLifecycleOwner){
+            toDetailFragment(it)
+        }
+    }
 
 
     private fun observingDataChange() {
@@ -182,12 +172,13 @@ class MainFragment : Fragment() {
     private fun initialMainFlow() {
         lifecycleScope.launch {
             viewModel.database.sectionDao().getAllSection().take(1).collect {
-                val sectionId=if (it.isNotEmpty()) it[0].fId else "4"
-                val sectionName =if (it.isNotEmpty()) it[0].sectionName else "综合版1"
-                val sectionUrl=if (it.isNotEmpty()) it[0].sectionUrl else "https://adnmb3.com/m/f/%E7%BB%BC%E5%90%88%E7%89%881"
+                val sectionId = if (it.isNotEmpty()) it[0].fId else "4"
+                val sectionName = if (it.isNotEmpty()) it[0].sectionName else "综合版1"
+                val sectionUrl =
+                    if (it.isNotEmpty()) it[0].sectionUrl else "https://adnmb3.com/m/f/%E7%BB%BC%E5%90%88%E7%89%881"
                 Log.e(LOG_TAG, "first sectionName:$sectionName")
-                viewModel.setMainFlow(sectionName=sectionName,sectionUrl =sectionUrl )
-                viewModel.currentSectionId=sectionId
+                viewModel.setMainFlow(sectionName = sectionName, sectionUrl = sectionUrl)
+                viewModel.currentSectionId = sectionId
                 observeMainFlow()
                 binding.mainToolbar.title = sectionName
             }
@@ -212,25 +203,31 @@ class MainFragment : Fragment() {
     private fun handleLaunchLoading() {
         lifecycleScope.launch {
             adapter.loadStateFlow.collectLatest { loadStates ->
-                when(loadStates.refresh){
-                    is LoadState.Loading->{
+                when (loadStates.refresh) {
+                    is LoadState.Loading -> {
                         binding.loadingImage.visibility = View.VISIBLE
                         binding.fabAdd.visibility = View.INVISIBLE
 
-                        Glide.with(this@MainFragment).load(viewModel.randomLoadingImage).into(binding.loadingImage)
+                        Glide.with(this@MainFragment).load(viewModel.randomLoadingImage)
+                            .into(binding.loadingImage)
                     }
-                    is LoadState.Error->{
+                    is LoadState.Error -> {
                         binding.loadingImage.visibility = View.VISIBLE
                         binding.fabAdd.visibility = View.INVISIBLE
-                        Glide.with(this@MainFragment).load(R.drawable.ic_loading_page_failed).into(binding.loadingImage)
+                        Glide.with(this@MainFragment).load(viewModel.randomLoadingImage)
+                            .into(binding.loadingImage)
                         Snackbar
-                            .make(binding.root,R.string.loading_page_fail_info,Snackbar.LENGTH_INDEFINITE)
-                            .setAction(getString(R.string.loading_fail_retry)){
+                            .make(
+                                binding.root,
+                                R.string.loading_page_fail_info,
+                                Snackbar.LENGTH_INDEFINITE
+                            )
+                            .setAction(getString(R.string.loading_fail_retry)) {
                                 adapter.retry()
                             }
                             .show()
                     }
-                    else->{
+                    else -> {
                         binding.loadingImage.visibility = View.GONE
                         binding.fabAdd.visibility = View.VISIBLE
                         binding.fabAdd.visibility = View.VISIBLE
@@ -251,10 +248,7 @@ class MainFragment : Fragment() {
         }
     }
 
-    private fun setupDrawerRecyclerView() {
 
-
-    }
 
     private fun setupRecyclerView() {
         adapter = MainRecyclerViewAdapter(this, { imageUrl ->
@@ -262,18 +256,22 @@ class MainFragment : Fragment() {
             findNavController().navigate(action)
         }) { poThread ->
             viewModel.currentPoThread = poThread
-            val action = MainFragmentDirections.actionMainFragmentToDetailDialogFragment(
-                poThread.threadId
-            )
-            findNavController().navigate(action)
-            viewModel.setDetailFlow(poThread.threadId)
-            viewModel.isMainFragment.value = false
+            toDetailFragment(poThread.threadId)
         }
         binding.mainRecyclerView.adapter = adapter
 //            .withLoadStateFooter(MainLoadStateAdapter(adapter::retry))
         layoutManager = LinearLayoutManager(context)
         binding.mainRecyclerView.layoutManager = layoutManager
     }
+    private fun toDetailFragment(poThreadId:Long){
+        val action = MainFragmentDirections.actionMainFragmentToDetailDialogFragment(
+            poThreadId
+        )
+        findNavController().navigate(action)
+        viewModel.setDetailFlow(poThreadId)
+        viewModel.isMainFragment.value = false
+    }
+
 
 
     private fun setupToolbar() {
@@ -296,29 +294,50 @@ class MainFragment : Fragment() {
 
 
         toolbar.inflateMenu(R.menu.main_toolbar_menu)
-//        val searchManager = requireActivity().getSystemService(Context.SEARCH_SERVICE) as SearchManager
-//        val searchItem=toolbar.menu.findItem(R.id.menu_item_search)
-//        val searchView=searchItem.actionView as SearchView
-//        searchView.apply {
-//            setSearchableInfo(searchManager.getSearchableInfo(requireActivity().componentName))
-//            isIconified=true
-//            setOnQueryTextFocusChangeListener { _, hasFocus ->
-//                if (!hasFocus){
-//                    searchItem.collapseActionView()
-//                    searchView.setQuery("",false)
-//                }
-//            }
-//        }
         toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
-//                R.id.menu_item_refresh -> {
-////                    adapter.refresh()
-////                    layoutManager.scrollToPosition(0)
-//                    Log.e("Simsim", "refresh item pressed")
-//                    true
-//                }
-//            R.id.menu_item_search->{}
+                R.id.menu_item_refresh -> {
+                    adapter.refresh()
+                    layoutManager.scrollToPosition(0)
+                    Log.e("Simsim", "refresh item pressed")
+                    true
+                }
+            R.id.menu_item_search->{
+                val editText=layoutInflater.inflate(R.layout.search_edit_text,null,false) as EditText
+                MaterialAlertDialogBuilder(requireContext())
+                    .setView(editText)
+                    .setPositiveButton("去串"){ dialog: DialogInterface, _ ->
+                        val threadId=editText.text.toString().toLongOrNull()
+                        threadId?.let {
+                            val action =MainFragmentDirections.actionMainFragmentToDetailDialogFragment(threadId)
+                            findNavController().navigate(action)
+                            viewModel.setDetailFlow(threadId)
+                            viewModel.isMainFragment.value = false
+                            dialog.dismiss()
+                        }?: kotlin.run {
+                            Toast.makeText(requireContext(),"去不了啊，请重试",Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    .setNegativeButton("不去了"){dialog: DialogInterface, _ ->
+                        dialog.dismiss()
+
+                    }
+                    .show()
+                true
+            }
                 else -> false
+            }
+        }
+    }
+    fun doWhenPostSuccess(){
+        lifecycleScope.launch {
+            viewModel.successPost.observe(viewLifecycleOwner){success->
+                if (success){
+                    Snackbar.make(binding.mainCoordinatorLayout,"发串成功",Snackbar.LENGTH_LONG)
+                        .show()
+                }else{
+                    //todo
+                }
             }
         }
     }

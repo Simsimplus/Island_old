@@ -126,3 +126,8 @@ data class UpdateRecord(
         var index:Int=666,
         var lastUpdateTime:LocalDateTime
 )
+
+data class SectionGroup(
+        var groupName:String,
+        var sectionNameList:List<Section>,
+)

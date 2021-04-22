@@ -118,7 +118,7 @@ class AislandNetworkService @Inject constructor() {
             if (call.isSuccessful) {
                 Log.e(LOG_TAG, "do reply:${call.body()}")
                 call.body()?.let {
-                    it.contains("回复成功")
+                    it.contains("成功")
                 }?:false
             } else {
                 false
@@ -179,7 +179,7 @@ class AislandNetworkService @Inject constructor() {
             if (call.isSuccessful) {
                 Log.e(LOG_TAG, "do post:${call.body()}")
                 call.body()?.let {
-                    it.contains("回复成功")
+                    it.contains("成功")
                 }?:false
             } else {
                 false

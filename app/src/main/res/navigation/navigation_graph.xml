@@ -73,7 +73,6 @@
         <argument
             android:name="sectionName"
             app:argType="string"
-
             android:defaultValue=""/>
     </dialog>
     <action

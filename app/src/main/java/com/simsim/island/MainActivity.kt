@@ -3,11 +3,13 @@ package com.simsim.island
 import android.Manifest
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.os.PersistableBundle
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.util.DisplayMetrics
@@ -18,6 +20,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.findNavController
 import com.simsim.island.database.IslandDatabase
 import com.simsim.island.databinding.MainActivityBinding
 import com.simsim.island.model.Emoji
@@ -62,6 +65,18 @@ class MainActivity : AppCompatActivity() {
         viewModel.pictureUri.value=uri
     }
 
+    internal fun shareText(text:String){
+        Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, text)
+            type = "text/plain"
+
+        }.also {
+            Intent.createChooser(it,null)
+            startActivity(it)
+        }
+    }
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,34 +92,29 @@ class MainActivity : AppCompatActivity() {
                 database.emojiDao().insertAllEmojis(emojiList)
             }
         }
-//        if(intent.action == Intent.ACTION_SEARCH){
-//            intent.getStringExtra(SearchManager.QUERY)?.also { query->
-//                viewModel.newSearchQuery.value=query
-//            }
-//        }
+        savedInstanceState?.let {
+            val poThreadId=it.getLong("poThreadId")
+            if (poThreadId!=0L){
+                viewModel.savedInstanceState.value=poThreadId
+            }
+        }
 
 
         lifecycleScope.launchWhenCreated {
             Log.e(LOG_TAG, "network:${checkNetwork()}")
             viewModel.doWhenDestroy()
         }
+
     }
 
-//    override fun onNewIntent(intent: Intent?) {
-//        super.onNewIntent(intent)
-//        setIntent(intent)
-//        intent?.let {
-//            handleIntent(intent)
-//        }
-//    }
+    override fun onSaveInstanceState(outState: Bundle) {
+        viewModel.currentPoThread?.let {
+            outState.putLong("poThreadId",it.threadId)
+        }
+        super.onSaveInstanceState(outState)
+    }
 
-//    private fun handleIntent(intent: Intent) {
-//        if(intent.action == Intent.ACTION_SEARCH){
-//            intent.getStringExtra(SearchManager.QUERY)?.also { query->
-//                viewModel.newSearchQuery.value=query
-//            }
-//        }
-//    }
+
 
     private fun getWindowHeightAndActionBarHeight() {
         val displayMetrics = DisplayMetrics()

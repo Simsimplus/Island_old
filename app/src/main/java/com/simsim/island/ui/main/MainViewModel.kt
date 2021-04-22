@@ -38,8 +38,9 @@ class MainViewModel @Inject constructor(
     var randomLoadingImage: Int = R.drawable.ic_blue_ocean1
     val newSearchQuery = MutableLiveData<String>()
     var currentPoThread: PoThread? = null
-    var currentSectionId: String? = null
+    var currentSectionId: String = ""
     var currentSectionName: String? = null
+    val savedInstanceState= MutableLiveData<Long>()
     var currentReplyThreads = mutableListOf<BasicThread>()
     var sectionList = database.sectionDao().getAllSection()
     var mainFlow: Flow<PagingData<PoThread>> = emptyFlow()
@@ -59,6 +60,8 @@ class MainViewModel @Inject constructor(
     var picturePath = MutableLiveData<String>()
     var pictureUri = MutableLiveData<Uri>()
     var shouldTakePicture = MutableLiveData<String>()
+    var successReply=MutableLiveData<Boolean>()
+    var successPost=MutableLiveData<Boolean>()
 
     fun doUpdate(){
         viewModelScope.launch {
@@ -206,7 +209,7 @@ class MainViewModel @Inject constructor(
         title: String = ""
     ) {
         viewModelScope.launch {
-            networkService.doPost(
+            successPost.value= networkService.doPost(
                 cookie,
 //                poThreadId,
                 content,
@@ -235,7 +238,7 @@ class MainViewModel @Inject constructor(
         title: String = ""
     ) {
         viewModelScope.launch {
-            networkService.doReply(
+            successReply.value=networkService.doReply(
                 cookie,
                 poThreadId,
                 content,

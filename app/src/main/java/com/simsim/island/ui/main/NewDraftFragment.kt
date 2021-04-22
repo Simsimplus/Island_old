@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.view.*
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.GridView
 import android.widget.TextView
@@ -25,19 +26,25 @@ import com.simsim.island.R
 import com.simsim.island.databinding.NewDraftFragmentBinding
 import com.simsim.island.model.Emoji
 import com.simsim.island.util.LOG_TAG
+import com.simsim.island.util.TARGET_SECTION
+import com.simsim.island.util.TARGET_THREAD
+import com.simsim.island.util.toggleVisibility
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.InputStream
+import java.lang.IllegalArgumentException
 
 @AndroidEntryPoint
 class NewDraftFragment : DialogFragment() {
     private val viewModel:MainViewModel by activityViewModels()
     private lateinit var binding:NewDraftFragmentBinding
     private val args:NewDraftFragmentArgs by navArgs()
-    private var fId=args.fId
+    private var fId:String=""
     private var postImage: InputStream? = null
     private var imageType:String?=null
     private var imageName:String?=null
@@ -54,20 +61,59 @@ class NewDraftFragment : DialogFragment() {
     ): View? {
         binding= NewDraftFragmentBinding.inflate(inflater, container, false)
         getEmojiList()
+        fId=args.fId
 
         lifecycleScope.launch {
-            val spinner=binding.sectionSelector
-            val sectionList=viewModel.sectionList.collectLatest { sectionList->
-                if (fId.isNotBlank()){
-
+            binding.expandButton.setOnClickListener {
+                binding.emailTitleTextView.toggleVisibility()
+                binding.emailValueEditText.toggleVisibility()
+                binding.nameTitleTextView.toggleVisibility()
+                binding.nameValueEditText.toggleVisibility()
+                binding.titleTitleTextView.toggleVisibility()
+                binding.titleValueEditText.toggleVisibility()
+                if(binding.emailTitleTextView.isVisible){
+                    binding.expandButton.setImageResource(R.drawable.ic_round_keyboard_arrow_up_16)
+                }else{
+                    binding.expandButton.setImageResource(R.drawable.ic_round_keyboard_arrow_down_16)
                 }
-                spinner.adapter=ArrayAdapter(requireContext(),R.layout.spinner_viewholder,sectionList)
-                spinner.setOnItemClickListener { parent, view, position, id ->
-                    fId=sectionList[position].sectionName
-                    spinner.setSelection(position)
-                }
-
             }
+            val target=binding.targetValueTextView
+            binding.targetTitleTextView.text=if(args.target== TARGET_SECTION) "板块：" else "串号："
+            if(args.target== TARGET_SECTION){
+                val sectionMap= hashMapOf<String,String>()
+                val sectionMapReversed=hashMapOf<String,String>()
+                var sectionArray:Array<String>
+                    viewModel.database.sectionDao().getAllSection().collectLatest {
+                        val list=it.filter {section ->
+                            section.group!="时间线"
+                        }
+                        list.forEach { section->
+                            sectionMap[section.fId]=section.sectionName
+                            sectionMapReversed[section.sectionName]=section.fId
+                        }
+                        sectionArray=list.map { it.sectionName }.toTypedArray()
+                        if (fId.isNotBlank()){
+                            target.text=sectionMap[fId]?:throw IllegalArgumentException("can not find section name in map")
+                        }else{
+                            target.text=list[0].sectionName
+                            fId=sectionMapReversed[list[0].sectionName]?:throw IllegalArgumentException("can not find section fid in map")
+                        }
+                        target.setOnClickListener {
+                            MaterialAlertDialogBuilder(requireContext())
+                                .setItems(sectionArray){ dialog: DialogInterface, position: Int ->
+                                    val sectionNameSelected=sectionArray[position]
+                                    target.text=sectionNameSelected
+                                    fId=sectionMapReversed[sectionNameSelected]?:throw IllegalArgumentException("can not find section fid in map")
+                                    dialog.dismiss()
+                                }
+                                .show()
+                        }
+                    }
+            }else{
+                target.text=args.threadId.toString()
+            }
+
+
         }
         return binding.root
     }
@@ -106,8 +152,8 @@ class NewDraftFragment : DialogFragment() {
     override fun onDetach() {
         super.onDetach()
         when(args.target){
-            "thread"->{viewModel.isMainFragment.value=false}
-            "section"->{viewModel.isMainFragment.value=true}
+            TARGET_THREAD->{viewModel.isMainFragment.value=false}
+            TARGET_SECTION->{viewModel.isMainFragment.value=true}
         }
     }
 
@@ -125,7 +171,7 @@ class NewDraftFragment : DialogFragment() {
     private fun setupToolbar() {
         val toolbar = binding.newDraftDialogToolbar
         toolbar.setNavigationIcon(R.drawable.ic_round_arrow_back_24)
-        toolbar.title = if (args.target=="thread") "No.${args.threadId}" else args.sectionName
+        toolbar.title = if (args.target== TARGET_THREAD) "回复" else "发串"
         toolbar.setNavigationOnClickListener {
             dismiss()
         }
@@ -133,8 +179,11 @@ class NewDraftFragment : DialogFragment() {
         toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.draft_menu_send -> {
+                    val title=binding.titleValueEditText.text.toString()
+                    val email=binding.emailValueEditText.text.toString()
+                    val name=binding.nameValueEditText.text.toString()
                     when(args.target){
-                        "thread"->{viewModel.doReply(
+                        TARGET_THREAD->{viewModel.doReply(
                             cookie = "%D8%A9%AE%99%1BKc%BC%16iDt%94%7B%DDm%86%15%81%AA%8Ct%3E%BB",
                             poThreadId = args.threadId,
                             content = binding.newInputContent.text.toString(),
@@ -142,8 +191,11 @@ class NewDraftFragment : DialogFragment() {
                             imageType=imageType,
                             imageName=imageName,
                             waterMark = binding.toggleButton.isChecked,
+                            title = title,
+                            email = email,
+                            name = name,
                         )}
-                        "section"->{viewModel.doPost(
+                        TARGET_SECTION->{viewModel.doPost(
                             cookie = "%D8%A9%AE%99%1BKc%BC%16iDt%94%7B%DDm%86%15%81%AA%8Ct%3E%BB",
 //                            poThreadId = args.threadId,
                             content = binding.newInputContent.text.toString(),
@@ -152,6 +204,9 @@ class NewDraftFragment : DialogFragment() {
                             imageName=imageName,
                             waterMark = binding.toggleButton.isChecked,
                             fId = fId,
+                            title = title,
+                            email = email,
+                            name = name,
                         )}
                     }
                     dismiss()
@@ -272,13 +327,5 @@ class NewDraftFragment : DialogFragment() {
 
         }
         return photoUri
-    }
-
-
-    companion object {
-
-        @JvmStatic
-        fun newInstance() =
-            NewDraftFragment()
     }
 }

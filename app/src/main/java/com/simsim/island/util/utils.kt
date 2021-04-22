@@ -13,6 +13,9 @@ import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.math.abs
 
+const val TARGET_THREAD="thread"
+const val TARGET_SECTION="section"
+
 const val islandUrl="https://adnmb3.com"
 val threadIdPattern = "\\d+".toRegex()
 const val referenceStringSpliterator = "\n"
@@ -135,4 +138,18 @@ class OnSwipeListener(
     }
 
 
+}
+
+fun View.toggleVisibility(){
+    when(this.visibility){
+        View.VISIBLE->{
+            this.visibility=View.GONE
+        }
+        View.GONE->{
+            this.visibility=View.VISIBLE
+        }
+        else->{
+
+        }
+    }
 }

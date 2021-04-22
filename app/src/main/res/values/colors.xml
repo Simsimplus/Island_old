@@ -17,6 +17,7 @@
     <color name="thread_reference">#ff227c71</color>
     <color name="web_green">#ff789922</color>
     <color name="manager_red">#ffff0000</color>
+    <color name="transparent">#00ffffff</color>
 
 
 </resources>

@@ -17,6 +17,7 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.simsim.island.MainActivity
 import com.simsim.island.R
 import com.simsim.island.adapter.DetailRecyclerViewAdapter
 import com.simsim.island.adapter.MainLoadStateAdapter
@@ -26,6 +27,8 @@ import com.simsim.island.model.BasicThread
 import com.simsim.island.repository.AislandRepo
 import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.OnSwipeListener
+import com.simsim.island.util.TARGET_SECTION
+import com.simsim.island.util.TARGET_THREAD
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -68,7 +71,7 @@ class DetailDialogFragment : DialogFragment() {
 //                         binding.detailFabAdd.visibility=View.INVISIBLE
                      }
                     is LoadState.Error->{
-                        binding.detailLoadingImage.setImageResource(R.drawable.ic_loading_page_failed)
+                        binding.detailLoadingImage.setImageResource(viewModel.randomLoadingImage)
                         binding.detailLoadingImage.visibility=View.VISIBLE
                         Snackbar
                             .make(binding.root,R.string.loading_page_fail_info,Snackbar.LENGTH_INDEFINITE)
@@ -108,7 +111,12 @@ class DetailDialogFragment : DialogFragment() {
     @SuppressLint("ClickableViewAccessibility")
     private fun setupFAB() {
         binding.detailFabAdd.setOnClickListener {
-            newThreadReply()
+            newThreadReply(
+                target = TARGET_THREAD,
+                prefill = "",
+                threadId = args.ThreadId,
+                fId = ""
+            )
         }
         binding.detailFabAdd.setOnTouchListener(
             OnSwipeListener(
@@ -228,15 +236,11 @@ private fun setupSwipeRefreshLayout() {
     }
 }
 
-override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    val dialog = super.onCreateDialog(savedInstanceState)
-//        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-    return dialog
-}
 
 override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     setupToolbar()
+    doWhenReplySuccess()
 }
 
 private fun setupToolbar() {
@@ -255,9 +259,19 @@ private fun setupToolbar() {
 //                    true
 //                }
             R.id.detail_fragment_menu_report -> {
+                newThreadReply(
+                    target = TARGET_SECTION,
+                    prefill = ">>${args.ThreadId}\n举报理由：",
+                    threadId = 0,
+                    fId = "18"
+                )
                 true
             }
             R.id.detail_fragment_menu_share -> {
+                val sharedText = viewModel.currentPoThread?.let { poThread ->
+                    "${poThread.content}\nhttps://adnmb3.com/t/${poThread.threadId}"
+                }?:"https://adnmb3.com/Forum"
+                (requireActivity() as MainActivity).shareText(sharedText)
                 true
             }
             R.id.detail_fragment_menu_star -> {
@@ -281,15 +295,35 @@ private fun setupToolbar() {
 }
 
 
-private fun newThreadReply(prefill:String="") {
-    val action = DetailDialogFragmentDirections.actionGlobalNewDraftFragment(
-        target = "thread",
-        threadId= args.ThreadId,
-        prefillText = prefill
-    )
+private fun newThreadReply(target: String,prefill:String,threadId:Long,fId:String) {
+    val action = if (target== TARGET_THREAD){
+        DetailDialogFragmentDirections.actionGlobalNewDraftFragment(
+            target = TARGET_THREAD,
+            threadId = threadId,
+            prefillText = prefill
+        )
+    }else{
+        DetailDialogFragmentDirections.actionGlobalNewDraftFragment(
+            target = TARGET_SECTION,
+            fId=fId,
+            prefillText = prefill
+        )
+    }
     findNavController().navigate(action)
     viewModel.isMainFragment.value = false
 }
+    fun doWhenReplySuccess(){
+        lifecycleScope.launch {
+            viewModel.successReply.observe(viewLifecycleOwner){success->
+                if (success){
+                    Snackbar.make(binding.detailDialogLayout,"发串成功",Snackbar.LENGTH_LONG)
+                        .show()
+                }else{
+                    //todo
+                }
+            }
+        }
+    }
 
 override fun onDetach() {
     super.onDetach()

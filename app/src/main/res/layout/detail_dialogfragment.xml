@@ -66,7 +66,7 @@
         app:layout_constraintEnd_toEndOf="@+id/detail_swipeRefreshLayout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/appBarLayout2"
-        tools:srcCompat="@drawable/ic_loading_page_failed" />
+        tools:srcCompat="@drawable/ic_blue_ocean1" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

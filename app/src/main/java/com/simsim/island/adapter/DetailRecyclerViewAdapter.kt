@@ -2,6 +2,11 @@ package com.simsim.island.adapter
 
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.TextPaint
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -35,22 +40,38 @@ class DetailRecyclerViewAdapter(
 //        val imagePosted:ImageView=view.findViewById(R.id.image_posted)
 //        val commentNumber:TextView=view.findViewById(R.id.comment_number)
     }
+    inner class HideTextSpan(
+        var color:Int,
+        val clickListener:()->Unit
+    ):ClickableSpan(){
+        override fun updateDrawState(textPaint: TextPaint) {
+            textPaint.bgColor=color
+//            super.updateDrawState(textPaint)
+        }
+
+        override fun onClick(widget: View) {
+            color=ContextCompat.getColor(fragment.requireContext(),R.color.transparent)
+            widget.invalidate()
+        }
+    }
+    inner class ReferenceClickableSpan(
+        val clickListener:()->Unit
+    ):ClickableSpan(){
+        override fun updateDrawState(textPaint: TextPaint) {
+            textPaint.color=ContextCompat.getColor(fragment.requireContext(),R.color.thread_reference)
+            textPaint.isUnderlineText=true
+//            super.updateDrawState(textPaint)
+        }
+
+        override fun onClick(widget: View) {
+            clickListener.invoke()
+        }
+    }
 
     override fun onBindViewHolder(holder: BasicThreadViewHolder, position: Int) {
         val thread = getItem(position)
         thread?.let {
             bindHolder(holder, it)
-//            holder.uidTextview.text= handleThreadId(it.poThread.uid)
-//            holder.timeTextview.text= handleThreadTime(it.poThread.time)
-//            holder.threadIdTextview.text= it.poThread.ThreadId
-//            holder.contentTextview.text=it.poThread.content
-//            holder.commentNumber.text=it.commentsNumber
-//            if (it.poThread.imageUrl.isNotBlank()){
-//                Glide.with(fragment).load(it.poThread.imageUrl).into(holder.imagePosted)
-//                holder.imagePosted.visibility=View.VISIBLE
-//                holder.imagePosted.setBackgroundResource(R.drawable.image_shape)
-//                holder.imagePosted.clipToOutline=true
-//            }
         }
     }
 
@@ -59,11 +80,42 @@ class DetailRecyclerViewAdapter(
         it: BasicThread
     ) {
         val binding = DetailRecyclerviewViewholderBinding.bind(holder.view)
-        //            Log.e("Simsim", it.toString())
         binding.uidTextview.text = handleThreadId(it.uid)
         binding.timeTextview.text = handleThreadTime(it.time)
         binding.threadIdTextview.text = it.replyThreadId.toString()
-        binding.contentTextview.text = it.content
+        binding.contentTextview.apply{
+
+            val referenceRegex=">>No.(\\d+)".toRegex()
+            val hideTextRegex="\\[h\\](.*)?\\[\\/h\\]".toRegex()
+            val hideTexts=hideTextRegex.findAll(it.content).toList().map{
+                it.groupValues[1]
+            }
+            val content=SpannableString(it.content.replace("\\[h\\]|\\[\\/h\\]".toRegex(),""))
+
+            hideTexts.distinct().forEach { hideText->
+                hideText.toRegex().findAll(content).forEach {
+                    content.setSpan(
+                        HideTextSpan(ContextCompat.getColor(fragment.requireContext(),R.color.content_font_color)){},
+                        it.range.first,
+                        it.range.last+1,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+            }
+            referenceRegex.findAll(content).forEach {
+                content.setSpan(
+                    ReferenceClickableSpan{
+                                            referenceClickListener(it.groupValues[0])
+                    },
+                    it.range.first,
+                    it.range.last+1,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+            text=content
+            movementMethod=LinkMovementMethod.getInstance()
+            highlightColor=ContextCompat.getColor(fragment.requireContext(),R.color.transparent)
+        }
         // set po id highlighted
         if (it.isPo) {
             binding.uidTextview.setTypeface(null, Typeface.BOLD)
