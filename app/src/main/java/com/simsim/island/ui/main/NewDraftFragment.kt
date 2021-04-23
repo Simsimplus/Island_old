@@ -62,7 +62,16 @@ class NewDraftFragment : DialogFragment() {
         binding= NewDraftFragmentBinding.inflate(inflater, container, false)
         getEmojiList()
         fId=args.fId
+        setupPictureTaking()
+        setupInfoFillArea()
 
+        return binding.root
+    }
+
+
+
+
+    private fun setupInfoFillArea() {
         lifecycleScope.launch {
             binding.expandButton.setOnClickListener {
                 binding.emailTitleTextView.toggleVisibility()
@@ -71,51 +80,51 @@ class NewDraftFragment : DialogFragment() {
                 binding.nameValueEditText.toggleVisibility()
                 binding.titleTitleTextView.toggleVisibility()
                 binding.titleValueEditText.toggleVisibility()
-                if(binding.emailTitleTextView.isVisible){
+                if (binding.emailTitleTextView.isVisible) {
                     binding.expandButton.setImageResource(R.drawable.ic_round_keyboard_arrow_up_16)
-                }else{
+                } else {
                     binding.expandButton.setImageResource(R.drawable.ic_round_keyboard_arrow_down_16)
                 }
             }
-            val target=binding.targetValueTextView
-            binding.targetTitleTextView.text=if(args.target== TARGET_SECTION) "板块：" else "串号："
-            if(args.target== TARGET_SECTION){
-                val sectionMap= hashMapOf<String,String>()
-                val sectionMapReversed=hashMapOf<String,String>()
-                var sectionArray:Array<String>
-                    viewModel.database.sectionDao().getAllSection().collectLatest {
-                        val list=it.filter {section ->
-                            section.group!="时间线"
-                        }
-                        list.forEach { section->
-                            sectionMap[section.fId]=section.sectionName
-                            sectionMapReversed[section.sectionName]=section.fId
-                        }
-                        sectionArray=list.map { it.sectionName }.toTypedArray()
-                        if (fId.isNotBlank()){
-                            target.text=sectionMap[fId]?:throw IllegalArgumentException("can not find section name in map")
-                        }else{
-                            target.text=list[0].sectionName
-                            fId=sectionMapReversed[list[0].sectionName]?:throw IllegalArgumentException("can not find section fid in map")
-                        }
-                        target.setOnClickListener {
-                            MaterialAlertDialogBuilder(requireContext())
-                                .setItems(sectionArray){ dialog: DialogInterface, position: Int ->
-                                    val sectionNameSelected=sectionArray[position]
-                                    target.text=sectionNameSelected
-                                    fId=sectionMapReversed[sectionNameSelected]?:throw IllegalArgumentException("can not find section fid in map")
-                                    dialog.dismiss()
-                                }
-                                .show()
-                        }
+            val target = binding.targetValueTextView
+            binding.targetTitleTextView.text = if (args.target == TARGET_SECTION) "板块：" else "串号："
+            if (args.target == TARGET_SECTION) {
+                val sectionMap = hashMapOf<String, String>()
+                val sectionMapReversed = hashMapOf<String, String>()
+                var sectionArray: Array<String>
+                viewModel.database.sectionDao().getAllSection().collectLatest {
+                    val list = it.filter { section ->
+                        section.group != "时间线"
                     }
-            }else{
-                target.text=args.threadId.toString()
+                    list.forEach { section ->
+                        sectionMap[section.fId] = section.sectionName
+                        sectionMapReversed[section.sectionName] = section.fId
+                    }
+                    sectionArray = list.map { it.sectionName }.toTypedArray()
+                    if (fId.isNotBlank()) {
+                        target.text = sectionMap[fId]
+                            ?: throw IllegalArgumentException("can not find section name in map")
+                    } else {
+                        target.text = list[0].sectionName
+                        fId = sectionMapReversed[list[0].sectionName]
+                            ?: throw IllegalArgumentException("can not find section fid in map")
+                    }
+                    target.setOnClickListener {
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setItems(sectionArray) { dialog: DialogInterface, position: Int ->
+                                val sectionNameSelected = sectionArray[position]
+                                target.text = sectionNameSelected
+                                fId = sectionMapReversed[sectionNameSelected]
+                                    ?: throw IllegalArgumentException("can not find section fid in map")
+                                dialog.dismiss()
+                            }
+                            .show()
+                    }
+                }
+            } else {
+                target.text = args.threadId.toString()
             }
-
-
         }
-        return binding.root
     }
 
     private fun getEmojiList() {
@@ -160,6 +169,7 @@ class NewDraftFragment : DialogFragment() {
     override fun onDismiss(dialog: DialogInterface) {
         viewModel.pictureUri.removeObservers(viewLifecycleOwner)
         viewModel.cameraTakePictureSuccess.removeObservers(viewLifecycleOwner)
+        viewModel.pictureUri.value=null
         super.onDismiss(dialog)
     }
 
@@ -221,28 +231,37 @@ class NewDraftFragment : DialogFragment() {
                         }.setItems(
                             arrayOf(
                                 "拍照",
-                                "相册"
+                                "相册",
+                                "手绘"
                             )
                         ) { dialogInterface: DialogInterface, itemIndex: Int ->
                             dialogInterface.dismiss()
                             when (itemIndex) {
                                 0 -> {
                                     val uri=takePictureFromCamera()
-                                    viewModel.cameraTakePictureSuccess.observe(viewLifecycleOwner){ success ->
-                                        if (success){
-                                            postImage=requireActivity().contentResolver.openInputStream(uri)?.buffered()
-                                            imageType=requireActivity().contentResolver.getType(uri)
-                                            imageName=DocumentFile.fromSingleUri(requireContext(),uri)?.name
-                                        }
-                                    }
+//                                    viewModel.cameraTakePictureSuccess.observe(viewLifecycleOwner){ success ->
+//                                        if (success){
+//                                            postImage=requireActivity().contentResolver.openInputStream(uri)?.buffered()
+//                                            imageType=requireActivity().contentResolver.getType(uri)
+//                                            imageName=DocumentFile.fromSingleUri(requireContext(),uri)?.name
+//                                        }
+//                                    }
                                 }
                                 1 -> {
                                     takePictureFromGallery()
-                                    viewModel.pictureUri.observe(viewLifecycleOwner){uri->
-                                        postImage=requireActivity().contentResolver.openInputStream(uri)?.buffered()
-                                        imageType=requireActivity().contentResolver.getType(uri)
-                                        imageName=DocumentFile.fromSingleUri(requireContext(),uri)?.name
-                                    }
+//                                    viewModel.pictureUri.observe(viewLifecycleOwner){uri->
+//                                        postImage=requireActivity().contentResolver.openInputStream(uri)?.buffered()
+//                                        imageType=requireActivity().contentResolver.getType(uri)
+//                                        imageName=DocumentFile.fromSingleUri(requireContext(),uri)?.name
+//                                    }
+                                }
+                                2->{
+                                    takePictureFromNewDraw()
+//                                    viewModel.pictureUri.observe(viewLifecycleOwner){uri->
+//                                        postImage=requireActivity().contentResolver.openInputStream(uri)?.buffered()
+//                                        imageType=requireActivity().contentResolver.getType(uri)
+//                                        imageName=DocumentFile.fromSingleUri(requireContext(),uri)?.name
+//                                    }
                                 }
                             }
                         }.show()
@@ -254,7 +273,6 @@ class NewDraftFragment : DialogFragment() {
                     showEmojiDialog()
                     true
                 }
-
                 else -> {
                     false
                 }
@@ -286,23 +304,34 @@ class NewDraftFragment : DialogFragment() {
 
     }
 
+    private fun setupPictureTaking() {
+
+        viewModel.pictureUri.observe(viewLifecycleOwner){photoUri->
+            photoUri?.let {
+                postImage=requireActivity().contentResolver.openInputStream(photoUri)?.buffered()
+                imageType=requireActivity().contentResolver.getType(photoUri)
+                imageName=DocumentFile.fromSingleUri(requireContext(),photoUri)?.name
+                Glide.with(this).load(photoUri).into(binding.newImagePosted)
+
+                binding.cancleButton.setOnClickListener {
+                    viewModel.pictureUri.value=null
+                    binding.postViewLauout.visibility = View.GONE
+                    Glide.with(this).clear(binding.newImagePosted)
+                }
+                binding.newImagePosted.setOnClickListener {
+                    val action=NewDraftFragmentDirections.actionGlobalImageDetailFragment(imageUrl = photoUri.toString(),isURI = true)
+                    findNavController().navigate(action)
+                }
+                binding.postViewLauout.isVisible = true
+            }
+        }
+    }
+
     private fun takePictureFromGallery() {
         viewModel.shouldTakePicture.value="gallery"
         val activity=requireActivity() as MainActivity
         activity.pickPicture.launch("image/*")
-        viewModel.pictureUri.observe(viewLifecycleOwner){photoUri->
-            viewModel.gallertTakePictureSuccess.value=true
-            Glide.with(this).load(photoUri).into(binding.newImagePosted)
-            binding.postViewLauout.isVisible = true
-            binding.cancleButton.setOnClickListener {
-                binding.postViewLauout.visibility = View.GONE
-                Glide.with(this).clear(binding.newImagePosted)
-            }
-            binding.newImagePosted.setOnClickListener {
-                val action=NewDraftFragmentDirections.actionGlobalImageDetailFragment(imageUrl = photoUri.toString(),isURI = true)
-                findNavController().navigate(action)
-            }
-        }
+//        binding.postViewLauout.isVisible = true
     }
 
     private fun takePictureFromCamera()  :Uri{
@@ -313,19 +342,15 @@ class NewDraftFragment : DialogFragment() {
         viewModel.cameraTakePictureSuccess.observe(viewLifecycleOwner){ success ->
             if (success){
                 viewModel.pictureUri.value=photoUri
-                Glide.with(this).load(photoUri).into(binding.newImagePosted)
-                binding.postViewLauout.isVisible = true
-                binding.cancleButton.setOnClickListener {
-                    binding.postViewLauout.visibility = View.GONE
-                    Glide.with(this).clear(binding.newImagePosted)
-                }
-                binding.newImagePosted.setOnClickListener {
-                    val action=NewDraftFragmentDirections.actionGlobalImageDetailFragment(imageUrl = photoUri.toString(),isURI = true)
-                    findNavController().navigate(action)
-                }
+//                binding.postViewLauout.isVisible = true
             }
 
         }
         return photoUri
+    }
+    private fun takePictureFromNewDraw(){
+        val activity=requireActivity() as MainActivity
+        activity.newDraw.launch(Unit)
+
     }
 }

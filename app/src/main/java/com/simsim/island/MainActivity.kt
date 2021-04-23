@@ -1,9 +1,12 @@
 package com.simsim.island
 
 import android.Manifest
+import android.app.Activity
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.Uri
@@ -15,12 +18,18 @@ import android.provider.OpenableColumns
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
+import com.bumptech.glide.Glide
+import com.divyanshu.draw.activity.DrawingActivity
 import com.simsim.island.database.IslandDatabase
 import com.simsim.island.databinding.MainActivityBinding
 import com.simsim.island.model.Emoji
@@ -36,7 +45,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
-
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding:MainActivityBinding
@@ -63,6 +72,26 @@ class MainActivity : AppCompatActivity() {
     }
     internal val pickPicture=registerForActivityResult(ActivityResultContracts.GetContent()){ uri->
         viewModel.pictureUri.value=uri
+    }
+    class AddNewDraw: ActivityResultContract<Unit,ByteArray?>() {
+        override fun createIntent(context: Context, input: Unit?): Intent {
+            return Intent(context,DrawingActivity::class.java)
+        }
+
+        override fun parseResult(resultCode: Int, intent: Intent?): ByteArray? {
+            if (resultCode != Activity.RESULT_OK) {
+                return null
+            }
+            return intent?.getByteArrayExtra("bitmap")
+        }
+    }
+
+    internal val newDraw=registerForActivityResult(AddNewDraw()){  byteArray->
+        byteArray?.let {
+            val bitmap=BitmapFactory.decodeByteArray(byteArray,0,byteArray.size)
+            viewModel.drawPicture.value=bitmap
+            viewModel.pictureUri.value=saveImageToCache(bitmap = bitmap)
+        }
     }
 
     internal fun shareText(text:String){
@@ -174,7 +203,7 @@ class MainActivity : AppCompatActivity() {
         return photoUri
     }
 
-    internal fun saveImage(type: String = "jpg"):OutputStream{
+    internal fun saveImage(type: String = "jpg",savePath:String=Environment.DIRECTORY_PICTURES):OutputStream{
         requestPermission.launch(
             arrayOf(
                 Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -189,13 +218,13 @@ class MainActivity : AppCompatActivity() {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
                 put(MediaStore.MediaColumns.MIME_TYPE, "image/$type")
 
-                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+                put(MediaStore.MediaColumns.RELATIVE_PATH, savePath)
 
             }
             val uri=resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)!!
             resolver.openOutputStream(uri)!!
         }else{
-            val storageDir: File = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+            val storageDir: File = Environment.getExternalStoragePublicDirectory(savePath)
             val photoFile= File.createTempFile(
                 "Camera_${timeStamp}_", /* prefix */
                 ".$type", /* suffix */
@@ -208,6 +237,24 @@ class MainActivity : AppCompatActivity() {
         }
         return  photoStream
 //        val photoUri= FileProvider.getUriForFile(this,"com.simsim.fileProvider",photoFile)
+    }
+    internal fun saveImageToCache(type: String = "jpg",bitmap: Bitmap):Uri{
+        val timeStamp: String = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        val displayName="Camera_${timeStamp}_.jpg"
+        val storageDir: File = File(cacheDir,"IslandImageCache")
+        val photoFile= File.createTempFile(
+            "Camera_${timeStamp}_", /* prefix */
+            ".$type", /* suffix */
+            storageDir /* directory */
+        ).apply {
+            // Save a file: path for use with ACTION_VIEW intents
+            Log.e(LOG_TAG, "photo absolute path: $absolutePath")
+        }
+        val uri=FileProvider.getUriForFile(this, "com.simsim.fileProvider", photoFile)
+        FileOutputStream(photoFile).use {
+            bitmap.compress(Bitmap.CompressFormat.JPEG,100,it)
+        }
+        return uri
     }
 
 

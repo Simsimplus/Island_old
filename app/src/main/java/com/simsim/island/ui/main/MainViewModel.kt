@@ -1,6 +1,7 @@
 package com.simsim.island.ui.main
 
 import android.app.Application
+import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -59,6 +60,7 @@ class MainViewModel @Inject constructor(
     var gallertTakePictureSuccess = MutableLiveData<Boolean>()
     var picturePath = MutableLiveData<String>()
     var pictureUri = MutableLiveData<Uri>()
+    val drawPicture=MutableLiveData<Bitmap>()
     var shouldTakePicture = MutableLiveData<String>()
     var successReply=MutableLiveData<Boolean>()
     var successPost=MutableLiveData<Boolean>()

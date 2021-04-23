@@ -12,15 +12,19 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
 import androidx.core.view.*
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.commit
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.navOptions
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.simsim.island.MainActivity
 import com.simsim.island.R
@@ -42,12 +46,16 @@ class MainFragment : Fragment() {
     internal lateinit var adapter: MainRecyclerViewAdapter
     internal lateinit var layoutManager: LinearLayoutManager
     private lateinit var mainFlowJob: Job
+    private lateinit var drawerLayout:DrawerLayout
+    private lateinit var drawer:NavigationView
 //    private var loadingImageId =R.drawable.ic_blue_ocean1
 
 
     private val viewModel: MainViewModel by activityViewModels()
 
-
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -55,12 +63,13 @@ class MainFragment : Fragment() {
         binding = MainFragmentBinding.inflate(inflater, container, false)
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
+        drawerLayout=binding.drawerLayout
+        drawer=binding.sectionDrawer
         requestPermissions()
         setupFAB()
+        initialMainFlow()
         return binding.root
     }
-
-
     private fun requestPermissions() {
         (requireActivity() as MainActivity).requestPermission.launch(
             arrayOf(
@@ -78,12 +87,15 @@ class MainFragment : Fragment() {
                 layoutManager.scrollToPosition(0)
             },
             onSwipeLeft = {
-
-                adapter.refresh()
+                if (drawerLayout.isDrawerOpen(drawer)){
+                    drawerLayout.closeDrawer(drawer)
+                }else{
+                    adapter.refresh()
+                }
             },
             onSwipeRight = {
                 Log.e(LOG_TAG, "swipe left")
-                binding.drawerLayout.openDrawer(binding.navigationView)
+                drawerLayout.openDrawer(drawer)
             },
             onSwipeTop = {}
         ))
@@ -106,8 +118,8 @@ class MainFragment : Fragment() {
         lifecycleScope.launch {
             viewModel.database.sectionDao().getAllSection().distinctUntilChanged()
                 .collect { sectionList ->
-                    val drawerLayout = binding.drawerLayout
-                    val drawer = binding.navigationView
+//                    val drawerLayout = binding.drawerLayout
+//                    val drawer = binding.navigationView
                     val adapters = mutableListOf<DrawerRecyclerViewAdapter>()
                     val concatAdapterConfig=ConcatAdapter
                         .Config
@@ -142,7 +154,7 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         setupToolbar()
-        initialMainFlow()
+
         handleSavedInstanceState()
         setupRecyclerView()
         setupSwipeRefresh()
@@ -279,15 +291,15 @@ class MainFragment : Fragment() {
 
         toolbar.setNavigationIcon(R.drawable.ic_round_menu_24)
         toolbar.setNavigationOnClickListener {
-            if (binding.drawerLayout.isDrawerOpen(binding.navigationView)) {
-                binding.drawerLayout.closeDrawer(binding.navigationView)
+            if (drawerLayout.isDrawerOpen(drawer)) {
+                drawerLayout.closeDrawer(drawer)
             } else {
-                binding.drawerLayout.openDrawer(binding.navigationView)
+                drawerLayout.openDrawer(drawer)
             }
         }
-        binding.navigationView.setNavigationItemSelectedListener {
+        drawer.setNavigationItemSelectedListener {
             it.isChecked = true
-            binding.drawerLayout.close()
+            drawerLayout.close()
             true
         }
 //        toolbar.title = viewModel.currentSection.value
@@ -325,6 +337,11 @@ class MainFragment : Fragment() {
                     .show()
                 true
             }
+                R.id.main_menu_setting->{
+                    val action=MainFragmentDirections.actionMainFragmentToSettingsDialogFragment()
+                    findNavController().navigate(action)
+                    true
+                }
                 else -> false
             }
         }

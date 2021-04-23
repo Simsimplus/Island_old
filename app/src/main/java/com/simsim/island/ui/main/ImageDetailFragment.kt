@@ -51,18 +51,11 @@ class ImageDetailFragment() : DialogFragment() {
         setStyle(STYLE_NORMAL, R.style.fullscreenDialog)
     }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val dialog = super.onCreateDialog(savedInstanceState)
-//        dialog.setOnShowListener {
-//            val view=(it as BottomSheetDialog).findViewById<View>(R.id.image_layout)
-//            view?.layoutParams?.apply {
-//                height=viewModel.windowHeight
-//                view.layoutParams=this
-//            }
-//        }
-
-        return dialog
-    }
+//    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+//        val dialog = super.onCreateDialog(savedInstanceState)
+//
+//        return dialog
+//    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

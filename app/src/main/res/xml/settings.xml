@@ -1,2 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"/>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <SeekBarPreference
+        android:id="@+id/fab_size_seekbar_preference"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:useSimpleSummaryProvider="true"
+        app:title="悬浮按钮大小"
+        android:max="100"
+        />
+    <DropDownPreference
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:entries="@array/fab_size"
+        android:entryValues="@array/fab_size"
+        app:useSimpleSummaryProvider="true"
+        app:title="fab_size" />
+</PreferenceScreen>
