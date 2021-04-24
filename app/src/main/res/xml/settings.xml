@@ -1,19 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-    <SeekBarPreference
-        android:id="@+id/fab_size_seekbar_preference"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:useSimpleSummaryProvider="true"
-        app:title="悬浮按钮大小"
-        android:max="100"
-        />
-    <DropDownPreference
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:entries="@array/fab_size"
-        android:entryValues="@array/fab_size"
-        app:useSimpleSummaryProvider="true"
-        app:title="fab_size" />
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:initialExpandedChildrenCount="1"
+        app:title="悬浮按钮">
+
+        <SwitchPreference
+            app:defaultValue="true"
+            app:iconSpaceReserved="false"
+            app:key="enable_fab_key"
+            app:title="使用悬浮按钮" />
+        <SeekBarPreference
+            app:defaultValue="20"
+            app:iconSpaceReserved="false"
+            app:isPreferenceVisible="true"
+            app:key="fab_seek_bar_key"
+            android:max="100"
+            app:min="20"
+            app:title="悬浮按钮大小"
+            app:useSimpleSummaryProvider="true" />
+        <Preference
+            app:iconSpaceReserved="false"
+            app:isPreferenceVisible="true"
+            app:key="fab_default_size_key"
+            app:title="设为默认大小" />
+
+
+    </PreferenceCategory>
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="饼干cookie">
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="cookie_in_use_key"
+            app:title="正在使用的饼干"
+            />
+
+
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="cookie_from_QR_code_key"
+            app:title="二维码导入" />
+<!--        <EditTextPreference-->
+<!--            app:defaultValue="null"-->
+<!--            app:key="cookie_from_edit_text_key"-->
+<!--            app:singleLine="true"-->
+<!--            app:title="手动输入"-->
+<!--            app:iconSpaceReserved="false"-->
+<!--            app:useSimpleSummaryProvider="true"/>-->
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="cookie_from_web_view_key"
+            app:title="登录用户系统" />
+    </PreferenceCategory>
+
 </PreferenceScreen>

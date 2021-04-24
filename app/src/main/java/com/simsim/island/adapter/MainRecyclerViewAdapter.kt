@@ -91,7 +91,8 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imag
 //                        holder.binding.contentTextview.setCompoundDrawables(placeholder,null,null,null)
 //                    }
 //                })
-                Glide.with(holder.itemView).asDrawable().listener(object :RequestListener<Drawable>{
+                Glide
+                    .with(holder.itemView).asDrawable().listener(object :RequestListener<Drawable>{
                     override fun onLoadFailed(
                         e: GlideException?,
                         model: Any?,

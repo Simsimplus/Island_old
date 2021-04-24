@@ -131,3 +131,7 @@ data class SectionGroup(
         var groupName:String,
         var sectionNameList:List<Section>,
 )
+
+data class Cookie(
+        val cookie:String,
+)

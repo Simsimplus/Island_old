@@ -30,11 +30,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import com.bumptech.glide.Glide
 import com.divyanshu.draw.activity.DrawingActivity
+import com.google.zxing.integration.android.IntentIntegrator
+import com.journeyapps.barcodescanner.CaptureActivity
 import com.simsim.island.database.IslandDatabase
 import com.simsim.island.databinding.MainActivityBinding
 import com.simsim.island.model.Emoji
 import com.simsim.island.ui.main.MainViewModel
 import com.simsim.island.util.LOG_TAG
+import com.simsim.island.util.extractCookie
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.File
@@ -46,6 +49,7 @@ import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+fun Context.dp2PxScale()=this.resources.displayMetrics.density
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding:MainActivityBinding
@@ -103,6 +107,29 @@ class MainActivity : AppCompatActivity() {
         }.also {
             Intent.createChooser(it,null)
             startActivity(it)
+        }
+    }
+    inner class ScanQRCode:ActivityResultContract<Unit,String?>(){
+        override fun createIntent(context: Context, input: Unit?): Intent {
+            return IntentIntegrator(this@MainActivity).apply {
+                setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
+                setPrompt("扫描二维码")
+                setBeepEnabled(false)
+                setOrientationLocked(false)
+            }.createScanIntent()
+        }
+
+        override fun parseResult(resultCode: Int, intent: Intent?): String? {
+            return IntentIntegrator.parseActivityResult(resultCode,intent)?.contents
+        }
+
+    }
+    internal val scanQRCode=registerForActivityResult(ScanQRCode()){ QRResult->
+        QRResult?.let {
+            it.extractCookie()?.let { formattedQRResult->
+                viewModel.QRcodeResult.value=formattedQRResult
+                Log.e(LOG_TAG,"QR code formatted:$formattedQRResult")
+            }
         }
     }
 

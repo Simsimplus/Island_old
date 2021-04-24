@@ -24,11 +24,12 @@
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
         tools:openDrawer="start">
         <androidx.fragment.app.FragmentContainerView
-            android:name="com.simsim.island.ui.main.SettingsFragment"
+
             android:id="@+id/setting_fragment_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             />
+<!--        android:name="com.simsim.island.ui.main.SettingsFragment"-->
 
         <com.google.android.material.navigation.NavigationView
             android:id="@+id/section_drawer"
@@ -50,11 +51,10 @@
         android:clickable="true"
         android:contentDescription="@string/fab_add_new_thread"
         android:focusable="true"
-        android:visibility="gone"
+        android:visibility="visible"
         app:fabCustomSize="60dp"
         app:fabSize="mini"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/ic_round_add_24"
-        tools:visibility="visible" />
+        app:srcCompat="@drawable/ic_round_add_24" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

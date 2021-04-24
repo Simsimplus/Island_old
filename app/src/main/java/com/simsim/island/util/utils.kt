@@ -7,7 +7,9 @@ import android.view.GestureDetector
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.MotionEvent
 import android.view.View
+import com.google.gson.Gson
 import com.simsim.island.model.BasicThread
+import com.simsim.island.model.Cookie
 import com.simsim.island.model.PoThread
 import java.time.Duration
 import java.time.LocalDateTime
@@ -152,4 +154,10 @@ fun View.toggleVisibility(){
 
         }
     }
+}
+fun String.extractCookie():String?=try{
+    Gson().fromJson(this,Cookie::class.java).cookie
+}catch (e:Exception){
+    Log.e(LOG_TAG,"parse json exception:${e.stackTraceToString()}")
+    null
 }

@@ -37,6 +37,9 @@ interface ThreadDao  {
     @Query("select exists(select * from PoThread where threadId=:poThreadId)")
     fun isPoThreadCollected(poThreadId: Long):Boolean
 
+    @Query("select exists(select * from PoThread)")
+    fun isThereAnyPoThreadInDB():Flow<Boolean>
+
     @Query("select * from poThread where section=:section order by pageIndex asc")
     fun getAllPoThreadsBySection(section:String):PagingSource<Int,PoThread>
 //

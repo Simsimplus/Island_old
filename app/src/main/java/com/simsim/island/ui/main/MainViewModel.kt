@@ -45,6 +45,7 @@ class MainViewModel @Inject constructor(
     var currentReplyThreads = mutableListOf<BasicThread>()
     var sectionList = database.sectionDao().getAllSection()
     var mainFlow: Flow<PagingData<PoThread>> = emptyFlow()
+    var currentPoThreadList=MutableLiveData<List<PoThread>>()
     var detailFlow: Flow<PagingData<BasicThread>> = emptyFlow()
     val isMainFragment = MutableLiveData(true)
     var windowHeight = 1
@@ -57,13 +58,13 @@ class MainViewModel @Inject constructor(
     }
 
     var cameraTakePictureSuccess = MutableLiveData<Boolean>()
-    var gallertTakePictureSuccess = MutableLiveData<Boolean>()
     var picturePath = MutableLiveData<String>()
     var pictureUri = MutableLiveData<Uri>()
     val drawPicture=MutableLiveData<Bitmap>()
     var shouldTakePicture = MutableLiveData<String>()
     var successReply=MutableLiveData<Boolean>()
     var successPost=MutableLiveData<Boolean>()
+    val QRcodeResult=MutableLiveData<String>()
 
     fun doUpdate(){
         viewModelScope.launch {
@@ -129,10 +130,14 @@ class MainViewModel @Inject constructor(
             database.threadDao().getAllPoThreadsBySection(sectionName)
         }.flow
             .map { pagingData ->
+                val list= mutableListOf<PoThread>()
                 pagingData.map {
+                    list.add(it)
                     currentSectionName = it.section
                     it
                 }
+                currentPoThreadList.value=list
+                pagingData
             }
             .cachedIn(viewModelScope)
         return mainFlow
@@ -188,7 +193,6 @@ class MainViewModel @Inject constructor(
             }
             CoroutineScope(Dispatchers.Main).launch {
                 Log.e(LOG_TAG, "vm do destroy work")
-
                 glide.clearMemory()
             }
 

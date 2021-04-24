@@ -36,6 +36,8 @@ import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.OnSwipeListener
 import com.simsim.island.util.TARGET_SECTION
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -226,6 +228,12 @@ class MainFragment : Fragment() {
                     is LoadState.Error -> {
                         binding.loadingImage.visibility = View.VISIBLE
                         binding.fabAdd.visibility = View.INVISIBLE
+                        viewModel.database.threadDao().isThereAnyPoThreadInDB().collectLatest {
+                            if (it){
+                                binding.loadingImage.visibility = View.INVISIBLE
+                                binding.fabAdd.visibility = View.VISIBLE
+                            }
+                        }
                         Glide.with(this@MainFragment).load(viewModel.randomLoadingImage)
                             .into(binding.loadingImage)
                         Snackbar

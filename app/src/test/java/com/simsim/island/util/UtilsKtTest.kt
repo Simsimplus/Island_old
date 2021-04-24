@@ -14,5 +14,6 @@ class UtilsKtTest {
         println("回应有 92 篇被省略。要阅读所有回应请按下回应链接。".firstNumber())
         println("https://adnmb3.com/m/t/36304658?page=37".findPageNumber())
         println("https://adnmb3.com/m/t/36458060?r=36458142".removeQueryTail())
+        println("""{"cookie":"%D8%A9%AE%99%1BKc%BC%16iDt%94%7B%DDm%86%15%81%AA%8Ct%3E%BB"}""".extractCookie())
     }
 }
