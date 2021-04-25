@@ -32,6 +32,7 @@ import com.bumptech.glide.Glide
 import com.divyanshu.draw.activity.DrawingActivity
 import com.google.zxing.integration.android.IntentIntegrator
 import com.journeyapps.barcodescanner.CaptureActivity
+import com.journeyapps.barcodescanner.CaptureManager
 import com.simsim.island.database.IslandDatabase
 import com.simsim.island.databinding.MainActivityBinding
 import com.simsim.island.model.Emoji
@@ -154,7 +155,6 @@ class MainActivity : AppCompatActivity() {
                 viewModel.savedInstanceState.value=poThreadId
             }
         }
-
 
         lifecycleScope.launchWhenCreated {
             Log.e(LOG_TAG, "network:${checkNetwork()}")

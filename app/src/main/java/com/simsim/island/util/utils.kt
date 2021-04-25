@@ -1,7 +1,11 @@
 package com.simsim.island.util
 
 import android.annotation.SuppressLint
+import android.content.ContentUris
 import android.content.Context
+import android.os.Build
+import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.util.Log
 import android.view.GestureDetector
 import android.view.GestureDetector.SimpleOnGestureListener
@@ -14,6 +18,7 @@ import com.simsim.island.model.PoThread
 import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.math.abs
+
 
 const val TARGET_THREAD="thread"
 const val TARGET_SECTION="section"
@@ -115,10 +120,10 @@ class OnSwipeListener(
                 if (abs(diffX) > abs(diffY)) {
                     if (abs(diffX) > swipeThreshold && abs(velocityX) > swipeVelocityThreshold) {
                         if (diffX > 0) {
-                            Log.e(LOG_TAG,"swipe right")
+                            Log.e(LOG_TAG, "swipe right")
                             onSwipeRight()
                         } else {
-                            Log.e(LOG_TAG,"swipe left")
+                            Log.e(LOG_TAG, "swipe left")
                             onSwipeLeft()
                         }
                         result = true
@@ -144,11 +149,11 @@ class OnSwipeListener(
 
 fun View.toggleVisibility(){
     when(this.visibility){
-        View.VISIBLE->{
-            this.visibility=View.GONE
+        View.VISIBLE -> {
+            this.visibility = View.GONE
         }
-        View.GONE->{
-            this.visibility=View.VISIBLE
+        View.GONE -> {
+            this.visibility = View.VISIBLE
         }
         else->{
 
@@ -156,8 +161,9 @@ fun View.toggleVisibility(){
     }
 }
 fun String.extractCookie():String?=try{
-    Gson().fromJson(this,Cookie::class.java).cookie
-}catch (e:Exception){
-    Log.e(LOG_TAG,"parse json exception:${e.stackTraceToString()}")
+    Gson().fromJson(this, Cookie::class.java).cookie
+}catch (e: Exception){
+    Log.e(LOG_TAG, "parse json exception:${e.stackTraceToString()}")
     null
 }
+

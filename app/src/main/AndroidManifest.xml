@@ -22,6 +22,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Island"
         android:requestLegacyExternalStorage="true"
+        android:largeHeap="true"
         >
         <provider
             android:name="androidx.core.content.FileProvider"

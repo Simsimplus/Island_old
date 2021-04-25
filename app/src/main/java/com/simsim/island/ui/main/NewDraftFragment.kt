@@ -323,6 +323,7 @@ class NewDraftFragment : DialogFragment() {
                     findNavController().navigate(action)
                 }
                 binding.postViewLauout.isVisible = true
+                viewModel.pictureUri.value=null
             }
         }
     }
