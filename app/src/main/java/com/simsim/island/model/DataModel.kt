@@ -134,4 +134,6 @@ data class SectionGroup(
 
 data class Cookie(
         val cookie:String,
+        val name: String="",
+        val isInUse:Boolean=false
 )

@@ -14,6 +14,7 @@ import androidx.preference.SeekBarPreference
 import androidx.preference.SwitchPreference
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.RGBLuminanceSource
@@ -24,6 +25,7 @@ import com.simsim.island.dataStore
 import com.simsim.island.databinding.SettingsDialogFragmentBinding
 import com.simsim.island.dp2PxScale
 import com.simsim.island.util.LOG_TAG
+import com.simsim.island.util.ellipsis
 import com.simsim.island.util.extractCookie
 import com.simsim.island.util.getPath
 import dagger.hilt.android.AndroidEntryPoint
@@ -36,6 +38,7 @@ import kotlinx.coroutines.flow.map
 import java.io.File
 import java.io.FileInputStream
 import kotlin.properties.Delegates
+import kotlin.streams.toList
 
 @AndroidEntryPoint
 class SettingsFragment(
@@ -90,7 +93,25 @@ class SettingsFragment(
             }
         } ?: throw Exception("can not find fabSwitch")
 
-        val cookieInUse = findPreference<Preference>("cookie_in_use_key")
+        val cookieInUse = findPreference<Preference>("cookie_in_use_key")?.apply {
+            var cookie=preferenceDataStore!!.getString("cookie_in_use_key",null)
+            this.summary=(cookie?.let {
+                "现用：$it"
+            }?:"无cookie可用").ellipsis()
+            setOnPreferenceClickListener {
+                cookie=preferenceDataStore!!.getString("cookie_in_use_key",null)
+                val cookieSet=preferenceDataStore!!.getStringSet("cookies", mutableSetOf())?: mutableSetOf()
+                val cookieList=cookieSet.toList()
+                val cookieIndex=cookieList.indexOf(cookie)
+                MaterialAlertDialogBuilder(activity)
+                    .setSingleChoiceItems(cookieList.map{it.ellipsis(10)}.toTypedArray(),if (cookieIndex!=-1) cookieIndex else 0){dialog,position->
+                        preferenceDataStore!!.putString("cookie_in_use_key",cookieList[position])
+                        this.summary="现用：${cookieList[position]}".ellipsis()
+                    }
+                    .show()
+                true
+            }
+        }
             ?: throw Exception("can not find cookieInUse")
         val cookieQR = findPreference<Preference>("cookie_from_QR_code_key")?.apply {
             setOnPreferenceClickListener {
@@ -112,8 +133,17 @@ class SettingsFragment(
                 }.show()
                 viewModel.QRcodeResult.observe(viewLifecycleOwner) { result ->
                     result?.let {
-                        preferenceDataStore!!.putString("cookie_from_QR_code_key", result)
-                        cookieInUse.summary = result
+                        Snackbar.make(binding.settingCoordinatorLayout,"导入cookie大成功",Snackbar.LENGTH_LONG).setAction("使用"){
+                            preferenceDataStore!!.putString("cookie_in_use_key",result)
+                            cookieInUse.summary="现用：$result".ellipsis()
+                        }.show()
+                        val cookieSet=preferenceDataStore!!.getStringSet("cookies", mutableSetOf())?: mutableSetOf()
+                        if (cookieSet.isEmpty()){
+                            preferenceDataStore!!.putString("cookie_in_use_key",result)
+                            cookieInUse.summary="现用：$result".ellipsis()
+                        }
+                        cookieSet.add(result)
+                        preferenceDataStore!!.putStringSet("cookies", cookieSet)
                         viewModel.QRcodeResult.value = null
                     }
                 }
