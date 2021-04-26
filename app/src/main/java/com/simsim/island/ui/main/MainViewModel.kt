@@ -51,6 +51,8 @@ class MainViewModel @Inject constructor(
     var windowHeight = 1
     var actionBarHeight = 1
     private val glide = Glide.get(application.applicationContext)
+    val loginCookies = MutableLiveData<Map<String,String>>()
+    val loadCookieFromUserSystemSuccess=MutableLiveData<Boolean>()
 
     init {
         doUpdate()
@@ -69,7 +71,7 @@ class MainViewModel @Inject constructor(
     fun doUpdate(){
         viewModelScope.launch {
             val record=database.recordDao().getRecord()
-            if (record==null){
+            if (record==null || !database.sectionDao().isAnySectionInDB()){
                 getSectionList()
                 database.recordDao().insertRecord(UpdateRecord(lastUpdateTime =  LocalDateTime.now()))
             }else{
@@ -115,10 +117,11 @@ class MainViewModel @Inject constructor(
 
         mainFlow = Pager(
             PagingConfig(
-                pageSize = 50,
+                pageSize = 20,
+                prefetchDistance = 20,
                 enablePlaceholders = true,
                 maxSize = 9999,
-                initialLoadSize = 150,
+                initialLoadSize = 20,
             ),
             remoteMediator = MainRemoteMediator(
                 service = networkService,
@@ -148,10 +151,11 @@ class MainViewModel @Inject constructor(
         currentReplyThreads = mutableListOf()
         detailFlow = Pager(
             PagingConfig(
-                pageSize = 50,
+                pageSize = 20,
+                prefetchDistance = 20,
                 enablePlaceholders = false,
                 maxSize = 999999,
-                initialLoadSize = 150
+                initialLoadSize = 20
             ),
             remoteMediator = DetailRemoteMediator(
                 service = networkService,
@@ -256,6 +260,13 @@ class MainViewModel @Inject constructor(
                 email,
                 title,
             )
+        }
+    }
+    fun getCookies(cookieMap:Map<String,String>){
+        viewModelScope.launch {
+            val cookieList=networkService.getCookies(cookieMap)
+            database.cookieDao().insertAllCookies(cookieList)
+            loadCookieFromUserSystemSuccess.value=true
         }
     }
 

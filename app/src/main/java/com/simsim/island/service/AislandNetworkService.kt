@@ -1,7 +1,9 @@
 package com.simsim.island.service
 
+import android.net.Uri
 import android.util.Log
 import android.webkit.MimeTypeMap
+import com.simsim.island.model.Cookie
 import com.simsim.island.util.LOG_TAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -11,6 +13,7 @@ import okhttp3.OkHttpClient
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
+import org.jsoup.Jsoup
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
@@ -38,7 +41,7 @@ class AislandNetworkService @Inject constructor() {
 
     interface IslandHtmlService {
         @GET
-        suspend fun getHtmlStringByPage(@Url url: String): Response<String>
+        suspend fun getHtmlStringByPage(@Url url: String,@HeaderMap() header: HashMap<String, String> ): Response<String>
 
         @Multipart
         @POST
@@ -52,10 +55,18 @@ class AislandNetworkService @Inject constructor() {
 
     private val service: IslandHtmlService by lazy { retrofit.create(IslandHtmlService::class.java) }
 
-    suspend fun getHtmlStringByPage(url: String): String? = withContext(Dispatchers.IO) {
+    suspend fun getHtmlStringByPage(url: String,cookie: String?=null): String? = withContext(Dispatchers.IO) {
+        val header=cookie?.let {
+            hashMapOf(
+                "Cookie" to cookie,
+                "Host" to "adnmb3.com"
+            )
+        }?: hashMapOf(
+            "referer" to "https://adnmb3.com/Forum"
+        )
         val response: String?=
         try {
-            val call = service.getHtmlStringByPage(url)
+            val call = service.getHtmlStringByPage(url,header)
             Log.e("Simsim:url:", url)
             if (call.isSuccessful) {
                 call.body()
@@ -189,6 +200,34 @@ class AislandNetworkService @Inject constructor() {
             throw e
         }
         response
+    }
+    suspend fun getCookies(cookieMap:Map<String,String>):List<Cookie> = withContext(Dispatchers.IO){
+        val cookie=cookieMap.toString().replace(", ","; ").replace("[{}]".toRegex(),"")
+        val response= getHtmlStringByPage(url = "https://adnmb3.com/Member/User/Cookie/index.html",cookie =cookie )
+        response?.let { r->
+            val doc=Jsoup.parse(r)
+            val cookieList= mutableListOf<Cookie>()
+            doc.select("a[href~=/Member/User/Cookie/export/id/.*]").forEach { cookiePageTag->
+                val (cookieName,cookieValue) = getCookieFromPage(cookiePageTag.attr("href"),cookie)
+                cookieValue?.let {
+                    cookieList.add(Cookie(cookie=cookieValue,name=cookieName))
+                }
+            }
+            cookieList
+        }?: listOf()
+    }
+    suspend fun getCookieFromPage(url:String,cookie: String):Pair<String,String?> = withContext(Dispatchers.IO){
+        val response= getHtmlStringByPage(url = url,cookie =cookie )
+        response?.let { r->
+            val doc=Jsoup.parse(r)
+            val cookieName=doc.selectFirst("div[class=tpl-form-maintext]")?.ownText()?:""
+            val cookieValueRaw=doc.selectFirst("img[src~=http://publicapi.ovear.info.*]")?.attr("src")
+            val cookieValue=cookieValueRaw?.let { raw->
+                val rawDecode= Uri.decode(raw).replace("""[{}"]""".toRegex(),"").replaceBeforeLast("text=","")
+                rawDecode.split(":")[1]
+            }
+            cookieName to cookieValue
+        }?:"" to ""
     }
 
 

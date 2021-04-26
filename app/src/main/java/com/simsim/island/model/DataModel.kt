@@ -132,7 +132,10 @@ data class SectionGroup(
         var sectionNameList:List<Section>,
 )
 
+@Entity
 data class Cookie(
+        @ColumnInfo(index = true)
+        @PrimaryKey()
         val cookie:String,
         val name: String="",
         val isInUse:Boolean=false

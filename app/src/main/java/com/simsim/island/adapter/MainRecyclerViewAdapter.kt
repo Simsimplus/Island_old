@@ -3,6 +3,12 @@ package com.simsim.island.adapter
 import android.graphics.Typeface
 import android.graphics.drawable.Animatable
 import android.graphics.drawable.Drawable
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.TextPaint
+import android.text.method.LinkMovementMethod
+import android.text.style.BackgroundColorSpan
+import android.text.style.ClickableSpan
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -38,6 +44,14 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imag
 //        val imagePosted:ImageView=view.findViewById(R.id.image_posted)
 //        val commentNumber:TextView=view.findViewById(R.id.comment_number)
     }
+    inner class ReferenceColorSpan(
+    ):BackgroundColorSpan(ContextCompat.getColor(fragment.requireContext(),R.color.transparent)){
+        override fun updateDrawState(textPaint: TextPaint) {
+            textPaint.color=ContextCompat.getColor(fragment.requireContext(),R.color.thread_reference)
+            textPaint.isUnderlineText=true
+//            super.updateDrawState(textPaint)
+        }
+    }
 
     override fun onBindViewHolder(holder: IslandThreadViewHolder, position: Int) {
         val thread=getItem(position)
@@ -72,7 +86,35 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imag
             }else{
                 holder.binding.threadIdTextview.text= poThread.threadId.toString()
             }
-            holder.binding.contentTextview.text=poThread.content
+            holder.binding.contentTextview.apply{
+                val referenceRegex=">>No.(\\d+)".toRegex()
+                val hideTextRegex="\\[h\\](.*)?\\[\\/h\\]".toRegex()
+                val hideTexts=hideTextRegex.findAll(poThread.content).toList().map{
+                    it.groupValues[1]
+                }
+                val content= SpannableString(poThread.content.replace("\\[h\\]|\\[\\/h\\]".toRegex(),""))
+
+                hideTexts.distinct().forEach { hideText->
+                    hideText.toRegex().findAll(content).forEach {
+                        content.setSpan(
+                            BackgroundColorSpan(ContextCompat.getColor(fragment.requireContext(),R.color.content_font_color)),
+                            it.range.first,
+                            it.range.last+1,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                        )
+                    }
+                }
+                referenceRegex.findAll(content).forEach {
+                    content.setSpan(
+                        ReferenceColorSpan(),
+                        it.range.first,
+                        it.range.last+1,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+                text=content
+                highlightColor=ContextCompat.getColor(fragment.requireContext(),R.color.transparent)
+            }
             holder.binding.commentNumber.text=poThread.commentsNumber
             if (poThread.imageUrl.isNotBlank()){
                 val imageUrl=poThread.imageUrl

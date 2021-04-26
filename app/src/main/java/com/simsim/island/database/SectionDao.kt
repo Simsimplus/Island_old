@@ -14,4 +14,7 @@ interface SectionDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllSection(sections: List<Section>)
+
+    @Query("select exists(select * from sectionList)")
+    suspend fun isAnySectionInDB():Boolean
 }

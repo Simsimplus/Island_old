@@ -189,7 +189,7 @@ class MainFragment : Fragment() {
                 val sectionId = if (it.isNotEmpty()) it[0].fId else "4"
                 val sectionName = if (it.isNotEmpty()) it[0].sectionName else "综合版1"
                 val sectionUrl =
-                    if (it.isNotEmpty()) it[0].sectionUrl else "https://adnmb3.com/m/f/%E7%BB%BC%E5%90%88%E7%89%881"
+                    if (it.isNotEmpty()) it[0].sectionUrl else "https://adnmb3.com/f/%E7%BB%BC%E5%90%88%E7%89%881"
                 Log.e(LOG_TAG, "first sectionName:$sectionName")
                 viewModel.setMainFlow(sectionName = sectionName, sectionUrl = sectionUrl)
                 viewModel.currentSectionId = sectionId

@@ -166,4 +166,5 @@ fun String.extractCookie():String?=try{
     Log.e(LOG_TAG, "parse json exception:${e.stackTraceToString()}")
     null
 }
-fun String.ellipsis(remainLength:Int=20)=this.replaceRange((remainLength until this.length),"…")
+fun String.ellipsis(remainLength:Int=20)=if (this.length<=remainLength) this else
+    this.replaceRange((remainLength until this.length),"…")

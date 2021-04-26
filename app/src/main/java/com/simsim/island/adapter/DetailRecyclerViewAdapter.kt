@@ -84,7 +84,6 @@ class DetailRecyclerViewAdapter(
         binding.timeTextview.text = handleThreadTime(it.time)
         binding.threadIdTextview.text = it.replyThreadId.toString()
         binding.contentTextview.apply{
-
             val referenceRegex=">>No.(\\d+)".toRegex()
             val hideTextRegex="\\[h\\](.*)?\\[\\/h\\]".toRegex()
             val hideTexts=hideTextRegex.findAll(it.content).toList().map{

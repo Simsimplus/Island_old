@@ -53,7 +53,6 @@
     <action
         android:id="@+id/action_global_imageDetailFragment"
         app:destination="@id/imageDetailFragment"
-        app:enterAnim="@android:anim/fade_in"
         app:exitAnim="@android:anim/fade_out" />
     <dialog
         android:id="@+id/newDraftFragment"
@@ -89,4 +88,22 @@
         android:id="@+id/settingsDialogFragment"
         android:name="com.simsim.island.ui.main.SettingsDialogFragment"
         android:label="SettingsDialogFragment" />
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.simsim.island.ui.main.SettingsFragment"
+        android:label="SettingsFragment" />
+    <dialog
+        android:id="@+id/webViewDialogFragment"
+        android:name="com.simsim.island.ui.main.WebViewDialogFragment"
+        android:label="web_view_dialog_fragment"
+        tools:layout="@layout/web_view_dialog_fragment" >
+        <argument
+            android:name="url"
+            app:argType="string" />
+    </dialog>
+    <action
+        android:id="@+id/action_global_webViewDialogFragment"
+        app:destination="@id/webViewDialogFragment"
+        app:enterAnim="@android:anim/fade_in"
+        app:exitAnim="@android:anim/fade_out" />
 </navigation>

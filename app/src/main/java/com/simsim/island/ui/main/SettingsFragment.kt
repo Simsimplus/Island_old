@@ -4,10 +4,12 @@ import android.content.DialogInterface
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.core.view.isVisible
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SeekBarPreference
@@ -24,6 +26,7 @@ import com.simsim.island.R
 import com.simsim.island.dataStore
 import com.simsim.island.databinding.SettingsDialogFragmentBinding
 import com.simsim.island.dp2PxScale
+import com.simsim.island.model.Cookie
 import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.ellipsis
 import com.simsim.island.util.extractCookie
@@ -33,8 +36,7 @@ import id.zelory.compressor.Compressor
 import id.zelory.compressor.constraint.resolution
 import id.zelory.compressor.constraint.size
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import java.io.File
 import java.io.FileInputStream
 import kotlin.properties.Delegates
@@ -57,106 +59,166 @@ class SettingsFragment(
             preferenceDataStore = customDataStore
         }
         setPreferencesFromResource(R.xml.settings, rootKey)
-        val fabSizeSeekBar = findPreference<SeekBarPreference>("fab_seek_bar_key")
-            ?.apply {
-                setOnPreferenceChangeListener { _, newValue ->
-                    val fabSize = newValue as Int
-                    binding.fabAdd.customSize = (fabSize * dp2PxScale).toInt()
-                    true
-                }
-            } ?: throw Exception("can not find fabSizeSeekBar")
+        setupPreferences()
+    }
 
-        val fabSizeDefault = findPreference<Preference>("fab_default_size_key")
-            ?.apply {
-                setOnPreferenceClickListener {
-                    binding.fabAdd.customSize = FloatingActionButton.NO_CUSTOM_SIZE
-                    binding.fabAdd.size = FloatingActionButton.SIZE_AUTO
-                    true
-                }
-            } ?: throw Exception("can not find setFabDefaultSize")
-
-        val fabSwitch = findPreference<SwitchPreference>("enable_fab_key")?.apply {
-            var isFabEnable: Boolean by Delegates.observable(this.isChecked) { _, _, newValue ->
-                binding.settingToolbar.menu.findItem(R.id.setting_menu_add).isVisible = !newValue
-                fabSizeSeekBar.isVisible = newValue
-                fabSizeDefault.isVisible = newValue
-                binding.fabAdd.isVisible = newValue
-            }
-            isFabEnable = isChecked
-            setOnPreferenceChangeListener { _, newValue ->
-                isFabEnable = newValue as Boolean
-//                binding.settingToolbar.menu.findItem(R.id.setting_menu_add).isVisible=!isFabEnable
-//                fabSizeSeekBar.isVisible=isFabEnable
-//                fabSizeDefault.isVisible=isFabEnable
-//                binding.fabAdd.isVisible=isFabEnable
-                true
-            }
-        } ?: throw Exception("can not find fabSwitch")
-
-        val cookieInUse = findPreference<Preference>("cookie_in_use_key")?.apply {
-            var cookie=preferenceDataStore!!.getString("cookie_in_use_key",null)
-            this.summary=(cookie?.let {
-                "现用：$it"
-            }?:"无cookie可用").ellipsis()
-            setOnPreferenceClickListener {
-                cookie=preferenceDataStore!!.getString("cookie_in_use_key",null)
-                val cookieSet=preferenceDataStore!!.getStringSet("cookies", mutableSetOf())?: mutableSetOf()
-                val cookieList=cookieSet.toList()
-                val cookieIndex=cookieList.indexOf(cookie)
-                MaterialAlertDialogBuilder(activity)
-                    .setSingleChoiceItems(cookieList.map{it.ellipsis(10)}.toTypedArray(),if (cookieIndex!=-1) cookieIndex else 0){dialog,position->
-                        preferenceDataStore!!.putString("cookie_in_use_key",cookieList[position])
-                        this.summary="现用：${cookieList[position]}".ellipsis()
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewModel.loginCookies.observe(viewLifecycleOwner) { loginCookieMap->
+            if (!loginCookieMap.isNullOrEmpty()){
+                Log.e(LOG_TAG,"get login cookies from flow:$loginCookieMap")
+                viewModel.getCookies(loginCookieMap)
+                viewModel.loginCookies.value= mapOf()
+                viewModel.loadCookieFromUserSystemSuccess.observe(viewLifecycleOwner){success->
+                    if (success){
+                        Snackbar.make(
+                            binding.settingCoordinatorLayout,
+                            "用户系统导入饼干大成功",
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                        viewModel.loadCookieFromUserSystemSuccess.value=false
                     }
-                    .show()
-                true
+                }
             }
         }
-            ?: throw Exception("can not find cookieInUse")
-        val cookieQR = findPreference<Preference>("cookie_from_QR_code_key")?.apply {
-            setOnPreferenceClickListener {
-                MaterialAlertDialogBuilder(activity).setItems(
-                    arrayOf(
-                        "相机扫码",
-                        "图片扫码"
-                    )
-                ) { dialog: DialogInterface, position: Int ->
-                    dialog.dismiss()
-                    when (position) {
-                        0 -> {
-                            activity.scanQRCode.launch(Unit)
-                        }
-                        1 -> {
-                            QRCodeFromImage()
-                        }
+    }
+    private fun setupPreferences() {
+        lifecycleScope.launch {
+            val fabSizeSeekBar = findPreference<SeekBarPreference>("fab_seek_bar_key")
+                ?.apply {
+                    setOnPreferenceChangeListener { _, newValue ->
+                        val fabSize = newValue as Int
+                        binding.fabAdd.customSize = (fabSize * dp2PxScale).toInt()
+                        true
                     }
-                }.show()
-                viewModel.QRcodeResult.observe(viewLifecycleOwner) { result ->
-                    result?.let {
-                        Snackbar.make(binding.settingCoordinatorLayout,"导入cookie大成功",Snackbar.LENGTH_LONG).setAction("使用"){
-                            preferenceDataStore!!.putString("cookie_in_use_key",result)
-                            cookieInUse.summary="现用：$result".ellipsis()
-                        }.show()
-                        val cookieSet=preferenceDataStore!!.getStringSet("cookies", mutableSetOf())?: mutableSetOf()
-                        if (cookieSet.isEmpty()){
-                            preferenceDataStore!!.putString("cookie_in_use_key",result)
-                            cookieInUse.summary="现用：$result".ellipsis()
-                        }
-                        cookieSet.add(result)
-                        preferenceDataStore!!.putStringSet("cookies", cookieSet)
-                        viewModel.QRcodeResult.value = null
+                } ?: throw Exception("can not find fabSizeSeekBar")
+
+            val fabSizeDefault = findPreference<Preference>("fab_default_size_key")
+                ?.apply {
+                    setOnPreferenceClickListener {
+                        binding.fabAdd.customSize = FloatingActionButton.NO_CUSTOM_SIZE
+                        binding.fabAdd.size = FloatingActionButton.SIZE_AUTO
+                        true
                     }
+                } ?: throw Exception("can not find setFabDefaultSize")
+
+            val fabSwitch = findPreference<SwitchPreference>("enable_fab_key")?.apply {
+                var isFabEnable: Boolean by Delegates.observable(this.isChecked) { _, _, newValue ->
+                    binding.settingToolbar.menu.findItem(R.id.setting_menu_add).isVisible = !newValue
+                    fabSizeSeekBar.isVisible = newValue
+                    fabSizeDefault.isVisible = newValue
+                    binding.fabAdd.isVisible = newValue
                 }
-                true
-            }
-        } ?: throw Exception("can not find cookieQR")
+                isFabEnable = isChecked
+                setOnPreferenceChangeListener { _, newValue ->
+                    isFabEnable = newValue as Boolean
+                    //                binding.settingToolbar.menu.findItem(R.id.setting_menu_add).isVisible=!isFabEnable
+                    //                fabSizeSeekBar.isVisible=isFabEnable
+                    //                fabSizeDefault.isVisible=isFabEnable
+                    //                binding.fabAdd.isVisible=isFabEnable
+                    true
+                }
+            } ?: throw Exception("can not find fabSwitch")
 
-        val cookieWebView = findPreference<Preference>("cookie_from_web_view_key")?.apply {
-            setOnPreferenceClickListener {
-                true
-            }
-        } ?: throw Exception("can not find cookieWebView")
+            val cookieInUse = findPreference<Preference>("cookie_in_use_key")?.apply {
+                var cookie = preferenceDataStore!!.getString("cookie_in_use_key", null)
+                lifecycleScope.launch {
+                    this@apply.summary = (cookie?.let {
+                        val cookieInDB=viewModel.database.cookieDao().getCookieByValue(it)
+                        "现用：${cookieInDB?.name ?:"(饼干值) $it"}"
+                    } ?: "无cookie可用或未设置").ellipsis()
+                }
 
+
+                setOnPreferenceClickListener {
+                    cookie = preferenceDataStore!!.getString("cookie_in_use_key", null)
+//                    val cookieSet =
+//                        preferenceDataStore!!.getStringSet("cookies", mutableSetOf()) ?: mutableSetOf()
+                    lifecycleScope.launch {
+                        val cookieList =viewModel.database.cookieDao().getAllCookies()
+                        val cookieNameList=cookieList.map {
+                            it.name
+                        }
+                        val cookieValueList=cookieList.map {
+                            it.cookie
+                        }
+
+                        val cookieIndex = cookieValueList.indexOf(cookie)
+                        MaterialAlertDialogBuilder(activity)
+                            .setSingleChoiceItems(
+                                cookieNameList.map { it.ellipsis(10) }.toTypedArray(),
+                                if (cookieIndex != -1) cookieIndex else 0
+                            ) { _, position ->
+                                preferenceDataStore!!.putString("cookie_in_use_key", cookieValueList[position])
+                                this@apply.summary = "现用：${cookieNameList[position]}".ellipsis()
+                            }
+                            .show()
+                    }
+
+                    true
+                }
+            }
+                ?: throw Exception("can not find cookieInUse")
+            val cookieQR = findPreference<Preference>("cookie_from_QR_code_key")?.apply {
+                setOnPreferenceClickListener {
+                    MaterialAlertDialogBuilder(activity).setItems(
+                        arrayOf(
+                            "相机扫码",
+                            "图片扫码"
+                        )
+                    ) { dialog: DialogInterface, position: Int ->
+                        dialog.dismiss()
+                        when (position) {
+                            0 -> {
+                                activity.scanQRCode.launch(Unit)
+                            }
+                            1 -> {
+                                QRCodeFromImage()
+                            }
+                        }
+                    }.show()
+                    viewModel.QRcodeResult.observe(viewLifecycleOwner) { result ->
+                        result?.let {
+                            Snackbar.make(
+                                binding.settingCoordinatorLayout,
+                                "扫码导入cookie大成功",
+                                Snackbar.LENGTH_LONG
+                            ).setAction("使用") {
+                                lifecycleScope.launch {
+                                    preferenceDataStore!!.putString("cookie_in_use_key", result)
+                                    val cookieInDB=viewModel.database.cookieDao().getCookieByValue(result)
+                                    val summary=cookieInDB?.name ?:"(饼干值) $result"
+                                    cookieInDB?: kotlin.run {
+                                        lifecycleScope.launch {viewModel.database.cookieDao().insertAllCookies(listOf(Cookie(result,"无名")))  }
+                                    }
+                                    cookieInUse.summary = "现用：$summary".ellipsis()
+                                }
+                            }.show()
+                            val cookieSet =
+                                preferenceDataStore!!.getStringSet("cookies", mutableSetOf())
+                                    ?: mutableSetOf()
+                            if (cookieSet.isEmpty()) {
+                                preferenceDataStore!!.putString("cookie_in_use_key", result)
+                                cookieInUse.summary = "现用：$result".ellipsis()
+                            }
+                            cookieSet.add(result)
+                            preferenceDataStore!!.putStringSet("cookies", cookieSet)
+                            viewModel.QRcodeResult.value = null
+                        }
+                    }
+                    true
+                }
+            } ?: throw Exception("can not find cookieQR")
+
+            val cookieWebView = findPreference<Preference>("cookie_from_web_view_key")?.apply {
+                setOnPreferenceClickListener {
+                    val action=SettingsFragmentDirections.actionGlobalWebViewDialogFragment("https://adnmb3.com/Member/User/Index/login.html")
+                    findNavController().navigate(action)
+                    true
+                }
+
+            } ?: throw Exception("can not find cookieWebView")
+        }
     }
 
     private fun QRCodeFromImage() {
