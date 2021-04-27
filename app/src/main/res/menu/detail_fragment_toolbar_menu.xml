@@ -2,11 +2,12 @@
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-<!--    <item-->
-<!--        android:id="@+id/detail_fragment_menu_add"-->
-<!--        android:icon="@drawable/ic_round_add_24"-->
-<!--        android:title="@string/menu_add"-->
-<!--        app:showAsAction="ifRoom" />-->
+    <item
+        android:id="@+id/detail_fragment_menu_add"
+        android:icon="@drawable/ic_round_add_24"
+        android:title="@string/menu_add"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/detail_fragment_menu_share"
         android:icon="@drawable/ic_round_share_24"

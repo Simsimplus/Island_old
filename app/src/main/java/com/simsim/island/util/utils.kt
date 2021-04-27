@@ -11,6 +11,7 @@ import android.view.GestureDetector
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.MotionEvent
 import android.view.View
+import android.widget.Toast
 import com.google.gson.Gson
 import com.simsim.island.model.BasicThread
 import com.simsim.island.model.Cookie
@@ -22,6 +23,10 @@ import kotlin.math.abs
 
 const val TARGET_THREAD="thread"
 const val TARGET_SECTION="section"
+const val SWIPE_UP="swipe_up_key"
+const val SWIPE_DOWN="swipe_down_key"
+const val SWIPE_LEFT="swipe_left_key"
+const val SWIPE_RIGHT="swipe_right_key"
 
 const val islandUrl="https://adnmb3.com"
 val threadIdPattern = "\\d+".toRegex()
@@ -143,10 +148,22 @@ class OnSwipeListener(
         }
 
     }
-
-
 }
 
+class OnLongPressToMove(val context: Context): View.OnTouchListener {
+    private val gestureDetector = GestureDetector(context, GestureListener())
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+        return gestureDetector.onTouchEvent(event)
+    }
+    inner class GestureListener : SimpleOnGestureListener(){
+        override fun onShowPress(e: MotionEvent?) {
+            Toast.makeText(context,"移动以调整位置",Toast.LENGTH_SHORT).show()
+        }
+
+    }
+
+}
 fun View.toggleVisibility(){
     when(this.visibility){
         View.VISIBLE -> {
@@ -168,3 +185,7 @@ fun String.extractCookie():String?=try{
 }
 fun String.ellipsis(remainLength:Int=20)=if (this.length<=remainLength) this else
     this.replaceRange((remainLength until this.length),"…")
+fun <T> Array<out T>.indexOfOrFirst(element: T): Int{
+    val index=this.indexOf(element)
+    return if (index!=-1) index else 0
+}

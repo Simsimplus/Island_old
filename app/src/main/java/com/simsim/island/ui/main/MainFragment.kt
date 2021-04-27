@@ -8,39 +8,39 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
 import androidx.core.view.*
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.commit
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.navOptions
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.simsim.island.MainActivity
 import com.simsim.island.R
 import com.simsim.island.adapter.DrawerRecyclerViewAdapter
 import com.simsim.island.adapter.MainRecyclerViewAdapter
+import com.simsim.island.dataStore
 import com.simsim.island.databinding.MainFragmentBinding
+import com.simsim.island.dp2PxScale
 import com.simsim.island.model.SectionGroup
-import com.simsim.island.util.LOG_TAG
-import com.simsim.island.util.OnSwipeListener
-import com.simsim.island.util.TARGET_SECTION
+import com.simsim.island.util.*
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlin.properties.Delegates
 
 @AndroidEntryPoint
 class MainFragment : Fragment() {
@@ -48,8 +48,9 @@ class MainFragment : Fragment() {
     internal lateinit var adapter: MainRecyclerViewAdapter
     internal lateinit var layoutManager: LinearLayoutManager
     private lateinit var mainFlowJob: Job
-    private lateinit var drawerLayout:DrawerLayout
-    private lateinit var drawer:NavigationView
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var drawer: NavigationView
+    private var isFABEnable=true
 //    private var loadingImageId =R.drawable.ic_blue_ocean1
 
 
@@ -58,6 +59,7 @@ class MainFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -65,13 +67,14 @@ class MainFragment : Fragment() {
         binding = MainFragmentBinding.inflate(inflater, container, false)
         binding.viewModel = viewModel
         binding.lifecycleOwner = this
-        drawerLayout=binding.drawerLayout
-        drawer=binding.sectionDrawer
+        drawerLayout = binding.drawerLayout
+        drawer = binding.sectionDrawer
         requestPermissions()
         setupFAB()
         initialMainFlow()
         return binding.root
     }
+
     private fun requestPermissions() {
         (requireActivity() as MainActivity).requestPermission.launch(
             arrayOf(
@@ -83,26 +86,74 @@ class MainFragment : Fragment() {
 
     @SuppressLint("ClickableViewAccessibility")
     private fun setupFAB() {
-        binding.fabAdd.setOnTouchListener(OnSwipeListener(
-            requireContext(),
-            onSwipeBottom = {
-                layoutManager.scrollToPosition(0)
-            },
-            onSwipeLeft = {
-                if (drawerLayout.isDrawerOpen(drawer)){
-                    drawerLayout.closeDrawer(drawer)
-                }else{
-                    adapter.refresh()
+        lifecycleScope.launch {
+            requireContext().dataStore.data.collectLatest { settings->
+                val swipeUp=settings[stringPreferencesKey(SWIPE_UP)]
+                val swipeDown=settings[stringPreferencesKey(SWIPE_DOWN)]
+                val swipeLeft=settings[stringPreferencesKey(SWIPE_LEFT)]
+                val swipeRight=settings[stringPreferencesKey(SWIPE_RIGHT)]
+                binding.fabAdd.setOnTouchListener(OnSwipeListener(
+                    requireContext(),
+                    onSwipeTop = {
+                        getFABSwipeFunction(swipeString =swipeUp ).invoke()
+                    },
+                    onSwipeBottom = {
+                        getFABSwipeFunction(swipeString =swipeDown ).invoke()
+                    },
+                    onSwipeLeft = {
+                        getFABSwipeFunction(swipeString =swipeLeft ).invoke()
+                    },
+                    onSwipeRight = {
+                        getFABSwipeFunction(swipeString =swipeRight ).invoke()
+                    }
+                ))
+                settings[booleanPreferencesKey("fab_default_size_key")]?.let { setSizeDefault->
+                    if (setSizeDefault){
+                        binding.fabAdd.customSize = FloatingActionButton.NO_CUSTOM_SIZE
+                        binding.fabAdd.size = FloatingActionButton.SIZE_AUTO
+                    }else{
+                        settings[intPreferencesKey("fab_seek_bar_key")]?.let { fabCustomSize->
+                            binding.fabAdd.customSize = (fabCustomSize * requireContext().dp2PxScale()).toInt()
+                        }
+                    }
+
                 }
-            },
-            onSwipeRight = {
-                Log.e(LOG_TAG, "swipe left")
-                drawerLayout.openDrawer(drawer)
-            },
-            onSwipeTop = {}
-        ))
-        binding.fabAdd.setOnClickListener {
-            newThread()
+
+            }
+            binding.fabAdd.setOnClickListener {
+                newThread()
+            }
+        }
+    }
+    private fun getFABSwipeFunction(swipeString:String?):()->Unit{
+        val array=requireActivity().resources.getStringArray(R.array.swipe_function)
+        return when(swipeString){
+//                <item> 无</item>
+//                <item>刷新页面</item>
+//                <item>打开侧边栏</item>
+//                <item>回到顶部</item>
+            array[1]->{
+                {
+                    if (drawerLayout.isDrawerOpen(drawer)) {
+                        drawerLayout.closeDrawer(drawer)
+                    } else {
+                        adapter.refresh()
+                    }
+                }
+            }
+            array[2]->{
+                {
+                    drawerLayout.openDrawer(drawer)
+                }
+            }
+            array[3]->{
+                {
+                    layoutManager.scrollToPosition(0)
+                }
+            }
+            else->{{
+                //do nothing
+            }}
         }
     }
 
@@ -123,31 +174,32 @@ class MainFragment : Fragment() {
 //                    val drawerLayout = binding.drawerLayout
 //                    val drawer = binding.navigationView
                     val adapters = mutableListOf<DrawerRecyclerViewAdapter>()
-                    val concatAdapterConfig=ConcatAdapter
+                    val concatAdapterConfig = ConcatAdapter
                         .Config
                         .Builder()
                         .setIsolateViewTypes(false)
                         .build()
                     val sectionGroupBy = sectionList.groupBy {
-                            it.group
-                        }
+                        it.group
+                    }
                     sectionGroupBy.forEach { (group, list) ->
-                        val groupAdapter = DrawerRecyclerViewAdapter(SectionGroup(group, list)){ section->
-                            drawerLayout.close()
-                            binding.mainToolbar.title = section.sectionName
-                            viewModel.currentSectionId=section.fId
-                            viewModel.setMainFlow(
-                                section.sectionName,
-                                section.sectionUrl
-                            )
-                            observeMainFlow()
-                        }
+                        val groupAdapter =
+                            DrawerRecyclerViewAdapter(SectionGroup(group, list)) { section ->
+                                drawerLayout.close()
+                                binding.mainToolbar.title = section.sectionName
+                                viewModel.currentSectionId = section.fId
+                                viewModel.setMainFlow(
+                                    section.sectionName,
+                                    section.sectionUrl
+                                )
+                                observeMainFlow()
+                            }
                         adapters.add(groupAdapter)
                     }
-                    val concatAdapter=ConcatAdapter(concatAdapterConfig,adapters)
-                    with(binding.drawerRecyclerView){
-                        layoutManager=LinearLayoutManager(requireContext())
-                        adapter=concatAdapter
+                    val concatAdapter = ConcatAdapter(concatAdapterConfig, adapters)
+                    with(binding.drawerRecyclerView) {
+                        layoutManager = LinearLayoutManager(requireContext())
+                        adapter = concatAdapter
                     }
 
                 }
@@ -155,8 +207,9 @@ class MainFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         setupToolbar()
-
+        observeSettingsChange()
         handleSavedInstanceState()
         setupRecyclerView()
         setupSwipeRefresh()
@@ -164,13 +217,22 @@ class MainFragment : Fragment() {
         observingDataChange()
         handleLaunchLoading()
         doWhenPostSuccess()
-//        setupChips()
 
-        super.onViewCreated(view, savedInstanceState)
+    }
+    private fun observeSettingsChange() {
+        lifecycleScope.launch {
+            requireContext().dataStore.data.collectLatest { settings ->
+                settings[booleanPreferencesKey("enable_fab_key")]?.let { enable ->
+                    isFABEnable = enable
+                    binding.mainToolbar.menu.findItem(R.id.main_fragment_menu_add).isVisible = !enable
+                    binding.fabAdd.isVisible = enable
+                }
+            }
+        }
     }
 
     private fun handleSavedInstanceState() {
-        viewModel.savedInstanceState.observe(viewLifecycleOwner){
+        viewModel.savedInstanceState.observe(viewLifecycleOwner) {
             toDetailFragment(it)
         }
     }
@@ -229,7 +291,7 @@ class MainFragment : Fragment() {
                         binding.loadingImage.visibility = View.VISIBLE
                         binding.fabAdd.visibility = View.INVISIBLE
                         viewModel.database.threadDao().isThereAnyPoThreadInDB().collectLatest {
-                            if (it){
+                            if (it) {
                                 binding.loadingImage.visibility = View.INVISIBLE
                                 binding.fabAdd.visibility = View.VISIBLE
                             }
@@ -249,8 +311,12 @@ class MainFragment : Fragment() {
                     }
                     else -> {
                         binding.loadingImage.visibility = View.GONE
-                        binding.fabAdd.visibility = View.VISIBLE
-                        binding.fabAdd.visibility = View.VISIBLE
+                        if (isFABEnable) {
+                            binding.fabAdd.visibility = View.VISIBLE
+                        } else {
+                            binding.fabAdd.visibility = View.INVISIBLE
+                        }
+
                     }
                 }
             }
@@ -259,6 +325,7 @@ class MainFragment : Fragment() {
 
     private fun setupSwipeRefresh() {
         val swipeRefreshLayout = binding.swipeFreshLayout
+        swipeRefreshLayout.setColorSchemeResources(R.color.colorSecondary)
         swipeRefreshLayout.setOnRefreshListener {
             Log.e("Simsim", "main recycler view refresh by swipeRefreshLayout")
             adapter.refresh()
@@ -267,7 +334,6 @@ class MainFragment : Fragment() {
             }
         }
     }
-
 
 
     private fun setupRecyclerView() {
@@ -283,7 +349,8 @@ class MainFragment : Fragment() {
         layoutManager = LinearLayoutManager(context)
         binding.mainRecyclerView.layoutManager = layoutManager
     }
-    private fun toDetailFragment(poThreadId:Long){
+
+    private fun toDetailFragment(poThreadId: Long) {
         val action = MainFragmentDirections.actionMainFragmentToDetailDialogFragment(
             poThreadId
         )
@@ -293,10 +360,9 @@ class MainFragment : Fragment() {
     }
 
 
-
     private fun setupToolbar() {
         val toolbar = binding.mainToolbar
-
+        toolbar.inflateMenu(R.menu.main_toolbar_menu)
         toolbar.setNavigationIcon(R.drawable.ic_round_menu_24)
         toolbar.setNavigationOnClickListener {
             if (drawerLayout.isDrawerOpen(drawer)) {
@@ -313,40 +379,49 @@ class MainFragment : Fragment() {
 //        toolbar.title = viewModel.currentSection.value
 
 
-        toolbar.inflateMenu(R.menu.main_toolbar_menu)
+
         toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
+                R.id.main_fragment_menu_add -> {
+                    newThread()
+                    true
+                }
                 R.id.menu_item_refresh -> {
                     adapter.refresh()
                     layoutManager.scrollToPosition(0)
                     Log.e("Simsim", "refresh item pressed")
                     true
                 }
-            R.id.menu_item_search->{
-                val editText=layoutInflater.inflate(R.layout.search_edit_text,null,false) as EditText
-                MaterialAlertDialogBuilder(requireContext())
-                    .setView(editText)
-                    .setPositiveButton("去串"){ dialog: DialogInterface, _ ->
-                        val threadId=editText.text.toString().toLongOrNull()
-                        threadId?.let {
-                            val action =MainFragmentDirections.actionMainFragmentToDetailDialogFragment(threadId)
-                            findNavController().navigate(action)
-                            viewModel.setDetailFlow(threadId)
-                            viewModel.isMainFragment.value = false
-                            dialog.dismiss()
-                        }?: kotlin.run {
-                            Toast.makeText(requireContext(),"去不了啊，请重试",Toast.LENGTH_SHORT).show()
+                R.id.menu_item_search -> {
+                    val editText =
+                        layoutInflater.inflate(R.layout.search_edit_text, null, false) as EditText
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setView(editText)
+                        .setPositiveButton("去串") { dialog: DialogInterface, _ ->
+                            val threadId = editText.text.toString().toLongOrNull()
+                            threadId?.let {
+                                val action =
+                                    MainFragmentDirections.actionMainFragmentToDetailDialogFragment(
+                                        threadId
+                                    )
+                                findNavController().navigate(action)
+                                viewModel.setDetailFlow(threadId)
+                                viewModel.isMainFragment.value = false
+                                dialog.dismiss()
+                            } ?: kotlin.run {
+                                Toast.makeText(requireContext(), "去不了啊，请重试", Toast.LENGTH_SHORT)
+                                    .show()
+                            }
                         }
-                    }
-                    .setNegativeButton("不去了"){dialog: DialogInterface, _ ->
-                        dialog.dismiss()
+                        .setNegativeButton("不去了") { dialog: DialogInterface, _ ->
+                            dialog.dismiss()
 
-                    }
-                    .show()
-                true
-            }
-                R.id.main_menu_setting->{
-                    val action=MainFragmentDirections.actionMainFragmentToSettingsDialogFragment()
+                        }
+                        .show()
+                    true
+                }
+                R.id.main_menu_setting -> {
+                    val action = MainFragmentDirections.actionMainFragmentToSettingsDialogFragment()
                     findNavController().navigate(action)
                     true
                 }
@@ -354,13 +429,14 @@ class MainFragment : Fragment() {
             }
         }
     }
-    fun doWhenPostSuccess(){
+
+    fun doWhenPostSuccess() {
         lifecycleScope.launch {
-            viewModel.successPost.observe(viewLifecycleOwner){success->
-                if (success){
-                    Snackbar.make(binding.mainCoordinatorLayout,"发串成功",Snackbar.LENGTH_LONG)
+            viewModel.successPost.observe(viewLifecycleOwner) { success ->
+                if (success) {
+                    Snackbar.make(binding.mainCoordinatorLayout, "发串成功", Snackbar.LENGTH_LONG)
                         .show()
-                }else{
+                } else {
                     //todo
                 }
             }

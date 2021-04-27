@@ -3,7 +3,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory
         app:iconSpaceReserved="false"
-        app:initialExpandedChildrenCount="1"
         app:title="悬浮按钮">
 
         <SwitchPreference
@@ -11,20 +10,31 @@
             app:iconSpaceReserved="false"
             app:key="enable_fab_key"
             app:title="使用悬浮按钮" />
+        <SwitchPreference
+            app:defaultValue="true"
+            app:iconSpaceReserved="false"
+            app:isPreferenceVisible="true"
+            app:key="fab_default_size_key"
+            app:title="设为默认大小" />
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="fab_location_set_default_key"
+            app:summary="设置页长按可调整位置哦"
+            app:title="设为默认位置" />
         <SeekBarPreference
             app:defaultValue="20"
             app:iconSpaceReserved="false"
-            app:isPreferenceVisible="true"
+            app:isPreferenceVisible="false"
             app:key="fab_seek_bar_key"
             android:max="100"
             app:min="20"
             app:title="悬浮按钮大小"
             app:useSimpleSummaryProvider="true" />
         <Preference
+            app:key="fab_swipe_functions_key"
             app:iconSpaceReserved="false"
-            app:isPreferenceVisible="true"
-            app:key="fab_default_size_key"
-            app:title="设为默认大小" />
+            app:title="滑动时的功能"
+            />
 
 
     </PreferenceCategory>

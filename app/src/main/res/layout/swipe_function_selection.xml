@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:padding="10dp">
+
+    <TextView
+        android:id="@+id/tv_1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="上滑"
+        app:layout_constraintBottom_toBottomOf="@+id/fab_swipe_up"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/fab_swipe_up" />
+
+    <Spinner
+        android:id="@+id/fab_swipe_up"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:entries="@array/swipe_function"
+        android:gravity="center"
+        android:padding="5dp"
+        app:layout_constraintStart_toEndOf="@+id/tv_1"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="下滑"
+        app:layout_constraintBottom_toBottomOf="@+id/fab_swipe_down"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/fab_swipe_down" />
+
+    <Spinner
+        android:id="@+id/fab_swipe_down"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:entries="@array/swipe_function"
+        android:gravity="center"
+        android:padding="5dp"
+        app:layout_constraintStart_toEndOf="@+id/tv_2"
+        app:layout_constraintTop_toBottomOf="@id/fab_swipe_up" />
+
+    <TextView
+        android:id="@+id/tv_3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="左滑"
+        app:layout_constraintBottom_toBottomOf="@+id/fab_swipe_left"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/fab_swipe_left" />
+
+    <Spinner
+        android:id="@+id/fab_swipe_left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:entries="@array/swipe_function"
+        android:gravity="center"
+        android:padding="5dp"
+        app:layout_constraintStart_toEndOf="@+id/tv_3"
+        app:layout_constraintTop_toBottomOf="@id/fab_swipe_down" />
+
+    <TextView
+        android:id="@+id/tv_4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="右滑"
+        app:layout_constraintBottom_toBottomOf="@+id/fab_swipe_right"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/fab_swipe_right" />
+
+    <Spinner
+        android:id="@+id/fab_swipe_right"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:entries="@array/swipe_function"
+        android:gravity="center"
+        android:padding="5dp"
+        app:layout_constraintStart_toEndOf="@+id/tv_4"
+        app:layout_constraintTop_toBottomOf="@id/fab_swipe_left" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

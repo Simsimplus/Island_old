@@ -40,7 +40,7 @@
             android:contentDescription="@string/fab_add_new_thread"
             android:focusable="true"
             android:visibility="gone"
-            app:fabSize="mini"
+            app:fabSize="auto"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:srcCompat="@drawable/ic_round_add_24"

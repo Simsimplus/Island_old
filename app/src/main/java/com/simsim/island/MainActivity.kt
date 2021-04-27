@@ -30,6 +30,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import com.bumptech.glide.Glide
 import com.divyanshu.draw.activity.DrawingActivity
+import com.google.android.material.snackbar.Snackbar
 import com.google.zxing.integration.android.IntentIntegrator
 import com.journeyapps.barcodescanner.CaptureActivity
 import com.journeyapps.barcodescanner.CaptureManager
@@ -45,6 +46,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -56,6 +58,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding:MainActivityBinding
     private val viewModel:MainViewModel by viewModels()
     @Inject lateinit var database:IslandDatabase
+    private var backPressTime=LocalDateTime.now()
 
     internal val requestPermission=registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()){ permissions->
         permissions.entries.forEach{ entry->
@@ -285,7 +288,15 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
+    override fun onBackPressed() {
+        val now=LocalDateTime.now()
+        if (Duration.between(backPressTime,now).seconds<0.5){
+            finish()
+        }else{
+            Snackbar.make(binding.mainActivityCoordinatorLayout,"再划一次退出",500).show()
+            backPressTime=now
+        }
+    }
     companion object{
         private const val REQUEST_IMAGE_CAMERA=1
     }

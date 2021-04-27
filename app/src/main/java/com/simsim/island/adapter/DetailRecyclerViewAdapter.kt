@@ -92,7 +92,7 @@ class DetailRecyclerViewAdapter(
             val content=SpannableString(it.content.replace("\\[h\\]|\\[\\/h\\]".toRegex(),""))
 
             hideTexts.distinct().forEach { hideText->
-                hideText.toRegex().findAll(content).forEach {
+                Regex.fromLiteral(hideText).findAll(content).forEach {
                     content.setSpan(
                         HideTextSpan(ContextCompat.getColor(fragment.requireContext(),R.color.content_font_color)){},
                         it.range.first,

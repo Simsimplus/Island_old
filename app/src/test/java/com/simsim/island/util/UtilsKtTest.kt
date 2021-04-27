@@ -15,5 +15,8 @@ class UtilsKtTest {
         println("https://adnmb3.com/m/t/36304658?page=37".findPageNumber())
         println("https://adnmb3.com/m/t/36458060?r=36458142".removeQueryTail())
         println("""{"cookie":"%D8%A9%AE%99%1BKc%BC%16iDt%94%7B%DDm%86%15%81%AA%8Ct%3E%BB"}""".extractCookie())
+        println(Regex.fromLiteral("没老婆哪来的女儿⊂彡☆))д´) ").pattern)
+        assert(Regex.fromLiteral("没老婆哪来的女儿⊂彡☆))д´) ").matches("没老婆哪来的女儿⊂彡☆))д´) "))
+
     }
 }

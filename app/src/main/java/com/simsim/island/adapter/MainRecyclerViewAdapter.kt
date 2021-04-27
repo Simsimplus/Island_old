@@ -95,7 +95,7 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imag
                 val content= SpannableString(poThread.content.replace("\\[h\\]|\\[\\/h\\]".toRegex(),""))
 
                 hideTexts.distinct().forEach { hideText->
-                    hideText.toRegex().findAll(content).forEach {
+                    Regex.fromLiteral(hideText).findAll(content).forEach {
                         content.setSpan(
                             BackgroundColorSpan(ContextCompat.getColor(fragment.requireContext(),R.color.content_font_color)),
                             it.range.first,

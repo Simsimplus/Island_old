@@ -48,9 +48,9 @@
         <item>自动</item>
     </string-array>
     <string-array name="swipe_function">
+        <item> 无</item>
         <item>刷新页面</item>
         <item>打开侧边栏</item>
         <item>回到顶部</item>
-        <item></item>
     </string-array>
 </resources>

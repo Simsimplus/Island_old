@@ -4,6 +4,7 @@ import android.content.DialogInterface
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.datastore.core.DataStore
@@ -25,12 +26,10 @@ import com.simsim.island.MainActivity
 import com.simsim.island.R
 import com.simsim.island.dataStore
 import com.simsim.island.databinding.SettingsDialogFragmentBinding
+import com.simsim.island.databinding.SwipeFunctionSelectionBinding
 import com.simsim.island.dp2PxScale
 import com.simsim.island.model.Cookie
-import com.simsim.island.util.LOG_TAG
-import com.simsim.island.util.ellipsis
-import com.simsim.island.util.extractCookie
-import com.simsim.island.util.getPath
+import com.simsim.island.util.*
 import dagger.hilt.android.AndroidEntryPoint
 import id.zelory.compressor.Compressor
 import id.zelory.compressor.constraint.resolution
@@ -40,7 +39,6 @@ import kotlinx.coroutines.flow.*
 import java.io.File
 import java.io.FileInputStream
 import kotlin.properties.Delegates
-import kotlin.streams.toList
 
 @AndroidEntryPoint
 class SettingsFragment(
@@ -64,82 +62,132 @@ class SettingsFragment(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.loginCookies.observe(viewLifecycleOwner) { loginCookieMap->
-            if (!loginCookieMap.isNullOrEmpty()){
-                Log.e(LOG_TAG,"get login cookies from flow:$loginCookieMap")
+        viewModel.loginCookies.observe(viewLifecycleOwner) { loginCookieMap ->
+            if (!loginCookieMap.isNullOrEmpty()) {
+                Log.e(LOG_TAG, "get login cookies from flow:$loginCookieMap")
                 viewModel.getCookies(loginCookieMap)
-                viewModel.loginCookies.value= mapOf()
-                viewModel.loadCookieFromUserSystemSuccess.observe(viewLifecycleOwner){success->
-                    if (success){
+                viewModel.loginCookies.value = mapOf()
+                viewModel.loadCookieFromUserSystemSuccess.observe(viewLifecycleOwner) { success ->
+                    if (success) {
                         Snackbar.make(
                             binding.settingCoordinatorLayout,
                             "用户系统导入饼干大成功",
                             Snackbar.LENGTH_LONG
                         ).show()
-                        viewModel.loadCookieFromUserSystemSuccess.value=false
+                        viewModel.loadCookieFromUserSystemSuccess.value = false
                     }
                 }
             }
         }
     }
+
     private fun setupPreferences() {
         lifecycleScope.launch {
-            val fabSizeSeekBar = findPreference<SeekBarPreference>("fab_seek_bar_key")
-                ?.apply {
-                    setOnPreferenceChangeListener { _, newValue ->
-                        val fabSize = newValue as Int
-                        binding.fabAdd.customSize = (fabSize * dp2PxScale).toInt()
-                        true
-                    }
-                } ?: throw Exception("can not find fabSizeSeekBar")
+            val fabSizeSeekBar = findPreference<SeekBarPreference>("fab_seek_bar_key")?: throw Exception("can not find fabSizeSeekBar")
+            val fabSizeDefault = findPreference<SwitchPreference>("fab_default_size_key")?: throw Exception("can not find setFabDefaultSize")
+            val fabSwitch = findPreference<SwitchPreference>("enable_fab_key")?: throw Exception("can not find fabSwitch")
+            val fabSwipeFunction=findPreference<Preference>("fab_swipe_functions_key")?:throw Exception("can not find fabSwipeFunction")
+            val cookieInUse = findPreference<Preference>("cookie_in_use_key")?: throw Exception("can not find cookieInUse")
+            val cookieQR = findPreference<Preference>("cookie_from_QR_code_key") ?: throw Exception("can not find cookieQR")
+            val cookieWebView = findPreference<Preference>("cookie_from_web_view_key")?: throw Exception("can not find cookieWebView")
 
-            val fabSizeDefault = findPreference<Preference>("fab_default_size_key")
-                ?.apply {
-                    setOnPreferenceClickListener {
-                        binding.fabAdd.customSize = FloatingActionButton.NO_CUSTOM_SIZE
-                        binding.fabAdd.size = FloatingActionButton.SIZE_AUTO
-                        true
-                    }
-                } ?: throw Exception("can not find setFabDefaultSize")
-
-            val fabSwitch = findPreference<SwitchPreference>("enable_fab_key")?.apply {
+            fabSwitch.apply {
                 var isFabEnable: Boolean by Delegates.observable(this.isChecked) { _, _, newValue ->
-                    binding.settingToolbar.menu.findItem(R.id.setting_menu_add).isVisible = !newValue
-                    fabSizeSeekBar.isVisible = newValue
+                    binding.settingToolbar.menu.findItem(R.id.setting_menu_add).isVisible =
+                        !newValue
+                    if (!fabSizeDefault.isChecked){
+                        fabSizeSeekBar.isVisible=newValue
+                    }
+                    fabSwipeFunction.isVisible=newValue
                     fabSizeDefault.isVisible = newValue
                     binding.fabAdd.isVisible = newValue
                 }
                 isFabEnable = isChecked
                 setOnPreferenceChangeListener { _, newValue ->
                     isFabEnable = newValue as Boolean
-                    //                binding.settingToolbar.menu.findItem(R.id.setting_menu_add).isVisible=!isFabEnable
-                    //                fabSizeSeekBar.isVisible=isFabEnable
-                    //                fabSizeDefault.isVisible=isFabEnable
-                    //                binding.fabAdd.isVisible=isFabEnable
                     true
                 }
-            } ?: throw Exception("can not find fabSwitch")
+            }
+            fabSizeDefault.apply {
+//                fabSizeSeekBar.isVisible = !isChecked
+//                setOnPreferenceChangeListener { _, value ->
+//                    val setDefault = value as Boolean
+//                    if (setDefault) {
+//                        binding.fabAdd.customSize = FloatingActionButton.NO_CUSTOM_SIZE
+//                        binding.fabAdd.size = FloatingActionButton.SIZE_AUTO
+//                    }
+//                    fabSizeSeekBar.isVisible = !setDefault
+//                    true
+//                }
+            }
 
-            val cookieInUse = findPreference<Preference>("cookie_in_use_key")?.apply {
+            fabSizeSeekBar.apply {
+//                setOnPreferenceChangeListener { _, newValue ->
+//                    val fabSize = newValue as Int
+//                    if (!fabSizeDefault.isChecked) {
+//                        binding.fabAdd.customSize = (fabSize * dp2PxScale).toInt()
+//                    }
+//                    true
+//                }
+            }
+            fabSwipeFunction.apply {
+                setOnPreferenceClickListener { p->
+                    lifecycleScope.launch {
+                        val swipeFunctionSelectionBinding= SwipeFunctionSelectionBinding.inflate(LayoutInflater.from(activity))
+                        val swipeFunctionArray=activity.resources.getStringArray(R.array.swipe_function)
+                        preferenceDataStore?.apply {
+                            getString(SWIPE_UP,null)?.let {
+                                swipeFunctionSelectionBinding.fabSwipeUp.setSelection(swipeFunctionArray.indexOfOrFirst(it))
+                            }
+                            getString(SWIPE_DOWN,null)?.let {
+                                swipeFunctionSelectionBinding.fabSwipeDown.setSelection(swipeFunctionArray.indexOfOrFirst(it))
+                            }
+                            getString(SWIPE_LEFT,null)?.let {
+                                swipeFunctionSelectionBinding.fabSwipeLeft.setSelection(swipeFunctionArray.indexOfOrFirst(it))
+                            }
+                            getString(SWIPE_RIGHT,null)?.let {
+                                swipeFunctionSelectionBinding.fabSwipeRight.setSelection(swipeFunctionArray.indexOfOrFirst(it))
+                            }
+                        }
+                        MaterialAlertDialogBuilder(activity)
+                            .setView(swipeFunctionSelectionBinding.root)
+                            .setOnDismissListener {
+                                preferenceDataStore?.apply {
+                                    putString(SWIPE_UP,swipeFunctionSelectionBinding.fabSwipeUp.selectedItem.toString())
+                                    putString(SWIPE_DOWN,swipeFunctionSelectionBinding.fabSwipeDown.selectedItem.toString())
+                                    putString(SWIPE_LEFT,swipeFunctionSelectionBinding.fabSwipeLeft.selectedItem.toString())
+                                    putString(SWIPE_RIGHT,swipeFunctionSelectionBinding.fabSwipeRight.selectedItem.toString())
+                                }
+                            }
+                            .show()
+                    }
+                    true
+                }
+            }
+
+
+
+
+
+
+            cookieInUse.apply {
                 var cookie = preferenceDataStore!!.getString("cookie_in_use_key", null)
                 lifecycleScope.launch {
                     this@apply.summary = (cookie?.let {
-                        val cookieInDB=viewModel.database.cookieDao().getCookieByValue(it)
-                        "现用：${cookieInDB?.name ?:"(饼干值) $it"}"
+                        val cookieInDB = viewModel.database.cookieDao().getCookieByValue(it)
+                        "现用：${cookieInDB?.name ?: "(饼干值) $it"}"
                     } ?: "无cookie可用或未设置").ellipsis()
                 }
-
-
                 setOnPreferenceClickListener {
                     cookie = preferenceDataStore!!.getString("cookie_in_use_key", null)
 //                    val cookieSet =
 //                        preferenceDataStore!!.getStringSet("cookies", mutableSetOf()) ?: mutableSetOf()
                     lifecycleScope.launch {
-                        val cookieList =viewModel.database.cookieDao().getAllCookies()
-                        val cookieNameList=cookieList.map {
+                        val cookieList = viewModel.database.cookieDao().getAllCookies()
+                        val cookieNameList = cookieList.map {
                             it.name
                         }
-                        val cookieValueList=cookieList.map {
+                        val cookieValueList = cookieList.map {
                             it.cookie
                         }
 
@@ -149,7 +197,10 @@ class SettingsFragment(
                                 cookieNameList.map { it.ellipsis(10) }.toTypedArray(),
                                 if (cookieIndex != -1) cookieIndex else 0
                             ) { _, position ->
-                                preferenceDataStore!!.putString("cookie_in_use_key", cookieValueList[position])
+                                preferenceDataStore!!.putString(
+                                    "cookie_in_use_key",
+                                    cookieValueList[position]
+                                )
                                 this@apply.summary = "现用：${cookieNameList[position]}".ellipsis()
                             }
                             .show()
@@ -158,8 +209,8 @@ class SettingsFragment(
                     true
                 }
             }
-                ?: throw Exception("can not find cookieInUse")
-            val cookieQR = findPreference<Preference>("cookie_from_QR_code_key")?.apply {
+
+            cookieQR.apply {
                 setOnPreferenceClickListener {
                     MaterialAlertDialogBuilder(activity).setItems(
                         arrayOf(
@@ -173,7 +224,7 @@ class SettingsFragment(
                                 activity.scanQRCode.launch(Unit)
                             }
                             1 -> {
-                                QRCodeFromImage()
+                                getQRCodeFromImage()
                             }
                         }
                     }.show()
@@ -186,10 +237,14 @@ class SettingsFragment(
                             ).setAction("使用") {
                                 lifecycleScope.launch {
                                     preferenceDataStore!!.putString("cookie_in_use_key", result)
-                                    val cookieInDB=viewModel.database.cookieDao().getCookieByValue(result)
-                                    val summary=cookieInDB?.name ?:"(饼干值) $result"
-                                    cookieInDB?: kotlin.run {
-                                        lifecycleScope.launch {viewModel.database.cookieDao().insertAllCookies(listOf(Cookie(result,"无名")))  }
+                                    val cookieInDB =
+                                        viewModel.database.cookieDao().getCookieByValue(result)
+                                    val summary = cookieInDB?.name ?: "(饼干值) $result"
+                                    cookieInDB ?: kotlin.run {
+                                        lifecycleScope.launch {
+                                            viewModel.database.cookieDao()
+                                                .insertAllCookies(listOf(Cookie(result, "无名")))
+                                        }
                                     }
                                     cookieInUse.summary = "现用：$summary".ellipsis()
                                 }
@@ -208,30 +263,31 @@ class SettingsFragment(
                     }
                     true
                 }
-            } ?: throw Exception("can not find cookieQR")
+            }
 
-            val cookieWebView = findPreference<Preference>("cookie_from_web_view_key")?.apply {
+            cookieWebView.apply {
                 setOnPreferenceClickListener {
-                    val action=SettingsFragmentDirections.actionGlobalWebViewDialogFragment("https://adnmb3.com/Member/User/Index/login.html")
+                    val action =
+                        SettingsFragmentDirections.actionGlobalWebViewDialogFragment("https://adnmb3.com/Member/User/Index/login.html")
                     findNavController().navigate(action)
                     true
                 }
 
-            } ?: throw Exception("can not find cookieWebView")
+            }
         }
     }
 
-    private fun QRCodeFromImage() {
+    private fun getQRCodeFromImage() {
         activity.pickPicture.launch("image/*")
         viewModel.pictureUri.observe(viewLifecycleOwner) { photoUri ->
             photoUri?.let {
-            CoroutineScope(Dispatchers.IO).launch {
+                CoroutineScope(Dispatchers.IO).launch {
                     getPath(activity, photoUri)?.let { imagePath ->
                         var compressedImageFile = File(imagePath)
                         if (compressedImageFile.readBytes().size > 1024 * 100) {
                             compressedImageFile =
                                 Compressor.compress(activity, compressedImageFile) {
-                                    resolution(100,100)
+                                    resolution(100, 100)
                                     size(1024 * 100)
                                 }
                         }
@@ -239,8 +295,8 @@ class SettingsFragment(
                             FileInputStream(compressedImageFile).use { fileInputStream ->
                                 BitmapFactory.decodeStream(fileInputStream)
                             }
-                        val width=compressedBitmap.width
-                        val height=compressedBitmap.height
+                        val width = compressedBitmap.width
+                        val height = compressedBitmap.height
                         val intArray = IntArray(width * height)
                         compressedBitmap.getPixels(
                             intArray,
@@ -257,7 +313,7 @@ class SettingsFragment(
                             intArray
                         )
                         val binaryBitmap = BinaryBitmap(HybridBinarizer(luminanceSource))
-                        val result=try {
+                        val result = try {
                             MultiFormatReader().decode(binaryBitmap).text
                         } catch (e: Exception) {
                             Log.e(
@@ -268,7 +324,7 @@ class SettingsFragment(
                         }
                         result?.let {
                             CoroutineScope(Dispatchers.Main).launch {
-                                viewModel.QRcodeResult.value =result.extractCookie()
+                                viewModel.QRcodeResult.value = result.extractCookie()
                                 viewModel.pictureUri.value = null
                             }
                         }
@@ -360,8 +416,11 @@ class SettingsFragment(
             val stringSetKey = stringSetPreferencesKey(key)
             lifecycleScope.launch {
                 dataStore.edit { settings ->
-                    settings[stringSetKey] = values?: mutableSetOf()
-                    Log.e(LOG_TAG, "save string set to dataStore with key:$key:${values?:"set is empty"}")
+                    settings[stringSetKey] = values ?: mutableSetOf()
+                    Log.e(
+                        LOG_TAG,
+                        "save string set to dataStore with key:$key:${values ?: "set is empty"}"
+                    )
                 }
             }
         }
@@ -374,7 +433,7 @@ class SettingsFragment(
                 val stringSetKey = stringSetPreferencesKey(key)
                 val dataStoreResult = withContext(Dispatchers.IO) {
                     dataStore.data.map { settings ->
-                        settings[stringSetKey]?.toMutableSet()?:defValues?: mutableSetOf()
+                        settings[stringSetKey]?.toMutableSet() ?: defValues ?: mutableSetOf()
                     }.first()
                 }
                 Log.e(LOG_TAG, "get string set from dataStore with key:$key:$dataStoreResult")
@@ -385,22 +444,3 @@ class SettingsFragment(
 
     }
 }
-
-//        lifecycleScope.launch {
-//            dataStore.data.collectLatest {settings->
-//                settings[booleanPreferencesKey("enable_fab_key")]?.let { isFabEnable->
-//                    binding.settingToolbar.menu.findItem(R.id.setting_menu_add).isVisible=!isFabEnable
-//                    fabSizeSeekBar.isVisible=isFabEnable
-//                    fabSizeDropDown.isVisible=isFabEnable
-//                    binding.fabAdd.isVisible=isFabEnable
-//
-//                }
-//                settings[intPreferencesKey("fab_seek_bar_key")]?.let {fabSize->
-//                    binding.fabAdd.customSize=(fabSize*dp2PxScale).toInt()
-//                }
-//                settings[stringPreferencesKey("fab_drop_down_key")]?.let { fabSize->
-//
-//                }
-//
-//            }
-//        }
