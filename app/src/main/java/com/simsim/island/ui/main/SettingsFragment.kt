@@ -1,20 +1,23 @@
 package com.simsim.island.ui.main
 
+import android.app.AlertDialog
 import android.content.DialogInterface
 import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.LinearLayout
+import android.widget.SeekBar
 import androidx.core.view.isVisible
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SeekBarPreference
-import androidx.preference.SwitchPreference
+import androidx.preference.*
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
@@ -84,8 +87,8 @@ class SettingsFragment(
     private fun setupPreferences() {
         lifecycleScope.launch {
             val fabSizeSeekBar = findPreference<SeekBarPreference>("fab_seek_bar_key")?: throw Exception("can not find fabSizeSeekBar")
-            val fabSizeDefault = findPreference<SwitchPreference>("fab_default_size_key")?: throw Exception("can not find setFabDefaultSize")
-            val fabSwitch = findPreference<SwitchPreference>("enable_fab_key")?: throw Exception("can not find fabSwitch")
+            val fabSizeDefault = findPreference<SwitchPreferenceCompat>("fab_default_size_key")?: throw Exception("can not find setFabDefaultSize")
+            val fabSwitch = findPreference<SwitchPreferenceCompat>("enable_fab_key")?: throw Exception("can not find fabSwitch")
             val fabSwipeFunction=findPreference<Preference>("fab_swipe_functions_key")?:throw Exception("can not find fabSwipeFunction")
             val cookieInUse = findPreference<Preference>("cookie_in_use_key")?: throw Exception("can not find cookieInUse")
             val cookieQR = findPreference<Preference>("cookie_from_QR_code_key") ?: throw Exception("can not find cookieQR")
@@ -109,27 +112,27 @@ class SettingsFragment(
                 }
             }
             fabSizeDefault.apply {
-//                fabSizeSeekBar.isVisible = !isChecked
-//                setOnPreferenceChangeListener { _, value ->
-//                    val setDefault = value as Boolean
-//                    if (setDefault) {
-//                        binding.fabAdd.customSize = FloatingActionButton.NO_CUSTOM_SIZE
-//                        binding.fabAdd.size = FloatingActionButton.SIZE_AUTO
-//                    }
-//                    fabSizeSeekBar.isVisible = !setDefault
+                fabSizeSeekBar.isVisible = !isChecked
+                setOnPreferenceChangeListener { _, value ->
+                    val setDefault = value as Boolean
+                    fabSizeSeekBar.isVisible = !setDefault
+                    true
+                }
+
+            }
+
+            fabSizeSeekBar.apply {
+//                setOnPreferenceClickListener {
+//                    MaterialAlertDialogBuilder(activity).setView(
+//                        LayoutInflater.from(activity).inflate(R.layout.number_picker,binding.root,false).apply {
+//                            min=0
+//                            max=100
+//                        }
+//                    ).show()
 //                    true
 //                }
             }
 
-            fabSizeSeekBar.apply {
-//                setOnPreferenceChangeListener { _, newValue ->
-//                    val fabSize = newValue as Int
-//                    if (!fabSizeDefault.isChecked) {
-//                        binding.fabAdd.customSize = (fabSize * dp2PxScale).toInt()
-//                    }
-//                    true
-//                }
-            }
             fabSwipeFunction.apply {
                 setOnPreferenceClickListener { p->
                     lifecycleScope.launch {

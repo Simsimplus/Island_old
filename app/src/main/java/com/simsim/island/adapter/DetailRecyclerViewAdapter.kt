@@ -69,17 +69,27 @@ class DetailRecyclerViewAdapter(
     }
 
     override fun onBindViewHolder(holder: BasicThreadViewHolder, position: Int) {
+        val binding = DetailRecyclerviewViewholderBinding.bind(holder.view)
         val thread = getItem(position)
         thread?.let {
-            bindHolder(holder, it)
+            binding.firstRowDetail.visibility=View.VISIBLE
+            binding.secondRowDetail.visibility=View.VISIBLE
+            binding.firstRowDetailPlaceholder.visibility=View.GONE
+            binding.secondRowDetailPlaceholder.visibility=View.GONE
+            bindHolder(binding, it)
+        }?: kotlin.run {
+            binding.firstRowDetail.visibility=View.GONE
+            binding.secondRowDetail.visibility=View.GONE
+            binding.firstRowDetailPlaceholder.visibility=View.VISIBLE
+            binding.secondRowDetailPlaceholder.visibility=View.VISIBLE
         }
     }
 
     fun bindHolder(
-        holder: BasicThreadViewHolder,
+        binding: DetailRecyclerviewViewholderBinding,
         it: BasicThread
     ) {
-        val binding = DetailRecyclerviewViewholderBinding.bind(holder.view)
+
         binding.uidTextview.text = handleThreadId(it.uid)
         binding.timeTextview.text = handleThreadTime(it.time)
         binding.threadIdTextview.text = it.replyThreadId.toString()
@@ -145,53 +155,53 @@ class DetailRecyclerViewAdapter(
         }
 
         //add text view to hold reference
-        if (it.references.isNotBlank()) {
-            val references = it.references.split(referenceStringSpliterator).reversed()
-            val layoutParams = binding.contentTextview.layoutParams.apply {
-                width=ViewGroup.LayoutParams.WRAP_CONTENT
-            }
-    //                val textSize = fragment.resources.getDimension(R.dimen.content_font_size)
-            references.forEach { reference ->
-                val textView = LayoutInflater.from(fragment.requireContext())
-                    .inflate(
-                        R.layout.reference_view,
-                        binding.detailFragmentContentLayout,
-                        false
-                    ) as TextView
-                textView.apply {
-                    text = reference
-                    paintFlags = paintFlags or Paint.UNDERLINE_TEXT_FLAG
-    //                        setTextSize(textSize)
-                    tag = reference
-                    setTextColor(
-                        ContextCompat.getColor(
-                            fragment.requireContext(),
-                            R.color.thread_reference
-                        )
-                    )
-                    setOnClickListener {
-                        referenceClickListener(reference)
-                    }
-                }
-                binding.detailFragmentContentLayout.addView(textView, 0, layoutParams)
-            }
-        } else {
-            binding.detailFragmentContentLayout.children.forEach { childView ->
-                childView.tag?.run {
-                    binding.detailFragmentContentLayout.removeView(childView)
-                }
-            }
-        }
+//        if (it.references.isNotBlank()) {
+//            val references = it.references.split(referenceStringSpliterator).reversed()
+//            val layoutParams = binding.contentTextview.layoutParams.apply {
+//                width=ViewGroup.LayoutParams.WRAP_CONTENT
+//            }
+//    //                val textSize = fragment.resources.getDimension(R.dimen.content_font_size)
+//            references.forEach { reference ->
+//                val textView = LayoutInflater.from(fragment.requireContext())
+//                    .inflate(
+//                        R.layout.reference_view,
+//                        binding.detailFragmentContentLayout,
+//                        false
+//                    ) as TextView
+//                textView.apply {
+//                    text = reference
+//                    paintFlags = paintFlags or Paint.UNDERLINE_TEXT_FLAG
+//    //                        setTextSize(textSize)
+//                    tag = reference
+//                    setTextColor(
+//                        ContextCompat.getColor(
+//                            fragment.requireContext(),
+//                            R.color.thread_reference
+//                        )
+//                    )
+//                    setOnClickListener {
+//                        referenceClickListener(reference)
+//                    }
+//                }
+//                binding.detailFragmentContentLayout.addView(textView, 0, layoutParams)
+//            }
+//        } else {
+//            binding.detailFragmentContentLayout.children.forEach { childView ->
+//                childView.tag?.run {
+//                    binding.detailFragmentContentLayout.removeView(childView)
+//                }
+//            }
+//        }
         // if a posted image exists, load it from internet
         if (it.imageUrl.isNotBlank()) {
             val imageUrl = it.imageUrl
             if (imageUrl.endsWith("gif")) {
-                Glide.with(holder.itemView).asGif().load(imageUrl)
+                Glide.with(binding.root).asGif().load(imageUrl)
                     .placeholder(R.drawable.image_loading)
                     .error(R.drawable.image_load_failed)
                     .into(binding.imagePosted)
             } else {
-                Glide.with(holder.itemView).asBitmap().load(imageUrl)
+                Glide.with(binding.root).asBitmap().load(imageUrl)
                     .placeholder(R.drawable.image_loading)
                     .error(R.drawable.image_load_failed).dontAnimate()
                     .into(binding.imagePosted)
@@ -236,7 +246,7 @@ class DetailRecyclerViewAdapter(
             }
 
             override fun areContentsTheSame(oldItem: BasicThread, newItem: BasicThread): Boolean {
-                return oldItem.replyThreadId == newItem.replyThreadId
+                return oldItem == newItem
             }
 
         }

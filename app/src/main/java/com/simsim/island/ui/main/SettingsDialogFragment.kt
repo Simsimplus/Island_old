@@ -3,11 +3,14 @@ package com.simsim.island.ui.main
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.datastore.dataStore
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -33,6 +36,7 @@ import kotlinx.coroutines.launch
 class SettingsDialogFragment :DialogFragment(){
     private val viewModel:MainViewModel by activityViewModels()
     private lateinit var binding:SettingsDialogFragmentBinding
+    private lateinit var fab:FloatingActionButton
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NORMAL, R.style.fullscreenDialog)
@@ -45,6 +49,7 @@ class SettingsDialogFragment :DialogFragment(){
         savedInstanceState: Bundle?
     ): View? {
         binding= SettingsDialogFragmentBinding.inflate(inflater)
+        fab=binding.fabAdd
         childFragmentManager.commit {
             add(R.id.setting_fragment_container,SettingsFragment(requireActivity() as MainActivity,viewModel,binding))
             addToBackStack("setting")
@@ -65,7 +70,10 @@ class SettingsDialogFragment :DialogFragment(){
                 val swipeDown=settings[stringPreferencesKey(SWIPE_DOWN)]
                 val swipeLeft=settings[stringPreferencesKey(SWIPE_LEFT)]
                 val swipeRight=settings[stringPreferencesKey(SWIPE_RIGHT)]
-                binding.fabAdd.setOnTouchListener(OnSwipeListener(
+                fab.setOnClickListener {
+                    Log.e(LOG_TAG,"fab clicked")
+                }
+                fab.setOnTouchListener(OnSwipeListener(
                     requireContext(),
                     onSwipeTop = {
                         getFABSwipeFunction(swipeString =swipeUp ).invoke()
@@ -83,14 +91,28 @@ class SettingsDialogFragment :DialogFragment(){
 
                 settings[booleanPreferencesKey("fab_default_size_key")]?.let { setSizeDefault->
                     if (setSizeDefault){
-                        binding.fabAdd.customSize = FloatingActionButton.NO_CUSTOM_SIZE
-                        binding.fabAdd.size = FloatingActionButton.SIZE_AUTO
+                        fab.customSize = FloatingActionButton.NO_CUSTOM_SIZE
+                        fab.size = FloatingActionButton.SIZE_AUTO
                     }else{
                         settings[intPreferencesKey("fab_seek_bar_key")]?.let { fabCustomSize->
-                            binding.fabAdd.customSize = (fabCustomSize * requireContext().dp2PxScale()).toInt()
+                            fab.customSize = (fabCustomSize * requireContext().dp2PxScale()).toInt()
                         }
                     }
 
+                }
+                (settings[booleanPreferencesKey("fab_place_right_key")]?:true).let { placeRight->
+                    val sideMargin=settings[intPreferencesKey("fab_side_distance_key")]?:0
+                    val bottomMargin=settings[intPreferencesKey("fab_side_bottom_key")]?:0
+                    val layoutParams=fab.layoutParams as CoordinatorLayout.LayoutParams
+                    layoutParams.bottomMargin=((30+bottomMargin)*requireContext().dp2PxScale()).toInt()
+                    if (placeRight){
+                        layoutParams.gravity= Gravity.BOTTOM or Gravity.RIGHT
+                        layoutParams.rightMargin=((30+sideMargin)*requireContext().dp2PxScale()).toInt()
+                    }else{
+                        layoutParams.gravity= Gravity.BOTTOM or Gravity.LEFT
+                        layoutParams.leftMargin=((30+sideMargin)*requireContext().dp2PxScale()).toInt()
+                    }
+                    fab.layoutParams=layoutParams
                 }
             }
 

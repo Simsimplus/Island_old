@@ -3,10 +3,13 @@ package com.simsim.island.ui.main
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -44,6 +47,7 @@ class DetailDialogFragment : DialogFragment() {
     private val args: DetailDialogFragmentArgs by navArgs()
     private lateinit var binding: DetailDialogfragmentBinding
     private lateinit var adapter: DetailRecyclerViewAdapter
+    private lateinit var fab:FloatingActionButton
     private lateinit var layoutManager: LinearLayoutManager
     private var isFABEnable=true
 //    private var fabSize:
@@ -62,7 +66,7 @@ class DetailDialogFragment : DialogFragment() {
     ): View? {
         // Inflate the layout for this fragment
         binding = DetailDialogfragmentBinding.inflate(inflater, container, false)
-
+        fab=binding.detailFabAdd
         setupFAB()
         return binding.root
     }
@@ -128,7 +132,7 @@ class DetailDialogFragment : DialogFragment() {
                 val swipeDown=settings[stringPreferencesKey(SWIPE_DOWN)]
                 val swipeLeft=settings[stringPreferencesKey(SWIPE_LEFT)]
                 val swipeRight=settings[stringPreferencesKey(SWIPE_RIGHT)]
-                binding.detailFabAdd.setOnTouchListener(OnSwipeListener(
+                fab.setOnTouchListener(OnSwipeListener(
                     requireContext(),
                     onSwipeTop = {
                         getFABSwipeFunction(swipeString =swipeUp ).invoke()
@@ -146,14 +150,28 @@ class DetailDialogFragment : DialogFragment() {
 
                 settings[booleanPreferencesKey("fab_default_size_key")]?.let { setSizeDefault->
                     if (setSizeDefault){
-                        binding.detailFabAdd.customSize = FloatingActionButton.NO_CUSTOM_SIZE
-                        binding.detailFabAdd.size = FloatingActionButton.SIZE_AUTO
+                        fab.customSize = FloatingActionButton.NO_CUSTOM_SIZE
+                        fab.size = FloatingActionButton.SIZE_AUTO
                     }else{
                         settings[intPreferencesKey("fab_seek_bar_key")]?.let { fabCustomSize->
-                            binding.detailFabAdd.customSize = (fabCustomSize * requireContext().dp2PxScale()).toInt()
+                            fab.customSize = (fabCustomSize * requireContext().dp2PxScale()).toInt()
                         }
                     }
 
+                }
+                (settings[booleanPreferencesKey("fab_place_right_key")]?:true).let { placeRight->
+                    val sideMargin=settings[intPreferencesKey("fab_side_distance_key")]?:0
+                    val bottomMargin=settings[intPreferencesKey("fab_side_bottom_key")]?:0
+                    val layoutParams=fab.layoutParams as CoordinatorLayout.LayoutParams
+                    layoutParams.bottomMargin=((30+bottomMargin)*requireContext().dp2PxScale()).toInt()
+                    if (placeRight){
+                        layoutParams.gravity= Gravity.BOTTOM or Gravity.RIGHT
+                        layoutParams.rightMargin=((30+sideMargin)*requireContext().dp2PxScale()).toInt()
+                    }else{
+                        layoutParams.gravity= Gravity.BOTTOM or Gravity.LEFT
+                        layoutParams.leftMargin=((30+sideMargin)*requireContext().dp2PxScale()).toInt()
+                    }
+                    fab.layoutParams=layoutParams
                 }
             }
             binding.detailFabAdd.setOnClickListener {
@@ -209,17 +227,19 @@ class DetailDialogFragment : DialogFragment() {
             val index = list.indexOfFirst {
                 it.replyThreadId == referenceId
             }
-            val holder =
+            val holderBinding =
                 DetailRecyclerviewViewholderBinding.inflate(layoutInflater, binding.root, false)
+            holderBinding.firstRowDetail.visibility=View.VISIBLE
+            holderBinding.secondRowDetail.visibility=View.VISIBLE
+            holderBinding.firstRowDetailPlaceholder.visibility=View.GONE
+            holderBinding.secondRowDetailPlaceholder.visibility=View.GONE
             when (index) {
                 in (0..list.size) -> {
                     val referenceThread = list[index]
                     adapter.bindHolder(
-                        holder = DetailRecyclerViewAdapter.BasicThreadViewHolder(
-                            holder.root
-                        ), it = referenceThread
+                        binding = holderBinding, it = referenceThread
                     )
-                    MaterialAlertDialogBuilder(requireContext()).setView(holder.root).show()
+                    MaterialAlertDialogBuilder(requireContext()).setView(holderBinding.root).show()
                 }
                 else -> {
                     val url = "https://adnmb3.com/m/t/$referenceId"
@@ -245,11 +265,9 @@ class DetailDialogFragment : DialogFragment() {
                         BasicThread(replyThreadId = 888, poThreadId = 888, section = "")
                     }
                     adapter.bindHolder(
-                        holder = DetailRecyclerViewAdapter.BasicThreadViewHolder(
-                            holder.root
-                        ), it = thread
+                        binding = holderBinding, it = thread
                     )
-                    MaterialAlertDialogBuilder(requireContext()).setView(holder.root).show()
+                    MaterialAlertDialogBuilder(requireContext()).setView(holderBinding.root).show()
                 }
             }
 

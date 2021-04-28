@@ -151,11 +151,11 @@ class MainViewModel @Inject constructor(
         currentReplyThreads = mutableListOf()
         detailFlow = Pager(
             PagingConfig(
-                pageSize = 20,
-                prefetchDistance = 20,
-                enablePlaceholders = false,
+                pageSize = 50,
+                prefetchDistance = 100,
+                enablePlaceholders = true,
                 maxSize = 999999,
-                initialLoadSize = 20
+                initialLoadSize = 150
             ),
             remoteMediator = DetailRemoteMediator(
                 service = networkService,

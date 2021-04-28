@@ -3,24 +3,50 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory
         app:iconSpaceReserved="false"
+        app:title="饼干cookie">
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="cookie_in_use_key"
+            app:title="正在使用的饼干" />
+
+
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="cookie_from_QR_code_key"
+            app:title="二维码导入" />
+        <!--        <EditTextPreference-->
+        <!--            app:defaultValue="null"-->
+        <!--            app:key="cookie_from_edit_text_key"-->
+        <!--            app:singleLine="true"-->
+        <!--            app:title="手动输入"-->
+        <!--            app:iconSpaceReserved="false"-->
+        <!--            app:useSimpleSummaryProvider="true"/>-->
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="cookie_from_web_view_key"
+            app:title="登录用户系统" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
         app:title="悬浮按钮">
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             app:defaultValue="true"
             app:iconSpaceReserved="false"
             app:key="enable_fab_key"
             app:title="使用悬浮按钮" />
-        <SwitchPreference
+        <SwitchPreferenceCompat
+            app:defaultValue="true"
+            app:iconSpaceReserved="false"
+            app:key="fab_place_right_key"
+            app:title="悬浮球放右边" />
+        <SwitchPreferenceCompat
             app:defaultValue="true"
             app:iconSpaceReserved="false"
             app:isPreferenceVisible="true"
             app:key="fab_default_size_key"
             app:title="设为默认大小" />
-        <Preference
-            app:iconSpaceReserved="false"
-            app:key="fab_location_set_default_key"
-            app:summary="设置页长按可调整位置哦"
-            app:title="设为默认位置" />
+
         <SeekBarPreference
             app:defaultValue="20"
             app:iconSpaceReserved="false"
@@ -30,6 +56,24 @@
             app:min="20"
             app:title="悬浮按钮大小"
             app:useSimpleSummaryProvider="true" />
+        <SeekBarPreference
+            app:iconSpaceReserved="false"
+            app:isPreferenceVisible="true"
+            app:key="fab_side_distance_key"
+            android:max="200"
+            app:min="0"
+            app:defaultValue="0"
+            app:title="侧边距调整"
+            app:useSimpleSummaryProvider="true" />
+        <SeekBarPreference
+            app:iconSpaceReserved="false"
+            app:isPreferenceVisible="true"
+            app:key="fab_side_bottom_key"
+            android:max="200"
+            app:min="0"
+            app:defaultValue="0"
+            app:title="底边距调整"
+            app:useSimpleSummaryProvider="true" />
         <Preference
             app:key="fab_swipe_functions_key"
             app:iconSpaceReserved="false"
@@ -37,32 +81,6 @@
             />
 
 
-    </PreferenceCategory>
-    <PreferenceCategory
-        app:iconSpaceReserved="false"
-        app:title="饼干cookie">
-        <Preference
-            app:iconSpaceReserved="false"
-            app:key="cookie_in_use_key"
-            app:title="正在使用的饼干"
-            />
-
-
-        <Preference
-            app:iconSpaceReserved="false"
-            app:key="cookie_from_QR_code_key"
-            app:title="二维码导入" />
-<!--        <EditTextPreference-->
-<!--            app:defaultValue="null"-->
-<!--            app:key="cookie_from_edit_text_key"-->
-<!--            app:singleLine="true"-->
-<!--            app:title="手动输入"-->
-<!--            app:iconSpaceReserved="false"-->
-<!--            app:useSimpleSummaryProvider="true"/>-->
-        <Preference
-            app:iconSpaceReserved="false"
-            app:key="cookie_from_web_view_key"
-            app:title="登录用户系统" />
     </PreferenceCategory>
 
 </PreferenceScreen>
