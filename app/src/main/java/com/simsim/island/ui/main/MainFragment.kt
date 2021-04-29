@@ -38,6 +38,7 @@ import com.simsim.island.dataStore
 import com.simsim.island.databinding.MainFragmentBinding
 import com.simsim.island.dp2PxScale
 import com.simsim.island.model.SectionGroup
+import com.simsim.island.preferenceKey.PreferenceKey
 import com.simsim.island.util.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
@@ -55,6 +56,7 @@ class MainFragment : Fragment() {
     private lateinit var drawer: NavigationView
     private lateinit var fab:FloatingActionButton
     private var isFABEnable=true
+    private lateinit var preferenceKey: PreferenceKey
 //    private var loadingImageId =R.drawable.ic_blue_ocean1
 
 
@@ -74,8 +76,9 @@ class MainFragment : Fragment() {
         drawerLayout = binding.drawerLayout
         drawer = binding.sectionDrawer
         fab=binding.fabAdd
+        preferenceKey= PreferenceKey(requireContext())
         requestPermissions()
-        setupFAB()
+
         initialMainFlow()
         return binding.root
     }
@@ -93,10 +96,17 @@ class MainFragment : Fragment() {
     private fun setupFAB() {
         lifecycleScope.launch {
             requireContext().dataStore.data.collectLatest { settings->
+                settings[booleanPreferencesKey(preferenceKey.enableFabKey)]?.let { enable ->
+                    binding.mainToolbar.menu.findItem(R.id.main_fragment_menu_add).isVisible = !enable
+                    fab.isVisible = enable
+                }
                 val swipeUp=settings[stringPreferencesKey(SWIPE_UP)]
                 val swipeDown=settings[stringPreferencesKey(SWIPE_DOWN)]
                 val swipeLeft=settings[stringPreferencesKey(SWIPE_LEFT)]
                 val swipeRight=settings[stringPreferencesKey(SWIPE_RIGHT)]
+                fab.setOnClickListener {
+                    Log.e(LOG_TAG,"fab clicked")
+                }
                 fab.setOnTouchListener(OnSwipeListener(
                     requireContext(),
                     onSwipeTop = {
@@ -112,32 +122,35 @@ class MainFragment : Fragment() {
                         getFABSwipeFunction(swipeString =swipeRight ).invoke()
                     }
                 ))
-                settings[booleanPreferencesKey("fab_default_size_key")]?.let { setSizeDefault->
+
+                settings[booleanPreferencesKey(preferenceKey.fabDefaultSizeKey)]?.let { setSizeDefault->
                     if (setSizeDefault){
                         fab.customSize = FloatingActionButton.NO_CUSTOM_SIZE
                         fab.size = FloatingActionButton.SIZE_AUTO
                     }else{
-                        settings[intPreferencesKey("fab_seek_bar_key")]?.let { fabCustomSize->
+                        settings[intPreferencesKey(preferenceKey.fabSizeSeekBarKey)]?.let { fabCustomSize->
                             fab.customSize = (fabCustomSize * requireContext().dp2PxScale()).toInt()
                         }
                     }
 
                 }
-                (settings[booleanPreferencesKey("fab_place_right_key")]?:true).let { placeRight->
-                    val sideMargin=settings[intPreferencesKey("fab_side_distance_key")]?:0
-                    val bottomMargin=settings[intPreferencesKey("fab_side_bottom_key")]?:0
+                (settings[booleanPreferencesKey(preferenceKey.fabPlaceRightKey)]?:true).let { placeRight->
+                    val sideMargin=settings[intPreferencesKey(preferenceKey.fabSideMarginKey)]?:0
+                    val bottomMargin=settings[intPreferencesKey(preferenceKey.fabBottomMarginKey)]?:0
                     val layoutParams=fab.layoutParams as CoordinatorLayout.LayoutParams
                     layoutParams.bottomMargin=((30+bottomMargin)*requireContext().dp2PxScale()).toInt()
                     if (placeRight){
-                        layoutParams.gravity=Gravity.BOTTOM or Gravity.RIGHT
+                        layoutParams.gravity= Gravity.BOTTOM or Gravity.RIGHT
                         layoutParams.rightMargin=((30+sideMargin)*requireContext().dp2PxScale()).toInt()
+                        layoutParams.leftMargin=0
                     }else{
-                        layoutParams.gravity=Gravity.BOTTOM or Gravity.LEFT
+                        layoutParams.gravity= Gravity.BOTTOM or Gravity.LEFT
                         layoutParams.leftMargin=((30+sideMargin)*requireContext().dp2PxScale()).toInt()
+                        layoutParams.rightMargin=0
                     }
                     fab.layoutParams=layoutParams
+                    fab.requestLayout()
                 }
-
             }
             fab.setOnClickListener {
                 newThread()
@@ -228,7 +241,7 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupToolbar()
-        observeSettingsChange()
+        setupFAB()
         handleSavedInstanceState()
         setupRecyclerView()
         setupSwipeRefresh()
@@ -238,17 +251,7 @@ class MainFragment : Fragment() {
         doWhenPostSuccess()
 
     }
-    private fun observeSettingsChange() {
-        lifecycleScope.launch {
-            requireContext().dataStore.data.collectLatest { settings ->
-                settings[booleanPreferencesKey("enable_fab_key")]?.let { enable ->
-                    isFABEnable = enable
-                    binding.mainToolbar.menu.findItem(R.id.main_fragment_menu_add).isVisible = !enable
-                    binding.fabAdd.isVisible = enable
-                }
-            }
-        }
-    }
+
 
     private fun handleSavedInstanceState() {
         viewModel.savedInstanceState.observe(viewLifecycleOwner) {
@@ -367,6 +370,7 @@ class MainFragment : Fragment() {
 //            .withLoadStateFooter(MainLoadStateAdapter(adapter::retry))
         layoutManager = LinearLayoutManager(context)
         binding.mainRecyclerView.layoutManager = layoutManager
+        binding.mainRecyclerView.isMotionEventSplittingEnabled=false
     }
 
     private fun toDetailFragment(poThreadId: Long) {

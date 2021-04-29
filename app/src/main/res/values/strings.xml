@@ -40,6 +40,19 @@
     <string name="loading_page_fail_info">页面加载失败，请刷新</string>
     <string name="loading_fail_retry">重试</string>
     <string name="expand_button">expand</string>
+    <string name="delete_button">delete_button</string>
+    <string name="cookie_in_use_key">cookie_in_use_key</string>
+    <string name="cookie_from_QR_code_key">cookie_from_QR_code_key</string>
+    <string name="cookie_from_web_view_key">cookie_from_web_view_key</string>
+    <string name="enable_fab_key">enable_fab_key</string>
+    <string name="fab_place_right_key">fab_place_right_key</string>
+    <string name="fab_default_size_key">fab_default_size_key</string>
+    <string name="fab_seek_bar_key">fab_seek_bar_key</string>
+    <string name="fab_side_distance_key">fab_side_distance_key</string>
+    <string name="fab_bottom_distance_key">fab_bottom_distance_key</string>
+    <string name="fab_swipe_functions_key">fab_swipe_functions_key</string>
+    <string name="block_rule_manage_key">block_rule_manage_key</string>
+    <string name="not_a_single_cookie_available">真的一个也没有了</string>
     <!--    <string name="emoji_list">|∀ﾟ, (´ﾟДﾟ`), (;´Д`), (｀･ω･), (=ﾟωﾟ)=, | ω・´), |-` ), |д` ), |ー` ), |∀` ), (つд⊂), (ﾟДﾟ≡ﾟДﾟ), (＾o＾)ﾉ, (|||ﾟДﾟ), ( ﾟ∀ﾟ), ( ´∀`), (*´∀`), (*ﾟ∇ﾟ), (*ﾟーﾟ), (　ﾟ 3ﾟ), ( ´ー`), ( ・_ゝ・), ( ´_ゝ`), (*´д`), (・ー・), (・∀・), (ゝ∀･), (〃∀〃), (*ﾟ∀ﾟ*), ( ﾟ∀。), ( `д´), (`ε´ ), (`ヮ´ ), σ`∀´),  ﾟ∀ﾟ)σ, ﾟ ∀ﾟ)ノ, (╬ﾟдﾟ), (|||ﾟдﾟ), ( ﾟдﾟ), Σ( ﾟдﾟ), ( ;ﾟдﾟ), ( ;´д`), (　д ) ﾟ ﾟ, ( ☉д⊙), (((　ﾟдﾟ))), ( ` ・´), ( ´д`), ( -д-), (>д<), ･ﾟ( ﾉд`ﾟ), ( TдT), (￣∇￣), (￣3￣), (￣ｰ￣), (￣ . ￣), (￣皿￣), (￣艸￣), (￣︿￣), (￣︶￣), ヾ(´ωﾟ｀), (*´ω`*), (・ω・), ( ´・ω), (｀・ω), (´・ω・`), (`・ω・´), ( `_っ´), ( `ー´), ( ´_っ`), ( ´ρ`), ( ﾟωﾟ), (oﾟωﾟo), (　^ω^), (｡◕∀◕｡), /( ◕‿‿◕ )\, ヾ(´ε`ヾ), (ノﾟ∀ﾟ)ノ, (σﾟдﾟ)σ, (σﾟ∀ﾟ)σ, |дﾟ ), ┃電柱┃, ﾟ(つд`ﾟ), ﾟÅﾟ )　, ⊂彡☆))д`), ⊂彡☆))д´), ⊂彡☆))∀`), (´∀((☆ミつ-->
     <!--</string>-->
     <string-array name="fab_size">

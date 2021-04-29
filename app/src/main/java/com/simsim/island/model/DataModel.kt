@@ -14,6 +14,16 @@ class Converter {
         return LocalDateTime.ofEpochSecond(time, 0, ZoneOffset.UTC)
     }
 
+    @TypeConverter
+    fun toTarget(name: String): BlockTarget {
+        return BlockTarget.valueOf(name)
+    }
+
+    @TypeConverter
+    fun fromTarget(target: BlockTarget): String {
+        return target.name
+    }
+
 }
 
 @Entity(
@@ -36,19 +46,19 @@ data class BasicThread(
         var uid: String = "",
         var imageUrl: String = "",
         var content: String = "",
-        var isManager:Boolean=false,
+        var isManager: Boolean = false,
         var isPo: Boolean = false,
         var commentsNumber: String = "0",
         var section: String,
         var references: String = "",
-        var timelineActualSection:String="",
+        var timelineActualSection: String = "",
 )
 
 @Entity
 data class PoThread constructor(
         @PrimaryKey var threadId: Long,
-        var pageIndex:Int,
-        var isManager:Boolean,
+        var pageIndex: Int,
+        var isManager: Boolean,
         var title: String = "",
         var name: String = "",
         var link: String = "",
@@ -57,16 +67,16 @@ data class PoThread constructor(
         var imageUrl: String = "",
         var content: String = "",
         var isPo: Boolean = true,
-        var isStar:Boolean=false,
+        var isStar: Boolean = false,
         var commentsNumber: String = "0",
         var section: String,
         var references: String = "",
         var collectTime: LocalDateTime = LocalDateTime.now(),
-        var timelineActualSection:String="",
+        var timelineActualSection: String = "",
 
-        ){
-        @Ignore
-        var replyThreads: List<BasicThread> = listOf()
+        ) {
+    @Ignore
+    var replyThreads: List<BasicThread> = listOf()
 }
 
 @Entity
@@ -100,43 +110,55 @@ data class StaredPoThreads(
 
 @Entity(tableName = "sectionList")
 data class Section(
-        var sectionIndex:Int,
+        var sectionIndex: Int,
         @ColumnInfo(index = true)
         @PrimaryKey
-        var sectionName:String,
-        var isShow:Boolean=true,
+        var sectionName: String,
+        var isShow: Boolean = true,
 //        var alias:String="",
-        var group:String,
-        var sectionUrl:String,
-        var fId:String,
+        var group: String,
+        var sectionUrl: String,
+        var fId: String,
 )
 
 @Entity
 data class Emoji(
-        var emojiIndex:Int,
+        var emojiIndex: Int,
         @ColumnInfo(index = true)
         @PrimaryKey
-        var emoji:String,
+        var emoji: String,
 )
 
 @Entity
 data class UpdateRecord(
         @ColumnInfo(index = true)
         @PrimaryKey()
-        var index:Int=666,
-        var lastUpdateTime:LocalDateTime
+        var index: Int = 666,
+        var lastUpdateTime: LocalDateTime
 )
 
 data class SectionGroup(
-        var groupName:String,
-        var sectionNameList:List<Section>,
+        var groupName: String,
+        var sectionNameList: List<Section>,
 )
 
 @Entity
 data class Cookie(
         @ColumnInfo(index = true)
         @PrimaryKey()
-        val cookie:String,
-        val name: String="",
-        val isInUse:Boolean=false
+        var cookie: String,
+        var name: String = "",
+        var isInUse: Boolean = false
+)
+
+@Entity
+data class BlockRule(
+        @ColumnInfo(index = true)
+        @PrimaryKey(autoGenerate = true)
+        var index: Int,
+        var rule: String,
+        var name: String = rule,
+        var isRegex: Boolean = false,
+        var isEnable: Boolean = true,
+        var target: BlockTarget=BlockTarget.TargetContent
 )

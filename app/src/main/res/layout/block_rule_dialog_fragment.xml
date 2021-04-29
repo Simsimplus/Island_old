@@ -12,36 +12,16 @@
         android:layout_height="wrap_content">
 
         <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/setting_toolbar"
+            android:id="@+id/block_rule_toolbar"
             style="@style/Widget.MaterialComponents.Toolbar.Primary"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize" />
     </com.google.android.material.appbar.AppBarLayout>
-
-
-    <androidx.drawerlayout.widget.DrawerLayout
-        android:id="@+id/drawer_layout"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/block_rule_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
-        tools:openDrawer="start">
-
-        <androidx.fragment.app.FragmentContainerView
-
-            android:id="@+id/setting_fragment_container"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-        <!--        android:name="com.simsim.island.ui.main.SettingsFragment"-->
-
-        <com.google.android.material.navigation.NavigationView
-            android:id="@+id/section_drawer"
-            android:layout_width="200dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="start"
-            android:fitsSystemWindows="true"
-            android:visibility="gone"
-            app:menu="@menu/drawer_menu" />
-    </androidx.drawerlayout.widget.DrawerLayout>
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add"

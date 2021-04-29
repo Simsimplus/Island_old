@@ -6,13 +6,13 @@
         app:title="饼干cookie">
         <Preference
             app:iconSpaceReserved="false"
-            app:key="cookie_in_use_key"
-            app:title="正在使用的饼干" />
+            app:key="@string/cookie_in_use_key"
+            app:title="管理饼干" />
 
 
         <Preference
             app:iconSpaceReserved="false"
-            app:key="cookie_from_QR_code_key"
+            app:key="@string/cookie_from_QR_code_key"
             app:title="二维码导入" />
         <!--        <EditTextPreference-->
         <!--            app:defaultValue="null"-->
@@ -23,7 +23,7 @@
         <!--            app:useSimpleSummaryProvider="true"/>-->
         <Preference
             app:iconSpaceReserved="false"
-            app:key="cookie_from_web_view_key"
+            app:key="@string/cookie_from_web_view_key"
             app:title="登录用户系统" />
     </PreferenceCategory>
     <PreferenceCategory
@@ -33,25 +33,25 @@
         <SwitchPreferenceCompat
             app:defaultValue="true"
             app:iconSpaceReserved="false"
-            app:key="enable_fab_key"
+            app:key="@string/enable_fab_key"
             app:title="使用悬浮按钮" />
         <SwitchPreferenceCompat
             app:defaultValue="true"
             app:iconSpaceReserved="false"
-            app:key="fab_place_right_key"
+            app:key="@string/fab_place_right_key"
             app:title="悬浮球放右边" />
         <SwitchPreferenceCompat
             app:defaultValue="true"
             app:iconSpaceReserved="false"
             app:isPreferenceVisible="true"
-            app:key="fab_default_size_key"
+            app:key="@string/fab_default_size_key"
             app:title="设为默认大小" />
 
         <SeekBarPreference
             app:defaultValue="20"
             app:iconSpaceReserved="false"
             app:isPreferenceVisible="false"
-            app:key="fab_seek_bar_key"
+            app:key="@string/fab_seek_bar_key"
             android:max="100"
             app:min="20"
             app:title="悬浮按钮大小"
@@ -59,7 +59,7 @@
         <SeekBarPreference
             app:iconSpaceReserved="false"
             app:isPreferenceVisible="true"
-            app:key="fab_side_distance_key"
+            app:key="@string/fab_side_distance_key"
             android:max="200"
             app:min="0"
             app:defaultValue="0"
@@ -68,19 +68,27 @@
         <SeekBarPreference
             app:iconSpaceReserved="false"
             app:isPreferenceVisible="true"
-            app:key="fab_side_bottom_key"
+            app:key="@string/fab_bottom_distance_key"
             android:max="200"
             app:min="0"
             app:defaultValue="0"
             app:title="底边距调整"
             app:useSimpleSummaryProvider="true" />
         <Preference
-            app:key="fab_swipe_functions_key"
+            app:key="@string/fab_swipe_functions_key"
             app:iconSpaceReserved="false"
             app:title="滑动时的功能"
             />
 
 
+    </PreferenceCategory>
+    <PreferenceCategory android:title="屏蔽管理"
+        app:iconSpaceReserved="false">
+<Preference
+    app:key="@string/block_rule_manage_key"
+    app:title="管理屏蔽项"
+    app:iconSpaceReserved="false"
+    />
     </PreferenceCategory>
 
 </PreferenceScreen>

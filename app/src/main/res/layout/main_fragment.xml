@@ -29,23 +29,6 @@
                 android:layout_height="?attr/actionBarSize" />
         </com.google.android.material.appbar.AppBarLayout>
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_add"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_marginEnd="30dp"
-            android:layout_marginBottom="30dp"
-            android:clickable="true"
-            android:contentDescription="@string/fab_add_new_thread"
-            android:focusable="true"
-            android:visibility="gone"
-            app:fabSize="auto"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:srcCompat="@drawable/ic_round_add_24"
-            tools:visibility="visible" />
-
         <androidx.drawerlayout.widget.DrawerLayout
             android:id="@+id/drawer_layout"
             android:layout_width="match_parent"
@@ -65,15 +48,17 @@
                     android:layout_height="match_parent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent">
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="1.0">
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/main_recycler_view"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_marginTop="@dimen/md_card_margin"
-                        android:background="@color/white"
+                        android:background="@color/backGroundGrey"
+                        android:paddingTop="@dimen/md_card_margin"
                         android:visibility="visible"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -82,22 +67,6 @@
 
 
                 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-
-                <ImageView
-                    android:id="@+id/loading_image"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:background="@color/white"
-                    android:clickable="false"
-
-                    android:contentDescription="@string/loading_image"
-                    android:scaleType="fitCenter"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    tools:srcCompat="@drawable/ic_blue_ocean1" />
 
 
             </androidx.constraintlayout.widget.ConstraintLayout>
@@ -120,6 +89,38 @@
                     android:layout_height="match_parent" />
             </com.google.android.material.navigation.NavigationView>
         </androidx.drawerlayout.widget.DrawerLayout>
+
+
+        <ImageView
+            android:id="@+id/loading_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/white"
+            android:clickable="false"
+
+            android:contentDescription="@string/loading_image"
+            android:elevation="7dp"
+            android:scaleType="fitCenter"
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
+            tools:srcCompat="@drawable/ic_blue_ocean1" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/loading_image"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="30dp"
+            android:layout_marginBottom="30dp"
+            android:clickable="true"
+            android:contentDescription="@string/fab_add_new_thread"
+            android:focusable="true"
+            android:visibility="gone"
+            app:fabSize="auto"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:srcCompat="@drawable/ic_round_add_24"
+            tools:visibility="visible" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

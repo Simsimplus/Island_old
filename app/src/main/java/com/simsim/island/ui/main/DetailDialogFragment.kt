@@ -33,6 +33,7 @@ import com.simsim.island.databinding.DetailDialogfragmentBinding
 import com.simsim.island.databinding.DetailRecyclerviewViewholderBinding
 import com.simsim.island.dp2PxScale
 import com.simsim.island.model.BasicThread
+import com.simsim.island.preferenceKey.PreferenceKey
 import com.simsim.island.repository.AislandRepo
 import com.simsim.island.util.*
 import dagger.hilt.android.AndroidEntryPoint
@@ -50,6 +51,7 @@ class DetailDialogFragment : DialogFragment() {
     private lateinit var fab:FloatingActionButton
     private lateinit var layoutManager: LinearLayoutManager
     private var isFABEnable=true
+    private lateinit var preferenceKey: PreferenceKey
 //    private var fabSize:
 
     //1.set dialog style in onCreate()
@@ -67,7 +69,7 @@ class DetailDialogFragment : DialogFragment() {
         // Inflate the layout for this fragment
         binding = DetailDialogfragmentBinding.inflate(inflater, container, false)
         fab=binding.detailFabAdd
-        setupFAB()
+        preferenceKey= PreferenceKey(requireContext())
         return binding.root
     }
 
@@ -128,10 +130,19 @@ class DetailDialogFragment : DialogFragment() {
     private fun setupFAB() {
         lifecycleScope.launch {
             requireContext().dataStore.data.collectLatest { settings->
+                settings[booleanPreferencesKey(preferenceKey.enableFabKey)]?.let { enable ->
+                    isFABEnable = enable
+                    binding.detailDialogToolbar.menu.findItem(R.id.detail_fragment_menu_add).isVisible =
+                        !enable
+                    fab.isVisible = enable
+                }
                 val swipeUp=settings[stringPreferencesKey(SWIPE_UP)]
                 val swipeDown=settings[stringPreferencesKey(SWIPE_DOWN)]
                 val swipeLeft=settings[stringPreferencesKey(SWIPE_LEFT)]
                 val swipeRight=settings[stringPreferencesKey(SWIPE_RIGHT)]
+                fab.setOnClickListener {
+                    Log.e(LOG_TAG,"fab clicked")
+                }
                 fab.setOnTouchListener(OnSwipeListener(
                     requireContext(),
                     onSwipeTop = {
@@ -148,30 +159,33 @@ class DetailDialogFragment : DialogFragment() {
                     }
                 ))
 
-                settings[booleanPreferencesKey("fab_default_size_key")]?.let { setSizeDefault->
+                settings[booleanPreferencesKey(preferenceKey.fabDefaultSizeKey)]?.let { setSizeDefault->
                     if (setSizeDefault){
                         fab.customSize = FloatingActionButton.NO_CUSTOM_SIZE
                         fab.size = FloatingActionButton.SIZE_AUTO
                     }else{
-                        settings[intPreferencesKey("fab_seek_bar_key")]?.let { fabCustomSize->
+                        settings[intPreferencesKey(preferenceKey.fabSizeSeekBarKey)]?.let { fabCustomSize->
                             fab.customSize = (fabCustomSize * requireContext().dp2PxScale()).toInt()
                         }
                     }
 
                 }
-                (settings[booleanPreferencesKey("fab_place_right_key")]?:true).let { placeRight->
-                    val sideMargin=settings[intPreferencesKey("fab_side_distance_key")]?:0
-                    val bottomMargin=settings[intPreferencesKey("fab_side_bottom_key")]?:0
+                (settings[booleanPreferencesKey(preferenceKey.fabPlaceRightKey)]?:true).let { placeRight->
+                    val sideMargin=settings[intPreferencesKey(preferenceKey.fabSideMarginKey)]?:0
+                    val bottomMargin=settings[intPreferencesKey(preferenceKey.fabBottomMarginKey)]?:0
                     val layoutParams=fab.layoutParams as CoordinatorLayout.LayoutParams
                     layoutParams.bottomMargin=((30+bottomMargin)*requireContext().dp2PxScale()).toInt()
                     if (placeRight){
                         layoutParams.gravity= Gravity.BOTTOM or Gravity.RIGHT
                         layoutParams.rightMargin=((30+sideMargin)*requireContext().dp2PxScale()).toInt()
+                        layoutParams.leftMargin=0
                     }else{
                         layoutParams.gravity= Gravity.BOTTOM or Gravity.LEFT
                         layoutParams.leftMargin=((30+sideMargin)*requireContext().dp2PxScale()).toInt()
+                        layoutParams.rightMargin=0
                     }
                     fab.layoutParams=layoutParams
+                    fab.requestLayout()
                 }
             }
             binding.detailFabAdd.setOnClickListener {
@@ -301,6 +315,7 @@ class DetailDialogFragment : DialogFragment() {
             adapter.withLoadStateHeader(MainLoadStateAdapter { adapter.retry() })
         layoutManager = LinearLayoutManager(context)
         binding.detailDialogRecyclerView.layoutManager = layoutManager
+        binding.detailDialogRecyclerView.isMotionEventSplittingEnabled=false
     }
 
     private fun setupSwipeRefreshLayout() {
@@ -318,7 +333,7 @@ class DetailDialogFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupToolbar()
-        observeSettingsChange()
+        setupFAB()
         doWhenReplySuccess()
         setupRecyclerView()
         setupSwipeRefreshLayout()
@@ -328,18 +343,6 @@ class DetailDialogFragment : DialogFragment() {
 
     }
 
-    private fun observeSettingsChange() {
-        lifecycleScope.launch {
-            requireContext().dataStore.data.collectLatest { settings ->
-                settings[booleanPreferencesKey("enable_fab_key")]?.let { enable ->
-                    isFABEnable = enable
-                    binding.detailDialogToolbar.menu.findItem(R.id.detail_fragment_menu_add).isVisible =
-                        !enable
-                    binding.detailFabAdd.isVisible = enable
-                }
-            }
-        }
-    }
 
     private fun setupToolbar() {
         val toolbar = binding.detailDialogToolbar

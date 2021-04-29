@@ -32,6 +32,7 @@ import com.simsim.island.databinding.SettingsDialogFragmentBinding
 import com.simsim.island.databinding.SwipeFunctionSelectionBinding
 import com.simsim.island.dp2PxScale
 import com.simsim.island.model.Cookie
+import com.simsim.island.preferenceKey.PreferenceKey
 import com.simsim.island.util.*
 import dagger.hilt.android.AndroidEntryPoint
 import id.zelory.compressor.Compressor
@@ -52,6 +53,7 @@ class SettingsFragment(
     //    private val viewModel:MainViewModel=ViewModelProvider(activity).get(MainViewModel::class.java)
     private val customDataStore: CustomDataStore = CustomDataStore()
     private val dataStore: DataStore<Preferences> = activity.dataStore
+    private val preferenceKey=PreferenceKey(activity)
     private var dp2PxScale: Float = activity.dp2PxScale()
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -86,24 +88,28 @@ class SettingsFragment(
 
     private fun setupPreferences() {
         lifecycleScope.launch {
-            val fabSizeSeekBar = findPreference<SeekBarPreference>("fab_seek_bar_key")?: throw Exception("can not find fabSizeSeekBar")
-            val fabSizeDefault = findPreference<SwitchPreferenceCompat>("fab_default_size_key")?: throw Exception("can not find setFabDefaultSize")
-            val fabSwitch = findPreference<SwitchPreferenceCompat>("enable_fab_key")?: throw Exception("can not find fabSwitch")
-            val fabSwipeFunction=findPreference<Preference>("fab_swipe_functions_key")?:throw Exception("can not find fabSwipeFunction")
-            val cookieInUse = findPreference<Preference>("cookie_in_use_key")?: throw Exception("can not find cookieInUse")
-            val cookieQR = findPreference<Preference>("cookie_from_QR_code_key") ?: throw Exception("can not find cookieQR")
-            val cookieWebView = findPreference<Preference>("cookie_from_web_view_key")?: throw Exception("can not find cookieWebView")
+            val fabSizeSeekBar = findPreference<SeekBarPreference>(preferenceKey.fabSizeSeekBarKey)?: throw Exception("can not find fabSizeSeekBar")
+            val fabSizeDefault = findPreference<SwitchPreferenceCompat>(preferenceKey.fabDefaultSizeKey)?: throw Exception("can not find setFabDefaultSize")
+            val fabSwitch = findPreference<SwitchPreferenceCompat>(preferenceKey.enableFabKey)?: throw Exception("can not find fabSwitch")
+            val fabSideMargin=findPreference<SeekBarPreference>(preferenceKey.fabSideMarginKey)?: throw Exception("can not find fabSideMargin")
+            val fabBottomMargin=findPreference<SeekBarPreference>(preferenceKey.fabBottomMarginKey)?: throw Exception("can not find fabBottomMargin")
+            val fabPlaceRight=findPreference<SwitchPreferenceCompat>(preferenceKey.fabPlaceRightKey)?:throw Exception("can not find fabPlaceRight")
+            val fabSwipeFunction=findPreference<Preference>(preferenceKey.fabSwipeFunctionsKey)?:throw Exception("can not find fabSwipeFunction")
+            val cookieInUse = findPreference<Preference>(preferenceKey.cookieInUseKey)?: throw Exception("can not find cookieInUse")
+            val cookieQR = findPreference<Preference>(preferenceKey.cookieFromQRCodeKey) ?: throw Exception("can not find cookieQR")
+            val cookieWebView = findPreference<Preference>(preferenceKey.cookieFromWebViewKey)?: throw Exception("can not find cookieWebView")
+            val blockRuleManage=findPreference<Preference>(preferenceKey.blockRuleManageKey)?: throw Exception("can not find blockRuleManage")
 
             fabSwitch.apply {
                 var isFabEnable: Boolean by Delegates.observable(this.isChecked) { _, _, newValue ->
-                    binding.settingToolbar.menu.findItem(R.id.setting_menu_add).isVisible =
-                        !newValue
                     if (!fabSizeDefault.isChecked){
                         fabSizeSeekBar.isVisible=newValue
                     }
                     fabSwipeFunction.isVisible=newValue
                     fabSizeDefault.isVisible = newValue
-                    binding.fabAdd.isVisible = newValue
+                    fabSideMargin.isVisible = newValue
+                    fabBottomMargin.isVisible = newValue
+                    fabPlaceRight.isVisible = newValue
                 }
                 isFabEnable = isChecked
                 setOnPreferenceChangeListener { _, newValue ->
@@ -185,30 +191,31 @@ class SettingsFragment(
                     cookie = preferenceDataStore!!.getString("cookie_in_use_key", null)
 //                    val cookieSet =
 //                        preferenceDataStore!!.getStringSet("cookies", mutableSetOf()) ?: mutableSetOf()
-                    lifecycleScope.launch {
-                        val cookieList = viewModel.database.cookieDao().getAllCookies()
-                        val cookieNameList = cookieList.map {
-                            it.name
-                        }
-                        val cookieValueList = cookieList.map {
-                            it.cookie
-                        }
-
-                        val cookieIndex = cookieValueList.indexOf(cookie)
-                        MaterialAlertDialogBuilder(activity)
-                            .setSingleChoiceItems(
-                                cookieNameList.map { it.ellipsis(10) }.toTypedArray(),
-                                if (cookieIndex != -1) cookieIndex else 0
-                            ) { _, position ->
-                                preferenceDataStore!!.putString(
-                                    "cookie_in_use_key",
-                                    cookieValueList[position]
-                                )
-                                this@apply.summary = "现用：${cookieNameList[position]}".ellipsis()
-                            }
-                            .show()
-                    }
-
+//                    lifecycleScope.launch {
+//                        val cookieList = viewModel.database.cookieDao().getAllCookies()
+//                        val cookieNameList = cookieList.map {
+//                            it.name
+//                        }
+//                        val cookieValueList = cookieList.map {
+//                            it.cookie
+//                        }
+//
+//                        val cookieIndex = cookieValueList.indexOf(cookie)
+//                        MaterialAlertDialogBuilder(activity)
+//                            .setSingleChoiceItems(
+//                                cookieNameList.map { it.ellipsis(10) }.toTypedArray(),
+//                                if (cookieIndex != -1) cookieIndex else 0
+//                            ) { _, position ->
+//                                preferenceDataStore!!.putString(
+//                                    "cookie_in_use_key",
+//                                    cookieValueList[position]
+//                                )
+//                                this@apply.summary = "现用：${cookieNameList[position]}".ellipsis()
+//                            }
+//                            .show()
+//                    }
+                    val action=SettingsDialogFragmentDirections.actionGlobalCookieManageDialogFragment()
+                    findNavController().navigate(action)
                     true
                 }
             }
@@ -276,6 +283,13 @@ class SettingsFragment(
                     true
                 }
 
+            }
+            blockRuleManage.apply {
+                setOnPreferenceClickListener {
+                    val action=SettingsFragmentDirections.actionGlobalBlockRuleDialogFragment()
+                    findNavController().navigate(action)
+                    true
+                }
             }
         }
     }

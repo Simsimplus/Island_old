@@ -18,9 +18,10 @@ import com.simsim.island.model.*
         Section::class,
         Emoji::class,
         UpdateRecord::class,
-        Cookie::class
+        Cookie::class,
+        BlockRule::class,
     ],
-    version = 1,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converter::class)
@@ -29,8 +30,9 @@ abstract class IslandDatabase : RoomDatabase() {
     abstract fun threadDao(): ThreadDao
     abstract fun sectionDao(): SectionDao
     abstract fun emojiDao(): EmojiDao
-    abstract fun recordDao():RecordDao
-    abstract fun cookieDao():CookieDao
+    abstract fun recordDao(): RecordDao
+    abstract fun cookieDao(): CookieDao
+    abstract fun blockRuleDao():BlockRuleDao
 
     companion object {
         @Volatile

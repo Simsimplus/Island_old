@@ -11,14 +11,11 @@
         android:id="@+id/md_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/md_card_margin"
-        android:layout_marginBottom="@dimen/md_card_margin"
+        android:layout_margin="@dimen/md_card_margin"
         app:cardBackgroundColor="#FFFFFF"
         app:cardCornerRadius="5dp"
-        app:cardElevation="2dp"
-        app:contentPadding="1dp"
-        app:contentPaddingBottom="5dp"
-        app:contentPaddingTop="5dp">
+        app:cardElevation="3dp"
+        app:contentPadding="5dp">
 
         <LinearLayout
             android:layout_width="match_parent"

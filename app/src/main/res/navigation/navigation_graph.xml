@@ -19,7 +19,7 @@
             android:id="@+id/action_mainFragment_to_settingsDialogFragment"
             app:destination="@id/settingsDialogFragment"
             app:enterAnim="@android:anim/fade_in"
-            app:exitAnim="@android:anim/fade_out"/>
+            app:exitAnim="@android:anim/fade_out" />
     </fragment>
     <dialog
         android:id="@+id/detailDialogFragment"
@@ -41,69 +41,95 @@
         android:id="@+id/imageDetailFragment"
         android:name="com.simsim.island.ui.main.ImageDetailFragment"
         android:label="image_detail_fragment"
-        tools:layout="@layout/image_detail_fragment" >
+        tools:layout="@layout/image_detail_fragment">
         <argument
             android:name="imageUrl"
             app:argType="string" />
         <argument
             android:name="isURI"
-            app:argType="boolean"
-            android:defaultValue="false" />
+            android:defaultValue="false"
+            app:argType="boolean" />
     </dialog>
-    <action
-        android:id="@+id/action_global_imageDetailFragment"
-        app:destination="@id/imageDetailFragment"
-        app:exitAnim="@android:anim/fade_out" />
+
     <dialog
         android:id="@+id/newDraftFragment"
         android:name="com.simsim.island.ui.main.NewDraftFragment"
         android:label="new_draft_fragment"
-        tools:layout="@layout/new_draft_fragment" >
+        tools:layout="@layout/new_draft_fragment">
         <argument
             android:name="target"
             app:argType="string" />
         <argument
             android:name="prefillText"
-            app:argType="string"
-            android:defaultValue=""/>
+            android:defaultValue=""
+            app:argType="string" />
         <argument
             android:name="threadId"
-            app:argType="long"
-            android:defaultValue="0L" />
+            android:defaultValue="0L"
+            app:argType="long" />
         <argument
             android:name="fId"
-            app:argType="string"
-            android:defaultValue=""/>
+            android:defaultValue=""
+            app:argType="string" />
         <argument
             android:name="sectionName"
-            app:argType="string"
-            android:defaultValue=""/>
+            android:defaultValue=""
+            app:argType="string" />
     </dialog>
-    <action
-        android:id="@+id/action_global_newDraftFragment"
-        app:destination="@id/newDraftFragment"
-        app:enterAnim="@android:anim/fade_in"
-        app:exitAnim="@android:anim/fade_out" />
+
     <dialog
         android:id="@+id/settingsDialogFragment"
         android:name="com.simsim.island.ui.main.SettingsDialogFragment"
-        android:label="SettingsDialogFragment" />
+        android:label="SettingsDialogFragment"
+        tools:layout="@layout/settings_dialog_fragment" />
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.simsim.island.ui.main.SettingsFragment"
-        android:label="SettingsFragment" />
+        android:label="SettingsFragment"
+        tools:layout="@layout/settings_dialog_fragment"/>
     <dialog
         android:id="@+id/webViewDialogFragment"
         android:name="com.simsim.island.ui.main.WebViewDialogFragment"
         android:label="web_view_dialog_fragment"
-        tools:layout="@layout/web_view_dialog_fragment" >
+        tools:layout="@layout/web_view_dialog_fragment">
         <argument
             android:name="url"
             app:argType="string" />
     </dialog>
+
+    <dialog
+        android:id="@+id/blockRuleDialogFragment"
+        android:name="com.simsim.island.ui.main.BlockRuleManageDialogFragment"
+        android:label="BlockRuleDialogFragment"
+        tools:layout="@layout/block_rule_dialog_fragment"/>
+    <dialog
+        android:id="@+id/cookieManageDialogFragment"
+        android:name="com.simsim.island.ui.main.CookieManageDialogFragment"
+        android:label="CookieManageDialogFragment"
+        tools:layout="@layout/cookie_manage_dialog_fragment"/>
+    <action
+        android:id="@+id/action_global_cookieManageDialogFragment"
+        app:destination="@id/cookieManageDialogFragment"
+        app:enterAnim="@android:anim/fade_in"
+        app:exitAnim="@android:anim/fade_out" />
+    <action
+        android:id="@+id/action_global_imageDetailFragment"
+        app:destination="@id/imageDetailFragment"
+        app:enterAnim="@android:anim/fade_in"
+        app:exitAnim="@android:anim/fade_out" />
     <action
         android:id="@+id/action_global_webViewDialogFragment"
         app:destination="@id/webViewDialogFragment"
         app:enterAnim="@android:anim/fade_in"
         app:exitAnim="@android:anim/fade_out" />
+    <action
+        android:id="@+id/action_global_newDraftFragment"
+        app:destination="@id/newDraftFragment"
+        app:enterAnim="@android:anim/fade_in"
+        app:exitAnim="@android:anim/fade_out" />
+    <action
+        android:id="@+id/action_global_blockRuleDialogFragment"
+        app:destination="@id/blockRuleDialogFragment"
+        app:enterAnim="@android:anim/fade_in"
+        app:exitAnim="@android:anim/fade_out"/>
 </navigation>
