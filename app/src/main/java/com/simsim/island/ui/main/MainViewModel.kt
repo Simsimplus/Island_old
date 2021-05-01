@@ -36,7 +36,7 @@ class MainViewModel @Inject constructor(
     val database: IslandDatabase,
     val networkService: AislandNetworkService
 ) : AndroidViewModel(application) {
-    var randomLoadingImage: Int = R.drawable.ic_blue_ocean1
+//    var randomLoadingImage: Int = R.drawable.ic_blue_ocean1
     val newSearchQuery = MutableLiveData<String>()
     var currentPoThread: PoThread? = null
     var currentSectionId: String = ""
@@ -56,7 +56,7 @@ class MainViewModel @Inject constructor(
 
     init {
         doUpdate()
-        randomLoadingImage()
+//        randomLoadingImage()
     }
 
     var cameraTakePictureSuccess = MutableLiveData<Boolean>()
@@ -81,29 +81,32 @@ class MainViewModel @Inject constructor(
             }
         }
     }
-    private fun randomLoadingImage() {
-        viewModelScope.launch {
-            while (true) {
-                delay(10000)
-                randomLoadingImage = when ((1..12).random()) {
-                    1 -> R.drawable.ic_blue_ocean1
-                    2 -> R.drawable.ic_blue_ocean2
-                    3 -> R.drawable.ic_blue_ocean3
-                    4 -> R.drawable.ic_blue_ocean4
-                    5 -> R.drawable.ic_blue_ocean5
-                    6 -> R.drawable.ic_blue_ocean6
-                    7 -> R.drawable.ic_blue_ocean7
-                    8 -> R.drawable.ic_blue_ocean8
-                    9 -> R.drawable.ic_blue_ocean9
-                    10 -> R.drawable.ic_blue_ocean10
-                    11 -> R.drawable.ic_blue_ocean11
-                    12 -> R.drawable.ic_blue_ocean12
-                    else -> R.drawable.image_load_failed
-                }
-                Log.e("Simsim", "get loading image id :$randomLoadingImage")
-            }
-        }
-    }
+
+
+//    private fun randomLoadingImage() {
+//
+//        viewModelScope.launch {
+//            while (true) {
+//                delay(10000)
+//                randomLoadingImage = when ((1..12).random()) {
+//                    1 -> R.drawable.ic_blue_ocean1
+//                    2 -> R.drawable.ic_blue_ocean2
+//                    3 -> R.drawable.ic_blue_ocean3
+//                    4 -> R.drawable.ic_blue_ocean4
+//                    5 -> R.drawable.ic_blue_ocean5
+//                    6 -> R.drawable.ic_blue_ocean6
+//                    7 -> R.drawable.ic_blue_ocean7
+//                    8 -> R.drawable.ic_blue_ocean8
+//                    9 -> R.drawable.ic_blue_ocean9
+//                    10 -> R.drawable.ic_blue_ocean10
+//                    11 -> R.drawable.ic_blue_ocean11
+//                    12 -> R.drawable.ic_blue_ocean12
+//                    else -> R.drawable.image_load_failed
+//                }
+//                Log.e("Simsim", "get loading image id :$randomLoadingImage")
+//            }
+//        }
+//    }
 
     private suspend fun getSectionList() {
         val sectionList = repo.getSectionList()

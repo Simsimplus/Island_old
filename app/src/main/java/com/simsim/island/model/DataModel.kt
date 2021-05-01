@@ -155,7 +155,7 @@ data class Cookie(
 data class BlockRule(
         @ColumnInfo(index = true)
         @PrimaryKey(autoGenerate = true)
-        var index: Int,
+        var index: Int=0,
         var rule: String,
         var name: String = rule,
         var isRegex: Boolean = false,

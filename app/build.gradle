@@ -47,7 +47,7 @@ android {
 }
 
 dependencies {
-
+    implementation 'com.github.ybq:Android-SpinKit:1.4.0'
     implementation 'com.github.divyanshub024:AndroidDraw:v0.1'
     implementation "com.google.dagger:hilt-android:$hilt_version"
     implementation 'org.jsoup:jsoup:1.13.1'

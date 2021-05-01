@@ -56,7 +56,7 @@ class SettingsDialogFragment :DialogFragment(){
         fab=binding.fabAdd
         preferenceKey=PreferenceKey(this.requireContext())
         childFragmentManager.commit {
-            add(R.id.setting_fragment_container,SettingsFragment(requireActivity() as MainActivity,viewModel,binding))
+            add(R.id.setting_fragment_container,SettingsFragment(requireActivity() as MainActivity,this@SettingsDialogFragment,viewModel,binding))
             addToBackStack("setting")
         }
         return binding.root

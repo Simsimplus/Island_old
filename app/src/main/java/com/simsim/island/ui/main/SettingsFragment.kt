@@ -47,6 +47,7 @@ import kotlin.properties.Delegates
 @AndroidEntryPoint
 class SettingsFragment(
     val activity: MainActivity,
+    val settingsDialogFragment: SettingsDialogFragment,
     val viewModel: MainViewModel,
     val binding: SettingsDialogFragmentBinding
 ) : PreferenceFragmentCompat() {
@@ -215,7 +216,7 @@ class SettingsFragment(
 //                            .show()
 //                    }
                     val action=SettingsDialogFragmentDirections.actionGlobalCookieManageDialogFragment()
-                    findNavController().navigate(action)
+                    settingsDialogFragment.findNavController().navigate(action)
                     true
                 }
             }
@@ -278,16 +279,16 @@ class SettingsFragment(
             cookieWebView.apply {
                 setOnPreferenceClickListener {
                     val action =
-                        SettingsFragmentDirections.actionGlobalWebViewDialogFragment("https://adnmb3.com/Member/User/Index/login.html")
-                    findNavController().navigate(action)
+                        SettingsDialogFragmentDirections.actionGlobalWebViewDialogFragment("https://adnmb3.com/Member/User/Index/login.html")
+                    settingsDialogFragment.findNavController().navigate(action)
                     true
                 }
 
             }
             blockRuleManage.apply {
                 setOnPreferenceClickListener {
-                    val action=SettingsFragmentDirections.actionGlobalBlockRuleDialogFragment()
-                    findNavController().navigate(action)
+                    val action=SettingsDialogFragmentDirections.actionGlobalBlockRuleDialogFragment()
+                    settingsDialogFragment.findNavController().navigate(action)
                     true
                 }
             }

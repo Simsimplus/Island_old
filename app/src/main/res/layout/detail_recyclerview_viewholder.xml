@@ -7,7 +7,7 @@
     android:id="@+id/detail_md_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="@dimen/md_card_margin"
+    android:layout_margin="@dimen/detail_md_card_margin"
     app:cardBackgroundColor="#FFFFFF"
     app:cardCornerRadius="5dp"
     app:cardElevation="3dp"

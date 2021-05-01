@@ -53,6 +53,13 @@
     <string name="fab_swipe_functions_key">fab_swipe_functions_key</string>
     <string name="block_rule_manage_key">block_rule_manage_key</string>
     <string name="not_a_single_cookie_available">真的一个也没有了</string>
+    <string name="name">名称</string>
+    <string name="label_rule">屏蔽规则</string>
+    <string name="label_name">名称</string>
+    <string name="use_regex">使用正则表达式</string>
+    <string name="label_block_target">屏蔽目标</string>
+    <string name="edit">edit</string>
+    <string name="bar">bar</string>
     <!--    <string name="emoji_list">|∀ﾟ, (´ﾟДﾟ`), (;´Д`), (｀･ω･), (=ﾟωﾟ)=, | ω・´), |-` ), |д` ), |ー` ), |∀` ), (つд⊂), (ﾟДﾟ≡ﾟДﾟ), (＾o＾)ﾉ, (|||ﾟДﾟ), ( ﾟ∀ﾟ), ( ´∀`), (*´∀`), (*ﾟ∇ﾟ), (*ﾟーﾟ), (　ﾟ 3ﾟ), ( ´ー`), ( ・_ゝ・), ( ´_ゝ`), (*´д`), (・ー・), (・∀・), (ゝ∀･), (〃∀〃), (*ﾟ∀ﾟ*), ( ﾟ∀。), ( `д´), (`ε´ ), (`ヮ´ ), σ`∀´),  ﾟ∀ﾟ)σ, ﾟ ∀ﾟ)ノ, (╬ﾟдﾟ), (|||ﾟдﾟ), ( ﾟдﾟ), Σ( ﾟдﾟ), ( ;ﾟдﾟ), ( ;´д`), (　д ) ﾟ ﾟ, ( ☉д⊙), (((　ﾟдﾟ))), ( ` ・´), ( ´д`), ( -д-), (>д<), ･ﾟ( ﾉд`ﾟ), ( TдT), (￣∇￣), (￣3￣), (￣ｰ￣), (￣ . ￣), (￣皿￣), (￣艸￣), (￣︿￣), (￣︶￣), ヾ(´ωﾟ｀), (*´ω`*), (・ω・), ( ´・ω), (｀・ω), (´・ω・`), (`・ω・´), ( `_っ´), ( `ー´), ( ´_っ`), ( ´ρ`), ( ﾟωﾟ), (oﾟωﾟo), (　^ω^), (｡◕∀◕｡), /( ◕‿‿◕ )\, ヾ(´ε`ヾ), (ノﾟ∀ﾟ)ノ, (σﾟдﾟ)σ, (σﾟ∀ﾟ)σ, |дﾟ ), ┃電柱┃, ﾟ(つд`ﾟ), ﾟÅﾟ )　, ⊂彡☆))д`), ⊂彡☆))д´), ⊂彡☆))∀`), (´∀((☆ミつ-->
     <!--</string>-->
     <string-array name="fab_size">

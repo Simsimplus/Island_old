@@ -46,6 +46,7 @@ class CookieManageDialogFragment : DialogFragment() {
             val cookieDao=viewModel.database.cookieDao()
             val cookieList = viewModel.database.cookieDao().getAllCookies()
             adapter = CookieRecyclerViewAdapter(
+                requireContext(),
                 cookieList.toMutableList(),
                 {cookies->
                    lifecycleScope.launch {

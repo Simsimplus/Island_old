@@ -10,10 +10,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.view.*
+import androidx.core.view.isVisible
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -25,7 +24,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
@@ -42,9 +40,11 @@ import com.simsim.island.preferenceKey.PreferenceKey
 import com.simsim.island.util.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
-import kotlin.properties.Delegates
 
 @AndroidEntryPoint
 class MainFragment : Fragment() {
@@ -62,9 +62,6 @@ class MainFragment : Fragment() {
 
     private val viewModel: MainViewModel by activityViewModels()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -84,12 +81,14 @@ class MainFragment : Fragment() {
     }
 
     private fun requestPermissions() {
-        (requireActivity() as MainActivity).requestPermission.launch(
-            arrayOf(
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.READ_EXTERNAL_STORAGE,
+        lifecycleScope.launch {
+            (requireActivity() as MainActivity).requestPermission.launch(
+                arrayOf(
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                )
             )
-        )
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -97,6 +96,7 @@ class MainFragment : Fragment() {
         lifecycleScope.launch {
             requireContext().dataStore.data.collectLatest { settings->
                 settings[booleanPreferencesKey(preferenceKey.enableFabKey)]?.let { enable ->
+                    isFABEnable=enable
                     binding.mainToolbar.menu.findItem(R.id.main_fragment_menu_add).isVisible = !enable
                     fab.isVisible = enable
                 }
@@ -190,13 +190,15 @@ class MainFragment : Fragment() {
     }
 
     private fun newThread() {
-        val action = MainFragmentDirections.actionGlobalNewDraftFragment(
-            target = TARGET_SECTION,
-            sectionName = viewModel.currentSectionName ?: "",
-            fId = viewModel.currentSectionId
-        )
-        findNavController().navigate(action)
-        viewModel.isMainFragment.value = false
+        lifecycleScope.launch{
+            val action = MainFragmentDirections.actionGlobalNewDraftFragment(
+                target = TARGET_SECTION,
+                sectionName = viewModel.currentSectionName ?: "",
+                fId = viewModel.currentSectionId
+            )
+            findNavController().navigate(action)
+            viewModel.isMainFragment.value = false
+        }
     }
 
     private fun setupDrawerSections() {
@@ -261,7 +263,6 @@ class MainFragment : Fragment() {
 
 
     private fun observingDataChange() {
-
         viewModel.isMainFragment.observe(viewLifecycleOwner) {
             binding.mainRecyclerView.suppressLayout(!it)
         }
@@ -306,20 +307,20 @@ class MainFragment : Fragment() {
                         binding.loadingImage.visibility = View.VISIBLE
                         binding.fabAdd.visibility = View.INVISIBLE
 
-                        Glide.with(this@MainFragment).load(viewModel.randomLoadingImage)
-                            .into(binding.loadingImage)
+//                        Glide.with(this@MainFragment).load(viewModel.randomLoadingImage)
+//                            .into(binding.loadingImage)
                     }
                     is LoadState.Error -> {
                         binding.loadingImage.visibility = View.VISIBLE
                         binding.fabAdd.visibility = View.INVISIBLE
-                        viewModel.database.threadDao().isThereAnyPoThreadInDB().collectLatest {
-                            if (it) {
-                                binding.loadingImage.visibility = View.INVISIBLE
-                                binding.fabAdd.visibility = View.VISIBLE
-                            }
-                        }
-                        Glide.with(this@MainFragment).load(viewModel.randomLoadingImage)
-                            .into(binding.loadingImage)
+//                        viewModel.database.threadDao().isThereAnyPoThreadInDB().collectLatest {
+//                            if (it) {
+//                                binding.loadingImage.visibility = View.INVISIBLE
+//                                binding.fabAdd.visibility = View.VISIBLE
+//                            }
+//                        }
+//                        Glide.with(this@MainFragment).load(viewModel.randomLoadingImage)
+//                            .into(binding.loadingImage)
                         Snackbar
                             .make(
                                 binding.root,
@@ -346,13 +347,15 @@ class MainFragment : Fragment() {
     }
 
     private fun setupSwipeRefresh() {
-        val swipeRefreshLayout = binding.swipeFreshLayout
-        swipeRefreshLayout.setColorSchemeResources(R.color.colorSecondary)
-        swipeRefreshLayout.setOnRefreshListener {
-            Log.e("Simsim", "main recycler view refresh by swipeRefreshLayout")
-            adapter.refresh()
-            if (swipeRefreshLayout.isRefreshing) {
-                swipeRefreshLayout.isRefreshing = false
+        lifecycleScope.launch{
+            val swipeRefreshLayout = binding.swipeFreshLayout
+            swipeRefreshLayout.setColorSchemeResources(R.color.colorSecondary)
+            swipeRefreshLayout.setOnRefreshListener {
+                Log.e("Simsim", "main recycler view refresh by swipeRefreshLayout")
+                adapter.refresh()
+                if (swipeRefreshLayout.isRefreshing) {
+                    swipeRefreshLayout.isRefreshing = false
+                }
             }
         }
     }

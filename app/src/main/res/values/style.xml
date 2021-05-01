@@ -11,4 +11,24 @@
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
 <!--        <item name="actionMenuTextColor">@color/colorAccent</item>-->
     </style>
+    <style name="md_input_edit_text">
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">0dp</item>
+        <item name="android:paddingTop">30dp</item>
+        <item name="android:paddingBottom">24dp</item>
+    </style>
+    <style name="md_input_edit_text_layout">
+        <item name="colorControlActivated">@color/colorSecondary</item>
+        <item name="boxStrokeColor">@color/colorSecondary</item>
+        <item name="hintTextColor">@color/colorSecondary</item>
+        <item name="boxBackgroundColor">@color/white</item>
+        <item name="helperTextTextColor">@color/colorSecondary</item>
+    </style>
+    <style name="md_input_edit_text_layout_dropdown" parent="Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu">
+        <item name="colorControlActivated">@color/colorSecondary</item>
+        <item name="boxStrokeColor">@color/colorSecondary</item>
+        <item name="hintTextColor">@color/colorSecondary</item>
+        <item name="boxBackgroundColor">@color/white</item>
+        <item name="helperTextTextColor">@color/colorSecondary</item>
+    </style>
 </resources>

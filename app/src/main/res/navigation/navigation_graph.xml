@@ -82,11 +82,11 @@
         android:name="com.simsim.island.ui.main.SettingsDialogFragment"
         android:label="SettingsDialogFragment"
         tools:layout="@layout/settings_dialog_fragment" />
-    <fragment
-        android:id="@+id/settingsFragment"
-        android:name="com.simsim.island.ui.main.SettingsFragment"
-        android:label="SettingsFragment"
-        tools:layout="@layout/settings_dialog_fragment"/>
+<!--    <fragment-->
+<!--        android:id="@+id/settingsFragment"-->
+<!--        android:name="com.simsim.island.ui.main.SettingsFragment"-->
+<!--        android:label="SettingsFragment"-->
+<!--        tools:layout="@layout/settings_dialog_fragment"/>-->
     <dialog
         android:id="@+id/webViewDialogFragment"
         android:name="com.simsim.island.ui.main.WebViewDialogFragment"
@@ -101,7 +101,25 @@
         android:id="@+id/blockRuleDialogFragment"
         android:name="com.simsim.island.ui.main.BlockRuleManageDialogFragment"
         android:label="BlockRuleDialogFragment"
-        tools:layout="@layout/block_rule_dialog_fragment"/>
+        tools:layout="@layout/block_rule_dialog_fragment">
+        <action
+            android:id="@+id/action_blockRuleDialogFragment_to_editBlockRuleDialogFragment"
+            app:destination="@id/editBlockRuleDialogFragment"
+            app:enterAnim="@android:anim/fade_in"
+            app:exitAnim="@android:anim/fade_out"/>
+    </dialog>
+    <dialog
+        android:id="@+id/editBlockRuleDialogFragment"
+        android:name="com.simsim.island.ui.main.EditBlockRuleDialogFragment"
+        android:label="edit_block_rule_dialog_fragment"
+        tools:layout="@layout/edit_block_rule_dialog_fragment" >
+        <argument
+            android:name="isNewOne"
+            app:argType="boolean" />
+        <argument
+            android:name="blockRuleIndex"
+            app:argType="integer" />
+    </dialog>
     <dialog
         android:id="@+id/cookieManageDialogFragment"
         android:name="com.simsim.island.ui.main.CookieManageDialogFragment"
@@ -132,4 +150,5 @@
         app:destination="@id/blockRuleDialogFragment"
         app:enterAnim="@android:anim/fade_in"
         app:exitAnim="@android:anim/fade_out"/>
+
 </navigation>

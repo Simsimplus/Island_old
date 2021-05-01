@@ -91,18 +91,57 @@
         </androidx.drawerlayout.widget.DrawerLayout>
 
 
-        <ImageView
+        <!--        <ImageView-->
+        <!--            android:id="@+id/loading_image"-->
+        <!--            android:layout_width="match_parent"-->
+        <!--            android:layout_height="match_parent"-->
+        <!--            android:background="@color/white"-->
+        <!--            android:clickable="false"-->
+        <!--            android:contentDescription="@string/loading_image"-->
+        <!--            android:elevation="7dp"-->
+        <!--            android:scaleType="fitCenter"-->
+        <!--            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"-->
+        <!--            tools:srcCompat="@drawable/ic_blue_ocean1" />-->
+
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/loading_image"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@color/white"
-            android:clickable="false"
-
-            android:contentDescription="@string/loading_image"
+            android:clickable="true"
             android:elevation="7dp"
-            android:scaleType="fitCenter"
             app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
-            tools:srcCompat="@drawable/ic_blue_ocean1" />
+            android:focusable="true">
+
+            <com.github.ybq.android.spinkit.SpinKitView
+                style="@style/SpinKitView.Circle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:contentDescription="@string/loading_image"
+                app:SpinKit_Color="@color/colorSecondary"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/loading_image_setting"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/white"
+                android:clickable="false"
+                android:contentDescription="@string/loading_image"
+                android:elevation="7dp"
+                android:scaleType="fitCenter"
+                android:visibility="gone"
+                app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:srcCompat="@drawable/ic_blue_ocean1" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_add"

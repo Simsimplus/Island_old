@@ -78,12 +78,12 @@ class DetailDialogFragment : DialogFragment() {
             adapter.loadStateFlow.collectLatest { loadStates ->
                 when (loadStates.refresh) {
                     is LoadState.Loading -> {
-                        binding.detailLoadingImage.setImageResource(viewModel.randomLoadingImage)
+//                        binding.detailLoadingImage.setImageResource(viewModel.randomLoadingImage)
                         binding.detailLoadingImage.visibility = View.VISIBLE
                         binding.detailFabAdd.visibility = View.INVISIBLE
                     }
                     is LoadState.Error -> {
-                        binding.detailLoadingImage.setImageResource(viewModel.randomLoadingImage)
+//                        binding.detailLoadingImage.setImageResource(viewModel.randomLoadingImage)
                         binding.detailLoadingImage.visibility = View.VISIBLE
                         Snackbar
                             .make(

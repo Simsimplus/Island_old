@@ -20,7 +20,7 @@
 <!--        <item name="actionBarTheme">@style/ThemeOverlay.MaterialComponents.Dark.ActionBar</item>-->
 <!--        <item name="editTextColor">@color/white</item>-->
 <!--        <item name="android:textColorHint">@color/white</item>-->
-        <item name="colorControlActivated">@color/colorSecondary</item>
+
 
     </style>
 
