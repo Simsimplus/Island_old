@@ -28,6 +28,8 @@ class EditBlockRuleDialogFragment : DialogFragment(){
     private lateinit var toolbar: MaterialToolbar
     private lateinit var preferenceKey: PreferenceKey
     private val args:EditBlockRuleDialogFragmentArgs by navArgs()
+    private var isSaved=false
+    private var blockRuleIndex=0L
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NORMAL, R.style.fullscreenDialog)
@@ -39,6 +41,11 @@ class EditBlockRuleDialogFragment : DialogFragment(){
     ): View? {
         binding= EditBlockRuleDialogFragmentBinding.inflate(inflater)
         preferenceKey= PreferenceKey(requireContext())
+        if (!args.isNewOne){
+            //saved before so should update record in DB
+            isSaved=true
+            blockRuleIndex=args.blockRuleIndex
+        }
         return binding.root
     }
 
@@ -52,13 +59,28 @@ class EditBlockRuleDialogFragment : DialogFragment(){
         val nameInput=binding.nameInput
         val ruleInput=binding.ruleInput
         val isRegex=binding.isRegex
+        val isNotCaseSensitive=binding.isNotCaseSensitive
+        val matchEntire=binding.matchEntire
         val blockTargetTextView=binding.blockTargetTextView
+        if (!args.isNewOne){
+            lifecycleScope.launch {
+                viewModel.database.blockRuleDao().getBlockRule(args.blockRuleIndex).let {
+                    nameInput.setText(it.name)
+                    ruleInput.setText(it.rule)
+                    isRegex.isChecked=it.isRegex
+                    isNotCaseSensitive.isChecked=it.isNotCaseSensitive
+                    matchEntire.isChecked=it.matchEntire
+                    blockTargetTextView.setText(it.target.targetName,false)
+                }
+            }
+        }
+
         val blockTargets=enumValues<BlockTarget>().toList()
         val items= blockTargets.map {
-            it.target
+            it.targetName
         }
         blockTargetTextView.setAdapter(ArrayAdapter(requireContext(),R.layout.spinner_viewholder,items))
-        blockTargetTextView.setText(BlockTarget.TargetAll.target,false)
+        blockTargetTextView.setText(BlockTarget.TargetAll.targetName,false)
         toolbar.setOnMenuItemClickListener { menuItem->
             when(menuItem.itemId){
                 R.id.new_block_rule_menu_save->{
@@ -76,22 +98,26 @@ class EditBlockRuleDialogFragment : DialogFragment(){
                         val target=blockTargets[items.indexOf(blockTargetTextView.text.toString())]
                         lifecycleScope.launch {
                             val blockRule=BlockRule(
-                                index = args.blockRuleIndex,
+                                index = blockRuleIndex,
                                 rule=rule,
                                 name=name,
                                 isRegex = isRegex.isChecked,
+                                isNotCaseSensitive = isNotCaseSensitive.isChecked,
+                                matchEntire = matchEntire.isChecked,
                                 target = target
                             ).also {
                                 Log.e(LOG_TAG,it.toString())
                             }
-                            if (args.isNewOne){
-                                viewModel.database.blockRuleDao().insertBlockRule(
-                                    blockRule
-                                )
-                            }else{
+                            if (isSaved){
                                 viewModel.database.blockRuleDao().updateBlockRule(
                                     blockRule
                                 )
+                            }else{
+                                blockRuleIndex=viewModel.database.blockRuleDao().insertBlockRule(
+                                    blockRule
+                                )
+                                isSaved=true
+
                             }
 
                         }

@@ -1,5 +1,6 @@
 package com.simsim.island.adapter
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.simsim.island.R
 import com.simsim.island.databinding.CommonlyUsedRecyclerviewViewholderBinding
 import com.simsim.island.model.Cookie
+import com.simsim.island.util.ellipsis
 
 class CookieRecyclerViewAdapter(
     val context: Context,
@@ -18,10 +20,12 @@ class CookieRecyclerViewAdapter(
 ) : RecyclerView.Adapter<CookieRecyclerViewAdapter.CookieViewHolder>() {
     inner class CookieViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val binding = CommonlyUsedRecyclerviewViewholderBinding.bind(view)
-        private val indicator=binding.indicatorBar
+        private val indicator = binding.indicatorBar
+        @SuppressLint("SetTextI18n")
         fun bind(cookie: Cookie) {
-            binding.editButton.visibility=View.GONE
-            binding.nameTextView.text = cookie.name
+            binding.editButton.visibility = View.GONE
+            binding.nameTextView.text = "饼干：${cookie.name}"
+            binding.detailTextView.text = "值：${cookie.cookie.ellipsis(10)}"
             binding.enableSwitch.isChecked = cookie.isInUse.also {
                 setIndicatorColor(it)
             }
@@ -45,14 +49,15 @@ class CookieRecyclerViewAdapter(
             }
 
         }
-        fun setIndicatorColor(isEnable:Boolean){
-            if (isEnable){
+
+        fun setIndicatorColor(isEnable: Boolean) {
+            if (isEnable) {
                 indicator.setBackgroundColor(
-                    ContextCompat.getColor(context,R.color.colorSecondary)
+                    ContextCompat.getColor(context, R.color.colorSecondary)
                 )
-            }else{
+            } else {
                 indicator.setBackgroundColor(
-                    ContextCompat.getColor(context,R.color.first_col_font_color)
+                    ContextCompat.getColor(context, R.color.first_col_font_color)
                 )
             }
         }

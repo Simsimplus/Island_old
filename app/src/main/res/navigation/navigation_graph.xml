@@ -118,7 +118,7 @@
             app:argType="boolean" />
         <argument
             android:name="blockRuleIndex"
-            app:argType="integer" />
+            app:argType="long" />
     </dialog>
     <dialog
         android:id="@+id/cookieManageDialogFragment"

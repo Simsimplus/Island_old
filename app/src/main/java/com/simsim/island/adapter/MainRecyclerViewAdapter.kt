@@ -1,14 +1,11 @@
 package com.simsim.island.adapter
 
 import android.graphics.Typeface
-import android.graphics.drawable.Animatable
 import android.graphics.drawable.Drawable
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.TextPaint
-import android.text.method.LinkMovementMethod
 import android.text.style.BackgroundColorSpan
-import android.text.style.ClickableSpan
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -21,17 +18,13 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.target.Target
-import com.bumptech.glide.request.transition.Transition
 import com.simsim.island.R
-import com.simsim.island.adapter.MainRecyclerViewAdapter.*
+import com.simsim.island.adapter.MainRecyclerViewAdapter.IslandThreadViewHolder
 import com.simsim.island.databinding.MainRecyclerviewViewholderBinding
 import com.simsim.island.model.PoThread
 import com.simsim.island.ui.main.MainFragment
 import com.simsim.island.util.LOG_TAG
-import com.simsim.island.util.handleThreadId
 import com.simsim.island.util.handleThreadTime
 
 class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imageClickListener: (imageUrl:String)->Unit,private val clickListener: (poThread:PoThread)->Unit):PagingDataAdapter<PoThread, IslandThreadViewHolder>(diffComparator) {
@@ -62,7 +55,7 @@ class MainRecyclerViewAdapter(private val fragment:MainFragment,private val imag
             holder.binding.secondRowMainPlaceholder.visibility=View.GONE
 //            val poThread=thread.toBasicThread()
 //            Log.e(LOG_TAG,poThread.toString())
-            holder.binding.uidTextview.text= handleThreadId(poThread.uid)
+            holder.binding.uidTextview.text= poThread.uid
             if (poThread.isManager){
                 holder.binding.uidTextview.setTypeface(null, Typeface.BOLD)
                 holder.binding.uidTextview.setTextColor(

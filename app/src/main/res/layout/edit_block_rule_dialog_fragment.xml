@@ -5,9 +5,7 @@
     android:id="@+id/new_block_rule_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.main.EditBlockRuleDialogFragment"
-    android:orientation="vertical"
-    style="@style/Theme.Island">
+    android:orientation="vertical">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
@@ -29,10 +27,11 @@
         android:paddingEnd="16dp">
 
         <com.google.android.material.textfield.TextInputLayout
+            style="@style/md_input_edit_text_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/label_name"
-            style="@style/md_input_edit_text_layout">
+            android:padding="5dp">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/name_input"
@@ -40,15 +39,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="text"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
                 tools:text="名称" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            style="@style/md_input_edit_text_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/label_rule"
-            style="@style/md_input_edit_text_layout">
+            android:padding="5dp">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/rule_input"
@@ -57,26 +58,46 @@
                 android:layout_height="wrap_content"
                 android:gravity="start"
                 android:inputType="textMultiLine"
-                android:lines="3"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
                 tools:text="规则规则规则规则规则规则规则规则规则规则规则规则规则规则" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.checkbox.MaterialCheckBox
+        <CheckBox
             android:id="@+id/is_regex"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:checked="false"
             android:text="@string/use_regex"
-            app:useMaterialThemeColors="true" />
+            app:useMaterialThemeColors="true"
+            android:theme="@style/Theme.Island"
+            tools:checked="true" />
+        <CheckBox
+            android:id="@+id/is_not_case_sensitive"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="false"
+            android:text="@string/is_not_case_sensitive"
+            android:theme="@style/Theme.Island"
+            app:useMaterialThemeColors="true"
+            />
+        <CheckBox
+            android:id="@+id/match_entire"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="@string/match_entire"
+            android:theme="@style/Theme.Island"
+            app:useMaterialThemeColors="true"
+            />
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/md_input_edit_text_layout_dropdown"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/label_block_target"
+            android:padding="5dp"
             app:endIconTint="@color/colorSecondary"
-            app:helperText="目标符合规则则此串被屏蔽"
-            >
+            app:helperText="目标符合规则则此串被屏蔽">
 
             <AutoCompleteTextView
                 android:id="@+id/block_target_text_view"
@@ -84,6 +105,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="none"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
                 tools:ignore="LabelFor"
                 tools:text="全部" />
 

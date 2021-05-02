@@ -7,8 +7,6 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.Toast
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -32,7 +30,7 @@ import com.simsim.island.dataStore
 import com.simsim.island.databinding.DetailDialogfragmentBinding
 import com.simsim.island.databinding.DetailRecyclerviewViewholderBinding
 import com.simsim.island.dp2PxScale
-import com.simsim.island.model.BasicThread
+import com.simsim.island.model.ReplyThread
 import com.simsim.island.preferenceKey.PreferenceKey
 import com.simsim.island.repository.AislandRepo
 import com.simsim.island.util.*
@@ -40,7 +38,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.jsoup.Jsoup
-import kotlin.properties.Delegates
 
 @AndroidEntryPoint
 class DetailDialogFragment : DialogFragment() {
@@ -113,15 +110,13 @@ class DetailDialogFragment : DialogFragment() {
 
     private fun observeThreadStarStatus() {
         lifecycleScope.launch {
-            viewModel.database.threadDao().getFlowPoThread(args.ThreadId).collectLatest {
-                it?.let {
+            viewModel.database.threadDao().isPoThreadStared(args.ThreadId).collectLatest {
                     val starItem =
                         binding.detailDialogToolbar.menu.findItem(R.id.detail_fragment_menu_star)
-                    if (it.isStar) {
+                    if (it) {
                         starItem.title = "取消收藏"
                     } else {
                         starItem.title = "收藏"
-                    }
                 }
             }
         }
@@ -259,12 +254,12 @@ class DetailDialogFragment : DialogFragment() {
                     val url = "https://adnmb3.com/m/t/$referenceId"
                     Log.e("Simsim", "request for thread detail:$url")
                     val response = viewModel.networkService.getHtmlStringByPage(url)
-                    val thread: BasicThread = if (response != null) {
+                    val thread: ReplyThread = if (response != null) {
                         val doc = Jsoup.parse(response)
                         val poThreadDiv =
                             doc.selectFirst("div[class=uk-container h-threads-container]")
                         if (poThreadDiv == null) {
-                            BasicThread(replyThreadId = 888, poThreadId = 888, section = "")
+                            ReplyThread(replyThreadId = 888, poThreadId = 888, section = "")
                         } else {
                             val poThread = AislandRepo.divToBasicThread(
                                 poThreadDiv,
@@ -276,7 +271,7 @@ class DetailDialogFragment : DialogFragment() {
                         }
 
                     } else {
-                        BasicThread(replyThreadId = 888, poThreadId = 888, section = "")
+                        ReplyThread(replyThreadId = 888, poThreadId = 888, section = "")
                     }
                     adapter.bindHolder(
                         binding = holderBinding, it = thread

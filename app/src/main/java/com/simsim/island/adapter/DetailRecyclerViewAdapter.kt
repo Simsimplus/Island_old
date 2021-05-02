@@ -1,6 +1,5 @@
 package com.simsim.island.adapter
 
-import android.graphics.Paint
 import android.graphics.Typeface
 import android.text.SpannableString
 import android.text.Spanned
@@ -10,9 +9,7 @@ import android.text.style.ClickableSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.core.content.ContextCompat
-import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
@@ -20,17 +17,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.simsim.island.R
 import com.simsim.island.databinding.DetailRecyclerviewViewholderBinding
-import com.simsim.island.model.BasicThread
-import com.simsim.island.util.handleThreadId
+import com.simsim.island.model.ReplyThread
 import com.simsim.island.util.handleThreadTime
-import com.simsim.island.util.referenceStringSpliterator
 
 class DetailRecyclerViewAdapter(
     private val fragment: Fragment,
     private val imageClickListener: (imageUrl: String) -> Unit,
     private val referenceClickListener:(reference:String)->Unit,
     private val itemClickListener: () -> Unit
-) : PagingDataAdapter<BasicThread, DetailRecyclerViewAdapter.BasicThreadViewHolder>(diffComparator) {
+) : PagingDataAdapter<ReplyThread, DetailRecyclerViewAdapter.BasicThreadViewHolder>(diffComparator) {
     class BasicThreadViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
 
 //        val uidTextview:TextView=view.findViewById(R.id.uid_textview)
@@ -87,10 +82,9 @@ class DetailRecyclerViewAdapter(
 
     fun bindHolder(
         binding: DetailRecyclerviewViewholderBinding,
-        it: BasicThread
+        it: ReplyThread
     ) {
-
-        binding.uidTextview.text = handleThreadId(it.uid)
+        binding.uidTextview.text = it.uid
         binding.timeTextview.text = handleThreadTime(it.time)
         binding.threadIdTextview.text = it.replyThreadId.toString()
         binding.contentTextview.apply{
@@ -154,44 +148,6 @@ class DetailRecyclerViewAdapter(
             )
         }
 
-        //add text view to hold reference
-//        if (it.references.isNotBlank()) {
-//            val references = it.references.split(referenceStringSpliterator).reversed()
-//            val layoutParams = binding.contentTextview.layoutParams.apply {
-//                width=ViewGroup.LayoutParams.WRAP_CONTENT
-//            }
-//    //                val textSize = fragment.resources.getDimension(R.dimen.content_font_size)
-//            references.forEach { reference ->
-//                val textView = LayoutInflater.from(fragment.requireContext())
-//                    .inflate(
-//                        R.layout.reference_view,
-//                        binding.detailFragmentContentLayout,
-//                        false
-//                    ) as TextView
-//                textView.apply {
-//                    text = reference
-//                    paintFlags = paintFlags or Paint.UNDERLINE_TEXT_FLAG
-//    //                        setTextSize(textSize)
-//                    tag = reference
-//                    setTextColor(
-//                        ContextCompat.getColor(
-//                            fragment.requireContext(),
-//                            R.color.thread_reference
-//                        )
-//                    )
-//                    setOnClickListener {
-//                        referenceClickListener(reference)
-//                    }
-//                }
-//                binding.detailFragmentContentLayout.addView(textView, 0, layoutParams)
-//            }
-//        } else {
-//            binding.detailFragmentContentLayout.children.forEach { childView ->
-//                childView.tag?.run {
-//                    binding.detailFragmentContentLayout.removeView(childView)
-//                }
-//            }
-//        }
         // if a posted image exists, load it from internet
         if (it.imageUrl.isNotBlank()) {
             val imageUrl = it.imageUrl
@@ -240,12 +196,12 @@ class DetailRecyclerViewAdapter(
     }
 
     companion object {
-        val diffComparator = object : DiffUtil.ItemCallback<BasicThread>() {
-            override fun areItemsTheSame(oldItem: BasicThread, newItem: BasicThread): Boolean {
+        val diffComparator = object : DiffUtil.ItemCallback<ReplyThread>() {
+            override fun areItemsTheSame(oldItem: ReplyThread, newItem: ReplyThread): Boolean {
                 return oldItem.replyThreadId == newItem.replyThreadId
             }
 
-            override fun areContentsTheSame(oldItem: BasicThread, newItem: BasicThread): Boolean {
+            override fun areContentsTheSame(oldItem: ReplyThread, newItem: ReplyThread): Boolean {
                 return oldItem == newItem
             }
 

@@ -1,7 +1,7 @@
 package com.simsim.island.adapter
 
+import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,8 +21,10 @@ class BlockRuleRecyclerViewAdapter(
     inner class BlockRuleViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val binding = CommonlyUsedRecyclerviewViewholderBinding.bind(view)
         private val indicator=binding.indicatorBar
+        @SuppressLint("SetTextI18n")
         fun bind(blockRule: BlockRule) {
-            binding.nameTextView.text = blockRule.name
+            binding.nameTextView.text = "名称：${blockRule.name}"
+            binding.detailTextView.text="规则：${blockRule.rule}"
             binding.enableSwitch.isChecked = blockRule.isEnable.also {
                 setIndicatorColor(it)
             }

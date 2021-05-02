@@ -71,7 +71,6 @@ class BlockRuleManageDialogFragment : DialogFragment() {
                         !enable
                     fab.isVisible = enable
                 }
-
                 settings[booleanPreferencesKey(preferenceKey.fabDefaultSizeKey)]?.let { setSizeDefault ->
                     if (setSizeDefault) {
                         fab.customSize = FloatingActionButton.NO_CUSTOM_SIZE

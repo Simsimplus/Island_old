@@ -10,18 +10,19 @@ import com.simsim.island.model.*
 
 @Database(
     entities = [
-        BasicThread::class,
+        ReplyThread::class,
         PoThread::class,
+        SavedPoThread::class,
+        SavedReplyThread::class,
         MainRemoteKey::class,
         DetailRemoteKey::class,
-        StaredPoThreads::class,
         Section::class,
         Emoji::class,
         UpdateRecord::class,
         Cookie::class,
         BlockRule::class,
     ],
-    version = 3,
+    version = 1,
     exportSchema = false
 )
 @TypeConverters(Converter::class)

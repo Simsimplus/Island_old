@@ -1,25 +1,20 @@
 package com.simsim.island.ui.main
 
-import android.app.AlertDialog
 import android.content.DialogInterface
 import android.graphics.BitmapFactory
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.LinearLayout
-import android.widget.SeekBar
-import androidx.core.view.isVisible
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.preference.*
+import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SeekBarPreference
+import androidx.preference.SwitchPreferenceCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.MultiFormatReader
@@ -39,7 +34,9 @@ import id.zelory.compressor.Compressor
 import id.zelory.compressor.constraint.resolution
 import id.zelory.compressor.constraint.size
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import java.io.File
 import java.io.FileInputStream
 import kotlin.properties.Delegates
@@ -118,6 +115,7 @@ class SettingsFragment(
                     true
                 }
             }
+
             fabSizeDefault.apply {
                 fabSizeSeekBar.isVisible = !isChecked
                 setOnPreferenceChangeListener { _, value ->
@@ -181,40 +179,17 @@ class SettingsFragment(
 
 
             cookieInUse.apply {
-                var cookie = preferenceDataStore!!.getString("cookie_in_use_key", null)
+                val p=this
                 lifecycleScope.launch {
-                    this@apply.summary = (cookie?.let {
-                        val cookieInDB = viewModel.database.cookieDao().getCookieByValue(it)
-                        "现用：${cookieInDB?.name ?: "(饼干值) $it"}"
-                    } ?: "无cookie可用或未设置").ellipsis()
+                    viewModel.database.cookieDao().getActiveCookieFlow().collectLatest {cookie->
+                        cookie?.let {
+                            p.summary="现用:${cookie.name}"
+                        }?: kotlin.run {
+                            p.summary="暂无可用"
+                        }
+                    }
                 }
                 setOnPreferenceClickListener {
-                    cookie = preferenceDataStore!!.getString("cookie_in_use_key", null)
-//                    val cookieSet =
-//                        preferenceDataStore!!.getStringSet("cookies", mutableSetOf()) ?: mutableSetOf()
-//                    lifecycleScope.launch {
-//                        val cookieList = viewModel.database.cookieDao().getAllCookies()
-//                        val cookieNameList = cookieList.map {
-//                            it.name
-//                        }
-//                        val cookieValueList = cookieList.map {
-//                            it.cookie
-//                        }
-//
-//                        val cookieIndex = cookieValueList.indexOf(cookie)
-//                        MaterialAlertDialogBuilder(activity)
-//                            .setSingleChoiceItems(
-//                                cookieNameList.map { it.ellipsis(10) }.toTypedArray(),
-//                                if (cookieIndex != -1) cookieIndex else 0
-//                            ) { _, position ->
-//                                preferenceDataStore!!.putString(
-//                                    "cookie_in_use_key",
-//                                    cookieValueList[position]
-//                                )
-//                                this@apply.summary = "现用：${cookieNameList[position]}".ellipsis()
-//                            }
-//                            .show()
-//                    }
                     val action=SettingsDialogFragmentDirections.actionGlobalCookieManageDialogFragment()
                     settingsDialogFragment.findNavController().navigate(action)
                     true

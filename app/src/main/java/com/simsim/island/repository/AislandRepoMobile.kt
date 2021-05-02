@@ -1,11 +1,14 @@
 package com.simsim.island.repository
 
 import android.util.Log
-import com.simsim.island.model.BasicThread
 import com.simsim.island.model.PoThread
+import com.simsim.island.model.ReplyThread
 import com.simsim.island.model.Section
 import com.simsim.island.service.AislandNetworkService
-import com.simsim.island.util.*
+import com.simsim.island.util.LOG_TAG
+import com.simsim.island.util.firstNumber
+import com.simsim.island.util.islandUrl
+import com.simsim.island.util.removeQueryTail
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.emptyFlow
@@ -35,7 +38,7 @@ class AislandRepoMobile @Inject constructor(private val service: AislandNetworkS
                     )
                     val replyDivs =
                         poDiv.select("div[class=uk-container h-threads-reply-container]")
-                    val replyThreads = mutableListOf<BasicThread>()
+                    val replyThreads = mutableListOf<ReplyThread>()
                     replyDivs.forEach { replyDiv ->
                         replyThreads.add(
                             divToBasicThread(
@@ -73,8 +76,8 @@ class AislandRepoMobile @Inject constructor(private val service: AislandNetworkS
             poThreadId: Long,
             fId: String,
             poUid: String = "ahsgjkdghahweuihuihafuidsbfiaubf"
-        ): BasicThread {
-            val basicThread = BasicThread(
+        ): ReplyThread {
+            val basicThread = ReplyThread(
                 section = section,
                 isPo = isPo,
                 poThreadId = poThreadId,
@@ -145,21 +148,21 @@ class AislandRepoMobile @Inject constructor(private val service: AislandNetworkS
                             }
                         }
                         "h-threads-content" -> {
-                            val referenceTags = try {
-                                p.select("font[color=#789922]")
-                            } catch (e: Exception) {
-                                Log.e("Simsim", e.stackTraceToString())
-                                null
-                            }
-                            val references = mutableListOf<String>()
-                            if (!referenceTags.isNullOrEmpty()) {
-                                referenceTags.forEach { reference ->
-                                    references.add(reference.ownText())
-                                }
-                            }
-                            basicThread.references = references.joinToString(
-                                referenceStringSpliterator
-                            )
+//                            val referenceTags = try {
+//                                p.select("font[color=#789922]")
+//                            } catch (e: Exception) {
+//                                Log.e("Simsim", e.stackTraceToString())
+//                                null
+//                            }
+//                            val references = mutableListOf<String>()
+//                            if (!referenceTags.isNullOrEmpty()) {
+//                                referenceTags.forEach { reference ->
+//                                    references.add(reference.ownText())
+//                                }
+//                            }
+//                            basicThread.references = references.joinToString(
+//                                referenceStringSpliterator
+//                            )
                             basicThread.content = p.ownText()
                         }
                     }
@@ -171,24 +174,23 @@ class AislandRepoMobile @Inject constructor(private val service: AislandNetworkS
         }
 
         fun basicThreadToPoThread(
-            basicThread: BasicThread,
-            replyThreads: List<BasicThread>,
+            replyThread: ReplyThread,
+            replyThreads: List<ReplyThread>,
             pageIndex: Int
         ): PoThread {
             return PoThread(
-                isManager = basicThread.isManager,
-                threadId = basicThread.replyThreadId,
-                title = basicThread.title,
-                name = basicThread.name,
-                link = basicThread.link,
-                time = basicThread.time,
-                uid = basicThread.uid,
-                imageUrl = basicThread.imageUrl,
-                content = basicThread.content,
-                isPo = basicThread.isPo,
-                commentsNumber = basicThread.commentsNumber,
-                section = basicThread.section,
-                references = basicThread.references,
+                isManager = replyThread.isManager,
+                threadId = replyThread.replyThreadId,
+                title = replyThread.title,
+                name = replyThread.name,
+                link = replyThread.link,
+                time = replyThread.time,
+                uid = replyThread.uid,
+                imageUrl = replyThread.imageUrl,
+                content = replyThread.content,
+                isPo = replyThread.isPo,
+                commentsNumber = replyThread.commentsNumber,
+                section = replyThread.section,
                 pageIndex = pageIndex,
             ).apply {
                 this.replyThreads = replyThreads

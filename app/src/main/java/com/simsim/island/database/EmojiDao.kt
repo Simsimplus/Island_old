@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EmojiDao {
+    @Query("select exists(select * from Emoji)")
+    suspend fun isAny():Boolean
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllEmojis(emojis:List<Emoji>)

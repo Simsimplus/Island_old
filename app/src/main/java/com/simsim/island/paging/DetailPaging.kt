@@ -3,8 +3,8 @@ package com.simsim.island.paging
 import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.simsim.island.model.BasicThread
 import com.simsim.island.model.PoThread
+import com.simsim.island.model.ReplyThread
 import com.simsim.island.repository.AislandRepo
 import com.simsim.island.service.AislandNetworkService
 import com.simsim.island.util.findPageNumber
@@ -15,15 +15,15 @@ class DetailPaging(
     private val service: AislandNetworkService,
     private val poThread: PoThread,
 ) :
-    PagingSource<Int, BasicThread>() {
-    override fun getRefreshKey(state: PagingState<Int, BasicThread>): Int? {
+    PagingSource<Int, ReplyThread>() {
+    override fun getRefreshKey(state: PagingState<Int, ReplyThread>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
             val anchorPage = state.closestPageToPosition(anchorPosition)
             anchorPage?.prevKey?.plus(1) ?: anchorPage?.nextKey?.minus(1)
         }
     }
 
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, BasicThread> {
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, ReplyThread> {
 //        if (!isNetworkConnected) return LoadResult.Error(Exception("not network"))
         try {
 //            val poThread=mainThread.find {
@@ -36,12 +36,12 @@ class DetailPaging(
             Log.e("Simsim","request for thread detail:$url")
             val response =
                 service.getHtmlStringByPage(url)
-            val threadList: List<BasicThread>? = if (response != null) {
+            val threadList: List<ReplyThread>? = if (response != null) {
                 val doc = Jsoup.parse(response)
                 val pages=doc.select("[href~=.*page=[0-9]+]")
                 maxPage =pages.last().attr("href").findPageNumber().toInt()
                 Log.e("Simsim","max page:$maxPage")
-                val replyThreads = mutableListOf<BasicThread>()
+                val replyThreads = mutableListOf<ReplyThread>()
                 if (nextPageNumber == 1) {
                     replyThreads.add(poThread.toBasicThread())
                 }

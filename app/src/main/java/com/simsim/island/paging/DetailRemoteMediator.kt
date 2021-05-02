@@ -7,8 +7,8 @@ import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.simsim.island.database.IslandDatabase
-import com.simsim.island.model.BasicThread
 import com.simsim.island.model.DetailRemoteKey
+import com.simsim.island.model.ReplyThread
 import com.simsim.island.repository.AislandRepo
 import com.simsim.island.service.AislandNetworkService
 import com.simsim.island.util.LOG_TAG
@@ -21,10 +21,10 @@ class DetailRemoteMediator(
     private val service: AislandNetworkService,
     private val poThreadId: Long,
     private val database: IslandDatabase
-) : RemoteMediator<Int, BasicThread>() {
+) : RemoteMediator<Int, ReplyThread>() {
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, BasicThread>
+        state: PagingState<Int, ReplyThread>
     ): MediatorResult {
         Log.e(LOG_TAG, "LoadType:$loadType")
         val page: Int = when (loadType) {
@@ -66,7 +66,7 @@ class DetailRemoteMediator(
             val url = "https://adnmb3.com/t/$poThreadId?page=$page"
             Log.e("Simsim", "request for thread detail:$url")
             val response = service.getHtmlStringByPage(url)
-            val threadList: List<BasicThread>? = if (response != null) {
+            val threadList: List<ReplyThread>? = if (response != null) {
                 val doc = Jsoup.parse(response)
                 val poThreadDiv = doc.selectFirst("div[class=h-threads-item-main]")
                 val pages = doc.select("[href~=.*page=[0-9]+]")
@@ -92,7 +92,7 @@ class DetailRemoteMediator(
                     Log.e(LOG_TAG, "detailRM poThread:$poThread")
 
                     Log.e("Simsim", "max page:$maxPage")
-                    val replyThreads = mutableListOf<BasicThread>()
+                    val replyThreads = mutableListOf<ReplyThread>()
                     if (page == 1) {
 
 

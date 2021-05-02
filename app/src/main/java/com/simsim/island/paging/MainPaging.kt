@@ -4,7 +4,6 @@ import android.net.Uri
 import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.simsim.island.model.BasicThread
 import com.simsim.island.model.PoThread
 import com.simsim.island.repository.AislandRepo
 import com.simsim.island.service.AislandNetworkService

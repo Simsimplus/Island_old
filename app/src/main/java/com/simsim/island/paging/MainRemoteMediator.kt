@@ -21,7 +21,6 @@ class MainRemoteMediator(
     private val sectionUrl:String,
     private val database: IslandDatabase
 ) : RemoteMediator<Int, PoThread>() {
-
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, PoThread>
@@ -78,27 +77,13 @@ class MainRemoteMediator(
                         MainRemoteKey(it.threadId, previousKey, nextKey)
                     }
                     database.keyDao().insertMainKeys(keys)
-                    threadList.forEach {
-                        if (database.threadDao().isPoThreadStared(it.threadId)){
-                            it.isStar=true
-                            }
-                        if (database.threadDao().isPoThreadCollected(it.threadId)){
-                            val collectedPoThread=database.threadDao().getPoThread(it.threadId)
-                            collectedPoThread?.let {
-                                it.collectTime=collectedPoThread.collectTime
-                                it.pageIndex=collectedPoThread.pageIndex
-                            }
-                        }
-                    }
                     database.threadDao().insertAllPoThreads(threadList)
                     //insert po threads first to give main remote key right foreign key
-
                 }
                 return MediatorResult.Success(endOfPaginationReached = false)
             } else {
                 return MediatorResult.Success(endOfPaginationReached = false)
             }
-
         } catch (e: Exception) {
             Log.e("Simsim", "main remote mediator error:${e.stackTraceToString()}")
             return MediatorResult.Error(e)

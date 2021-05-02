@@ -15,7 +15,7 @@
         <item name="android:paddingStart">0dp</item>
         <item name="android:paddingEnd">0dp</item>
         <item name="android:paddingTop">30dp</item>
-        <item name="android:paddingBottom">24dp</item>
+        <item name="android:paddingBottom">16dp</item>
     </style>
     <style name="md_input_edit_text_layout">
         <item name="colorControlActivated">@color/colorSecondary</item>
@@ -30,5 +30,8 @@
         <item name="hintTextColor">@color/colorSecondary</item>
         <item name="boxBackgroundColor">@color/white</item>
         <item name="helperTextTextColor">@color/colorSecondary</item>
+    </style>
+    <style name="md_checkbox" parent="Widget.AppCompat.CompoundButton.CheckBox">
+        <item name="buttonTint">@color/colorSecondary</item>
     </style>
 </resources>
