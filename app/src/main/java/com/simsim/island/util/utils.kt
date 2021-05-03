@@ -254,6 +254,7 @@ class OnSwipeListener(
             } catch (exception: Exception) {
                 exception.printStackTrace()
             }
+            Log.e(LOG_TAG,"[OnSwipeListener] on touch consumed:$result")
             return result
         }
 

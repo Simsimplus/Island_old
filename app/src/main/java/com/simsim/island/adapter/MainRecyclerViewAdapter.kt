@@ -8,8 +8,10 @@ import android.text.TextPaint
 import android.text.style.BackgroundColorSpan
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
@@ -30,6 +32,7 @@ import com.simsim.island.util.handleThreadTime
 class MainRecyclerViewAdapter(
     private val fragment: MainFragment,
     private val imageClickListener: (imageUrl: String) -> Unit,
+    private val popupMenuItemClickListener: ( menuItem: MenuItem,poThread:PoThread)->Boolean,
     private val clickListener: (poThread: PoThread) -> Unit
 ) : PagingDataAdapter<PoThread, IslandThreadViewHolder>(diffComparator) {
     inner class IslandThreadViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -198,6 +201,18 @@ class MainRecyclerViewAdapter(
             }
             holder.binding.mdCard.setOnClickListener {
                 clickListener.invoke(poThread)
+            }
+
+            holder.itemView.setOnLongClickListener { card->
+                Log.e(LOG_TAG,"main card long clicked")
+                PopupMenu(fragment.requireContext(),card).apply {
+                    inflate(R.menu.main_card_popup_menu)
+                    setOnMenuItemClickListener{
+                        Log.e(LOG_TAG,"main card menu selected[$it]")
+                        popupMenuItemClickListener.invoke(it,poThread)
+                    }
+                }.show()
+                true
             }
             //            holder.uidTextview.text= handleThreadId(islandThread.poThread.uid)
             //            holder.timeTextview.text= handleThreadTime(islandThread.poThread.time)

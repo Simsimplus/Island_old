@@ -1,14 +1,10 @@
 package com.simsim.island.ui.main
 
-import android.app.Dialog
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.view.DragEvent
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,19 +12,10 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable
 import com.bumptech.glide.Glide
-import com.bumptech.glide.annotation.GlideModule
-import com.bumptech.glide.load.DataSource
-import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.load.resource.gif.GifDrawable
-import com.bumptech.glide.request.RequestListener
-import com.bumptech.glide.request.target.Target
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.simsim.island.MainActivity
 import com.simsim.island.R
 import com.simsim.island.databinding.ImageDetailFragmentBinding
@@ -36,9 +23,7 @@ import com.simsim.island.util.LOG_TAG
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.io.FileOutputStream
 import java.nio.ByteBuffer
 
 @AndroidEntryPoint
@@ -68,32 +53,30 @@ class ImageDetailFragment() : DialogFragment() {
         }
             circularProgress.setColorSchemeColors(ContextCompat.getColor(requireContext(),R.color.colorSecondary))
             circularProgress.start()
-        val imageRequestListener = object : RequestListener<Drawable> {
-            override fun onLoadFailed(
-                e: GlideException?,
-                model: Any?,
-                target: Target<Drawable>?,
-                isFirstResource: Boolean
-            ): Boolean {
-                return false
-            }
-
-            override fun onResourceReady(
-                resource: Drawable?,
-                model: Any?,
-                target: Target<Drawable>?,
-                dataSource: DataSource?,
-                isFirstResource: Boolean
-            ): Boolean {
-                circularProgress.stop()
-                return false
-            }
-
-        }
+//        val imageRequestListener = object : RequestListener<Drawable> {
+//            override fun onLoadFailed(
+//                e: GlideException?,
+//                model: Any?,
+//                target: Target<Drawable>?,
+//                isFirstResource: Boolean
+//            ): Boolean {
+//                return false
+//            }
+//
+//            override fun onResourceReady(
+//                resource: Drawable?,
+//                model: Any?,
+//                target: Target<Drawable>?,
+//                dataSource: DataSource?,
+//                isFirstResource: Boolean
+//            ): Boolean {
+//                circularProgress.stop()
+//                return false
+//            }
+//
+//        }
         val imageUrl=if (args.isURI) Uri.parse(args.imageUrl) else args.imageUrl
-        Glide.with(binding.root).load(imageUrl).addListener(
-            imageRequestListener
-            ).placeholder(circularProgress).into(binding.imageDetail)
+        Glide.with(binding.root).load(imageUrl).placeholder(circularProgress).into(binding.imageDetail)
 
 
 

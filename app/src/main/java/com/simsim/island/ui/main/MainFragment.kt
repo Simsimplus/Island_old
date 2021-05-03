@@ -39,6 +39,7 @@ import com.simsim.island.databinding.MainFragmentBinding
 import com.simsim.island.dp2PxScale
 import com.simsim.island.model.BlockRule
 import com.simsim.island.model.BlockTarget
+import com.simsim.island.model.PoThread
 import com.simsim.island.model.SectionGroup
 import com.simsim.island.preferenceKey.PreferenceKey
 import com.simsim.island.util.*
@@ -98,73 +99,79 @@ class MainFragment : Fragment() {
     @SuppressLint("ClickableViewAccessibility")
     private fun setupFAB() {
         lifecycleScope.launch {
-            requireContext().dataStore.data.collectLatest { settings ->
-                settings[booleanPreferencesKey(preferenceKey.enableFabKey)]?.let { enable ->
-                    isFABEnable = enable
-                    binding.mainToolbar.menu.findItem(R.id.main_fragment_menu_add).isVisible =
-                        !enable
-                    fab.isVisible = enable
-                }
-                val swipeUp = settings[stringPreferencesKey(SWIPE_UP)]
-                val swipeDown = settings[stringPreferencesKey(SWIPE_DOWN)]
-                val swipeLeft = settings[stringPreferencesKey(SWIPE_LEFT)]
-                val swipeRight = settings[stringPreferencesKey(SWIPE_RIGHT)]
-                fab.setOnClickListener {
-                    Log.e(LOG_TAG, "fab clicked")
-                }
-                fab.setOnTouchListener(OnSwipeListener(
-                    requireContext(),
-                    onSwipeTop = {
-                        getFABSwipeFunction(swipeString = swipeUp).invoke()
-                    },
-                    onSwipeBottom = {
-                        getFABSwipeFunction(swipeString = swipeDown).invoke()
-                    },
-                    onSwipeLeft = {
-                        getFABSwipeFunction(swipeString = swipeLeft).invoke()
-                    },
-                    onSwipeRight = {
-                        getFABSwipeFunction(swipeString = swipeRight).invoke()
+            launch {
+                requireContext().dataStore.data.collectLatest { settings ->
+                    settings[booleanPreferencesKey(preferenceKey.enableFabKey)]?.let { enable ->
+                        isFABEnable = enable
+                        binding.mainToolbar.menu.findItem(R.id.main_fragment_menu_add).isVisible =
+                            !enable
+                        fab.isVisible = enable
                     }
-                ))
+                    val swipeUp = settings[stringPreferencesKey(SWIPE_UP)]
+                    val swipeDown = settings[stringPreferencesKey(SWIPE_DOWN)]
+                    val swipeLeft = settings[stringPreferencesKey(SWIPE_LEFT)]
+                    val swipeRight = settings[stringPreferencesKey(SWIPE_RIGHT)]
+                    fab.setOnTouchListener(OnSwipeListener(
+                        requireContext(),
+                        onSwipeTop = {
+                            getFABSwipeFunction(swipeString = swipeUp).invoke()
+                        },
+                        onSwipeBottom = {
+                            getFABSwipeFunction(swipeString = swipeDown).invoke()
+                        },
+                        onSwipeLeft = {
+                            getFABSwipeFunction(swipeString = swipeLeft).invoke()
+                        },
+                        onSwipeRight = {
+                            getFABSwipeFunction(swipeString = swipeRight).invoke()
+                        }
+                    ))
 
-                settings[booleanPreferencesKey(preferenceKey.fabDefaultSizeKey)]?.let { setSizeDefault ->
-                    if (setSizeDefault) {
-                        fab.customSize = FloatingActionButton.NO_CUSTOM_SIZE
-                        fab.size = FloatingActionButton.SIZE_AUTO
-                    } else {
-                        settings[intPreferencesKey(preferenceKey.fabSizeSeekBarKey)]?.let { fabCustomSize ->
-                            fab.customSize = (fabCustomSize * requireContext().dp2PxScale()).toInt()
+                    settings[booleanPreferencesKey(preferenceKey.fabDefaultSizeKey)]?.let { setSizeDefault ->
+                        if (setSizeDefault) {
+                            fab.customSize = FloatingActionButton.NO_CUSTOM_SIZE
+                            fab.size = FloatingActionButton.SIZE_AUTO
+                        } else {
+                            settings[intPreferencesKey(preferenceKey.fabSizeSeekBarKey)]?.let { fabCustomSize ->
+                                fab.customSize =
+                                    (fabCustomSize * requireContext().dp2PxScale()).toInt()
+                            }
                         }
                     }
-
-                }
-                (settings[booleanPreferencesKey(preferenceKey.fabPlaceRightKey)]
-                    ?: true).let { placeRight ->
-                    val sideMargin =
-                        settings[intPreferencesKey(preferenceKey.fabSideMarginKey)] ?: 0
-                    val bottomMargin =
-                        settings[intPreferencesKey(preferenceKey.fabBottomMarginKey)] ?: 0
-                    val layoutParams = fab.layoutParams as CoordinatorLayout.LayoutParams
-                    layoutParams.bottomMargin =
-                        ((30 + bottomMargin) * requireContext().dp2PxScale()).toInt()
-                    if (placeRight) {
-                        layoutParams.gravity = Gravity.BOTTOM or Gravity.RIGHT
-                        layoutParams.rightMargin =
-                            ((30 + sideMargin) * requireContext().dp2PxScale()).toInt()
-                        layoutParams.leftMargin = 0
-                    } else {
-                        layoutParams.gravity = Gravity.BOTTOM or Gravity.LEFT
-                        layoutParams.leftMargin =
-                            ((30 + sideMargin) * requireContext().dp2PxScale()).toInt()
-                        layoutParams.rightMargin = 0
+                    (settings[booleanPreferencesKey(preferenceKey.fabPlaceRightKey)]
+                        ?: true).let { placeRight ->
+                        val sideMargin =
+                            settings[intPreferencesKey(preferenceKey.fabSideMarginKey)] ?: 0
+                        val bottomMargin =
+                            settings[intPreferencesKey(preferenceKey.fabBottomMarginKey)] ?: 0
+                        val layoutParams = fab.layoutParams as CoordinatorLayout.LayoutParams
+                        layoutParams.bottomMargin =
+                            ((30 + bottomMargin) * requireContext().dp2PxScale()).toInt()
+                        if (placeRight) {
+                            layoutParams.gravity = Gravity.BOTTOM or Gravity.RIGHT
+                            layoutParams.rightMargin =
+                                ((30 + sideMargin) * requireContext().dp2PxScale()).toInt()
+                            layoutParams.leftMargin = 0
+                        } else {
+                            layoutParams.gravity = Gravity.BOTTOM or Gravity.LEFT
+                            layoutParams.leftMargin =
+                                ((30 + sideMargin) * requireContext().dp2PxScale()).toInt()
+                            layoutParams.rightMargin = 0
+                        }
+                        fab.layoutParams = layoutParams
+                        fab.requestLayout()
                     }
-                    fab.layoutParams = layoutParams
-                    fab.requestLayout()
+                    Log.e(LOG_TAG, "setting collected")
                 }
             }
-            fab.setOnClickListener {
-                newThread()
+            launch {
+                fab.setOnClickListener {
+                    Log.e(LOG_TAG, "main fab clicked")
+                    newThread()
+                }
+            }
+            launch {
+                Log.e(LOG_TAG, "test")
             }
         }
     }
@@ -256,10 +263,11 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupRecyclerView()
         setupToolbar()
         setupFAB()
         handleSavedInstanceState()
-        setupRecyclerView()
+
         setupSwipeRefresh()
         setupDrawerSections()
         observingDataChange()
@@ -327,14 +335,6 @@ class MainFragment : Fragment() {
                     is LoadState.Error -> {
                         binding.loadingImage.visibility = View.VISIBLE
                         binding.fabAdd.visibility = View.INVISIBLE
-//                        viewModel.database.threadDao().isThereAnyPoThreadInDB().collectLatest {
-//                            if (it) {
-//                                binding.loadingImage.visibility = View.INVISIBLE
-//                                binding.fabAdd.visibility = View.VISIBLE
-//                            }
-//                        }
-//                        Glide.with(this@MainFragment).load(viewModel.randomLoadingImage)
-//                            .into(binding.loadingImage)
                         Snackbar
                             .make(
                                 binding.root,
@@ -366,6 +366,7 @@ class MainFragment : Fragment() {
             swipeRefreshLayout.setColorSchemeResources(R.color.colorSecondary)
             swipeRefreshLayout.setOnRefreshListener {
                 Log.e("Simsim", "main recycler view refresh by swipeRefreshLayout")
+                layoutManager.scrollToPosition(0)
                 adapter.refresh()
                 if (swipeRefreshLayout.isRefreshing) {
                     swipeRefreshLayout.isRefreshing = false
@@ -376,13 +377,35 @@ class MainFragment : Fragment() {
 
 
     private fun setupRecyclerView() {
-        adapter = MainRecyclerViewAdapter(this, { imageUrl ->
-            val action = MainFragmentDirections.actionGlobalImageDetailFragment(imageUrl)
-            findNavController().navigate(action)
-        }) { poThread ->
-            viewModel.currentPoThread = poThread
-            toDetailFragment(poThread.threadId)
-        }
+        adapter = MainRecyclerViewAdapter(
+            fragment = this,
+            imageClickListener = { imageUrl ->
+                val action = MainFragmentDirections.actionGlobalImageDetailFragment(imageUrl)
+                findNavController().navigate(action)
+            },
+            popupMenuItemClickListener = {menuItem,poThread->
+                when(menuItem.itemId){
+                    R.id.main_popup_menu_block_thread->{
+                        blockThreadById(poThread)
+                        true
+                    }
+                    R.id.main_popup_menu_block_uid->{
+                        blockThreadByUid(poThread)
+                        true
+                    }
+                    R.id.main_popup_menu_star->{
+                        viewModel.starPoThread(poThread.threadId)
+                        true
+                    }
+                    else->{false}
+                }
+
+            },
+            clickListener = { poThread ->
+                viewModel.currentPoThread = poThread
+                toDetailFragment(poThread.threadId)
+            }
+        )
         binding.mainRecyclerView.adapter = adapter
 //            .withLoadStateFooter(MainLoadStateAdapter(adapter::retry))
         layoutManager = LinearLayoutManager(context)
@@ -401,50 +424,97 @@ class MainFragment : Fragment() {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 Log.e(LOG_TAG, "rv item swiped")
                 val position = viewHolder.absoluteAdapterPosition
-                adapter.getItemByPosition(position)?.let {
-                    val poThread = it.apply {
-                        isShow = false
-                    }
-                    lifecycleScope.launch {
-                        viewModel.database.threadDao().updatePoThread(poThread)
-                        var shouldBlock=true
-                        Snackbar.make(binding.mainCoordinatorLayout, "已屏蔽此串", Snackbar.LENGTH_SHORT)
-                            .setAction("取消") {
-                                shouldBlock=false
-                                lifecycleScope.launch {
-                                    viewModel.database.threadDao().updatePoThread(poThread.apply {
-                                        isShow = true
-                                    })
-                                }
-                            }
-                            .addCallback(
-                                object : Snackbar.Callback(){
-                                    override fun onDismissed(
-                                        transientBottomBar: Snackbar?,
-                                        event: Int
-                                    ) {
-                                        if (shouldBlock){
-                                            lifecycleScope.launch {
-                                                viewModel.database.blockRuleDao().insertBlockRule(
-                                                    BlockRule(
-                                                        index = 0,
-                                                        rule=poThread.threadId.toString(),
-                                                        target = BlockTarget.TargetThreadId
-                                                    )
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            )
-                            .show()
-                    }
+                adapter.getItemByPosition(position)?.let {poThread->
+
+                    blockThreadById(poThread)
                 }
             }
 
         }
         ItemTouchHelper(callBack).also {
             it.attachToRecyclerView(binding.mainRecyclerView)
+        }
+    }
+
+    private fun blockThreadById(poThread: PoThread) {
+        lifecycleScope.launch {
+            viewModel.database.threadDao().updatePoThread(poThread.apply {
+                isShow = false
+            })
+            var shouldBlock = true
+            Snackbar.make(binding.mainCoordinatorLayout, "已屏蔽此串", Snackbar.LENGTH_SHORT)
+                .setAction("取消") {
+                    shouldBlock = false
+                    lifecycleScope.launch {
+                        viewModel.database.threadDao().updatePoThread(poThread.apply {
+                            isShow = true
+                        })
+                    }
+                }
+                .addCallback(
+                    object : Snackbar.Callback() {
+                        override fun onDismissed(
+                            transientBottomBar: Snackbar?,
+                            event: Int
+                        ) {
+                            if (shouldBlock) {
+                                lifecycleScope.launch {
+                                    viewModel.database.blockRuleDao().insertBlockRule(
+                                        BlockRule(
+                                            index = 0,
+                                            rule = poThread.threadId.toString(),
+                                            target = BlockTarget.TargetThreadId
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+                )
+                .show()
+        }
+    }
+    private fun blockThreadByUid(poThread:PoThread){
+        lifecycleScope.launch {
+            val list=viewModel.database.threadDao().getAllPoThreadsByUid(poThread.uid)
+            list.forEach {
+                viewModel.database.threadDao().updatePoThread(it.apply {
+                    isShow=false
+                })
+            }
+            var shouldBlock = true
+            Snackbar.make(binding.mainCoordinatorLayout, "已屏蔽此饼干", Snackbar.LENGTH_SHORT)
+                .setAction("取消") {
+                    shouldBlock = false
+                    lifecycleScope.launch {
+                        list.forEach {
+                            viewModel.database.threadDao().updatePoThread(it.apply {
+                                isShow=true
+                            })
+                        }
+                    }
+                }
+                .addCallback(
+                    object : Snackbar.Callback() {
+                        override fun onDismissed(
+                            transientBottomBar: Snackbar?,
+                            event: Int
+                        ) {
+                            if (shouldBlock) {
+                                lifecycleScope.launch {
+                                    viewModel.database.blockRuleDao().insertBlockRule(
+                                        BlockRule(
+                                            index = 0,
+                                            rule = poThread.uid,
+                                            target = BlockTarget.TargetUid
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+                )
+                .show()
         }
     }
 

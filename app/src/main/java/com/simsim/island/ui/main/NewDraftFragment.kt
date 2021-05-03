@@ -1,13 +1,13 @@
 package com.simsim.island.ui.main
 
+//import com.github.dhaval2404.imagepicker.ImagePicker
 import android.content.DialogInterface
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.util.Log
-import android.view.*
-import android.widget.AdapterView
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.GridView
 import android.widget.TextView
@@ -21,23 +21,17 @@ import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.simsim.island.MainActivity
-//import com.github.dhaval2404.imagepicker.ImagePicker
 import com.simsim.island.R
 import com.simsim.island.databinding.NewDraftFragmentBinding
-import com.simsim.island.model.Emoji
 import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.TARGET_SECTION
 import com.simsim.island.util.TARGET_THREAD
 import com.simsim.island.util.toggleVisibility
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
-import java.io.File
 import java.io.InputStream
-import java.lang.IllegalArgumentException
 
 @AndroidEntryPoint
 class NewDraftFragment : DialogFragment() {
@@ -73,57 +67,67 @@ class NewDraftFragment : DialogFragment() {
 
     private fun setupInfoFillArea() {
         lifecycleScope.launch {
-            binding.expandButton.setOnClickListener {
-                binding.emailTitleTextView.toggleVisibility()
-                binding.emailValueEditText.toggleVisibility()
-                binding.nameTitleTextView.toggleVisibility()
-                binding.nameValueEditText.toggleVisibility()
-                binding.titleTitleTextView.toggleVisibility()
-                binding.titleValueEditText.toggleVisibility()
-                if (binding.emailTitleTextView.isVisible) {
-                    binding.expandButton.setImageResource(R.drawable.ic_round_keyboard_arrow_up_16)
-                } else {
-                    binding.expandButton.setImageResource(R.drawable.ic_round_keyboard_arrow_down_16)
+            launch {
+                binding.newInputContent.setText("")
+                binding.newInputContent.text?.let {
+                    it.insert(0,args.prefillText)
                 }
             }
-            val target = binding.targetValueTextView
-            binding.targetTitleTextView.text = if (args.target == TARGET_SECTION) "板块：" else "串号："
-            if (args.target == TARGET_SECTION) {
-                val sectionMap = hashMapOf<String, String>()
-                val sectionMapReversed = hashMapOf<String, String>()
-                var sectionArray: Array<String>
-                viewModel.database.sectionDao().getAllSection().collectLatest {
-                    val list = it.filter { section ->
-                        section.group != "时间线"
-                    }
-                    list.forEach { section ->
-                        sectionMap[section.fId] = section.sectionName
-                        sectionMapReversed[section.sectionName] = section.fId
-                    }
-                    sectionArray = list.map { it.sectionName }.toTypedArray()
-                    if (fId.isNotBlank()) {
-                        target.text = sectionMap[fId]
-                            ?: throw IllegalArgumentException("can not find section name in map")
+            launch{
+                binding.expandButton.setOnClickListener {
+                    binding.emailTitleTextView.toggleVisibility()
+                    binding.emailValueEditText.toggleVisibility()
+                    binding.nameTitleTextView.toggleVisibility()
+                    binding.nameValueEditText.toggleVisibility()
+                    binding.titleTitleTextView.toggleVisibility()
+                    binding.titleValueEditText.toggleVisibility()
+                    if (binding.emailTitleTextView.isVisible) {
+                        binding.expandButton.setImageResource(R.drawable.ic_round_keyboard_arrow_up_16)
                     } else {
-                        target.text = list[0].sectionName
-                        fId = sectionMapReversed[list[0].sectionName]
-                            ?: throw IllegalArgumentException("can not find section fid in map")
-                    }
-                    target.setOnClickListener {
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setItems(sectionArray) { dialog: DialogInterface, position: Int ->
-                                val sectionNameSelected = sectionArray[position]
-                                target.text = sectionNameSelected
-                                fId = sectionMapReversed[sectionNameSelected]
-                                    ?: throw IllegalArgumentException("can not find section fid in map")
-                                dialog.dismiss()
-                            }
-                            .show()
+                        binding.expandButton.setImageResource(R.drawable.ic_round_keyboard_arrow_down_16)
                     }
                 }
-            } else {
-                target.text = args.threadId.toString()
+                val target = binding.targetValueTextView
+                binding.targetTitleTextView.text =
+                    if (args.target == TARGET_SECTION) "板块：" else "串号："
+                if (args.target == TARGET_SECTION) {
+                    val sectionMap = hashMapOf<String, String>()
+                    val sectionMapReversed = hashMapOf<String, String>()
+                    var sectionArray: Array<String>
+                    viewModel.database.sectionDao().getAllSection().collectLatest {
+                        val list = it.filter { section ->
+                            section.group != "时间线"
+                        }
+                        list.forEach { section ->
+                            sectionMap[section.fId] = section.sectionName
+                            sectionMapReversed[section.sectionName] = section.fId
+                        }
+                        sectionArray = list.map { it.sectionName }.toTypedArray()
+                        if (fId.isNotBlank()) {
+                            target.text = sectionMap[fId]
+                                ?: throw IllegalArgumentException("can not find section name in map")
+                        } else {
+                            target.text = list[0].sectionName
+                            fId = sectionMapReversed[list[0].sectionName]
+                                ?: throw IllegalArgumentException("can not find section fid in map")
+                        }
+                        target.setOnClickListener {
+                            MaterialAlertDialogBuilder(requireContext())
+                                .setItems(sectionArray) { dialog: DialogInterface, position: Int ->
+                                    val sectionNameSelected = sectionArray[position]
+                                    target.text = sectionNameSelected
+                                    fId = sectionMapReversed[sectionNameSelected]
+                                        ?: throw IllegalArgumentException("can not find section fid in map")
+                                    dialog.dismiss()
+                                }
+                                .show()
+                        }
+                    }
+                } else {
+                    target.text = args.threadId.toString()
+                }
             }
+
         }
     }
 

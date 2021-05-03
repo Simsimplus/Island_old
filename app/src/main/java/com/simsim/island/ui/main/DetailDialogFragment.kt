@@ -1,6 +1,9 @@
 package com.simsim.island.ui.main
 
 import android.annotation.SuppressLint
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -124,72 +127,80 @@ class DetailDialogFragment : DialogFragment() {
     @SuppressLint("ClickableViewAccessibility")
     private fun setupFAB() {
         lifecycleScope.launch {
-            requireContext().dataStore.data.collectLatest { settings->
-                settings[booleanPreferencesKey(preferenceKey.enableFabKey)]?.let { enable ->
-                    isFABEnable = enable
-                    binding.detailDialogToolbar.menu.findItem(R.id.detail_fragment_menu_add).isVisible =
-                        !enable
-                    fab.isVisible = enable
-                }
-                val swipeUp=settings[stringPreferencesKey(SWIPE_UP)]
-                val swipeDown=settings[stringPreferencesKey(SWIPE_DOWN)]
-                val swipeLeft=settings[stringPreferencesKey(SWIPE_LEFT)]
-                val swipeRight=settings[stringPreferencesKey(SWIPE_RIGHT)]
-                fab.setOnClickListener {
-                    Log.e(LOG_TAG,"fab clicked")
-                }
-                fab.setOnTouchListener(OnSwipeListener(
-                    requireContext(),
-                    onSwipeTop = {
-                        getFABSwipeFunction(swipeString =swipeUp ).invoke()
-                    },
-                    onSwipeBottom = {
-                        getFABSwipeFunction(swipeString =swipeDown ).invoke()
-                    },
-                    onSwipeLeft = {
-                        getFABSwipeFunction(swipeString =swipeLeft ).invoke()
-                    },
-                    onSwipeRight = {
-                        getFABSwipeFunction(swipeString =swipeRight ).invoke()
+            launch{
+                requireContext().dataStore.data.collectLatest { settings ->
+                    settings[booleanPreferencesKey(preferenceKey.enableFabKey)]?.let { enable ->
+                        isFABEnable = enable
+                        binding.detailDialogToolbar.menu.findItem(R.id.detail_fragment_menu_add).isVisible =
+                            !enable
+                        fab.isVisible = enable
                     }
-                ))
-
-                settings[booleanPreferencesKey(preferenceKey.fabDefaultSizeKey)]?.let { setSizeDefault->
-                    if (setSizeDefault){
-                        fab.customSize = FloatingActionButton.NO_CUSTOM_SIZE
-                        fab.size = FloatingActionButton.SIZE_AUTO
-                    }else{
-                        settings[intPreferencesKey(preferenceKey.fabSizeSeekBarKey)]?.let { fabCustomSize->
-                            fab.customSize = (fabCustomSize * requireContext().dp2PxScale()).toInt()
+                    val swipeUp = settings[stringPreferencesKey(SWIPE_UP)]
+                    val swipeDown = settings[stringPreferencesKey(SWIPE_DOWN)]
+                    val swipeLeft = settings[stringPreferencesKey(SWIPE_LEFT)]
+                    val swipeRight = settings[stringPreferencesKey(SWIPE_RIGHT)]
+                    fab.setOnTouchListener(OnSwipeListener(
+                        requireContext(),
+                        onSwipeTop = {
+                            getFABSwipeFunction(swipeString = swipeUp).invoke()
+                        },
+                        onSwipeBottom = {
+                            getFABSwipeFunction(swipeString = swipeDown).invoke()
+                        },
+                        onSwipeLeft = {
+                            getFABSwipeFunction(swipeString = swipeLeft).invoke()
+                        },
+                        onSwipeRight = {
+                            getFABSwipeFunction(swipeString = swipeRight).invoke()
                         }
-                    }
+                    ))
 
-                }
-                (settings[booleanPreferencesKey(preferenceKey.fabPlaceRightKey)]?:true).let { placeRight->
-                    val sideMargin=settings[intPreferencesKey(preferenceKey.fabSideMarginKey)]?:0
-                    val bottomMargin=settings[intPreferencesKey(preferenceKey.fabBottomMarginKey)]?:0
-                    val layoutParams=fab.layoutParams as CoordinatorLayout.LayoutParams
-                    layoutParams.bottomMargin=((30+bottomMargin)*requireContext().dp2PxScale()).toInt()
-                    if (placeRight){
-                        layoutParams.gravity= Gravity.BOTTOM or Gravity.RIGHT
-                        layoutParams.rightMargin=((30+sideMargin)*requireContext().dp2PxScale()).toInt()
-                        layoutParams.leftMargin=0
-                    }else{
-                        layoutParams.gravity= Gravity.BOTTOM or Gravity.LEFT
-                        layoutParams.leftMargin=((30+sideMargin)*requireContext().dp2PxScale()).toInt()
-                        layoutParams.rightMargin=0
+                    settings[booleanPreferencesKey(preferenceKey.fabDefaultSizeKey)]?.let { setSizeDefault ->
+                        if (setSizeDefault) {
+                            fab.customSize = FloatingActionButton.NO_CUSTOM_SIZE
+                            fab.size = FloatingActionButton.SIZE_AUTO
+                        } else {
+                            settings[intPreferencesKey(preferenceKey.fabSizeSeekBarKey)]?.let { fabCustomSize ->
+                                fab.customSize =
+                                    (fabCustomSize * requireContext().dp2PxScale()).toInt()
+                            }
+                        }
+
                     }
-                    fab.layoutParams=layoutParams
-                    fab.requestLayout()
+                    (settings[booleanPreferencesKey(preferenceKey.fabPlaceRightKey)]
+                        ?: true).let { placeRight ->
+                        val sideMargin =
+                            settings[intPreferencesKey(preferenceKey.fabSideMarginKey)] ?: 0
+                        val bottomMargin =
+                            settings[intPreferencesKey(preferenceKey.fabBottomMarginKey)] ?: 0
+                        val layoutParams = fab.layoutParams as CoordinatorLayout.LayoutParams
+                        layoutParams.bottomMargin =
+                            ((30 + bottomMargin) * requireContext().dp2PxScale()).toInt()
+                        if (placeRight) {
+                            layoutParams.gravity = Gravity.BOTTOM or Gravity.RIGHT
+                            layoutParams.rightMargin =
+                                ((30 + sideMargin) * requireContext().dp2PxScale()).toInt()
+                            layoutParams.leftMargin = 0
+                        } else {
+                            layoutParams.gravity = Gravity.BOTTOM or Gravity.LEFT
+                            layoutParams.leftMargin =
+                                ((30 + sideMargin) * requireContext().dp2PxScale()).toInt()
+                            layoutParams.rightMargin = 0
+                        }
+                        fab.layoutParams = layoutParams
+                        fab.requestLayout()
+                    }
                 }
             }
-            binding.detailFabAdd.setOnClickListener {
-                newThreadReply(
-                    target = TARGET_THREAD,
-                    prefill = "",
-                    threadId = args.ThreadId,
-                    fId = ""
-                )
+            launch{
+                fab.setOnClickListener {
+                    newThreadReply(
+                        target = TARGET_THREAD,
+                        prefill = "",
+                        threadId = args.ThreadId,
+                        fId = ""
+                    )
+                }
             }
         }
     }
@@ -246,7 +257,7 @@ class DetailDialogFragment : DialogFragment() {
                 in (0..list.size) -> {
                     val referenceThread = list[index]
                     adapter.bindHolder(
-                        binding = holderBinding, it = referenceThread
+                        binding = holderBinding, thread = referenceThread
                     )
                     MaterialAlertDialogBuilder(requireContext()).setView(holderBinding.root).show()
                 }
@@ -274,7 +285,7 @@ class DetailDialogFragment : DialogFragment() {
                         ReplyThread(replyThreadId = 888, poThreadId = 888, section = "")
                     }
                     adapter.bindHolder(
-                        binding = holderBinding, it = thread
+                        binding = holderBinding, thread = thread
                     )
                     MaterialAlertDialogBuilder(requireContext()).setView(holderBinding.root).show()
                 }
@@ -296,16 +307,54 @@ class DetailDialogFragment : DialogFragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = DetailRecyclerViewAdapter(this,
+        adapter = DetailRecyclerViewAdapter(
+            fragment = this,
             imageClickListener = { imageUrl ->
                 val action = MainFragmentDirections.actionGlobalImageDetailFragment(imageUrl)
                 findNavController().navigate(action)
             },
             referenceClickListener = { reference ->
                 showReferenceDialog(reference)
-            }, {
-
-            })
+            },
+            popupMenuItemClickListener = { menuItem, replyThread ->
+                when (menuItem.itemId) {
+                    R.id.detail_popup_menu_reply -> {
+                        newThreadReply(
+                           target = TARGET_THREAD,
+                            prefill = ">>${replyThread.replyThreadId}\n",
+                            threadId = replyThread.poThreadId,
+                            fId = ""
+                        )
+                        true
+                    }
+                    R.id.detail_popup_menu_report -> {
+                        newThreadReply(
+                            target = TARGET_SECTION,
+                            prefill = ">>${replyThread.replyThreadId}\n举报理由：",
+                            threadId = 0,
+                            fId = "18"
+                        )
+                        true
+                    }
+                    R.id.detail_popup_menu_copy -> {
+                        val clipboardManager=requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        ClipData.newPlainText("Copied Text",replyThread.content).also {
+                            clipboardManager.setPrimaryClip(it)
+                        }
+                        Snackbar.make(binding.detailDialogLayout,"已复制至剪切板",Snackbar.LENGTH_LONG)
+                            .setAction("分享"){
+                                shareText(replyThread.content)
+                            }
+                            .show()
+                        true
+                    }
+                    else -> {
+                        false
+                    }
+                }
+            },
+            itemClickListener = {}
+        )
         binding.detailDialogRecyclerView.adapter =
             adapter.withLoadStateHeader(MainLoadStateAdapter { adapter.retry() })
         layoutManager = LinearLayoutManager(context)
@@ -372,11 +421,11 @@ class DetailDialogFragment : DialogFragment() {
                     val sharedText = viewModel.currentPoThread?.let { poThread ->
                         "${poThread.content}\nhttps://adnmb3.com/t/${poThread.threadId}"
                     } ?: "https://adnmb3.com/Forum"
-                    (requireActivity() as MainActivity).shareText(sharedText)
+                    shareText(sharedText)
                     true
                 }
                 R.id.detail_fragment_menu_star -> {
-                    viewModel.starPoThread(args.ThreadId)
+                    starThread(args.ThreadId)
 //                    val starItem = toolbar.menu.findItem(R.id.detail_fragment_menu_star)
 //                    when(starItem.title){
 //                        "收藏"->{
@@ -393,6 +442,14 @@ class DetailDialogFragment : DialogFragment() {
                 }
             }
         }
+    }
+
+    private fun shareText(sharedText: String) {
+        (requireActivity() as MainActivity).shareText(sharedText)
+    }
+
+    private fun starThread(threadId: Long) {
+        viewModel.starPoThread(threadId)
     }
 
 

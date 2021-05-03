@@ -55,6 +55,8 @@ interface ThreadDao  {
 
     @Query("select * from poThread where section=:section and isShow=1 order by pageIndex asc")
     fun getAllPoThreadsBySection(section:String):PagingSource<Int,PoThread>
+    @Query("select * from poThread where uid=:uid")
+    suspend fun getAllPoThreadsByUid(uid:String):List<PoThread>
 
     @Update
     suspend fun updatePoThread(poThread: PoThread)

@@ -8,6 +8,20 @@
     android:background="@color/white"
     android:orientation="vertical">
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/detail_fab_add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="30dp"
+        android:layout_marginBottom="30dp"
+        android:clickable="true"
+        android:contentDescription="@string/fab_add_new_thread"
+        android:focusable="true"
+        android:visibility="gone"
+        app:srcCompat="@drawable/ic_round_add_24"
+        tools:visibility="visible" />
+
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout2"
         android:layout_width="match_parent"
@@ -37,39 +51,14 @@
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/detail_fab_add"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="30dp"
-        android:layout_marginBottom="30dp"
-        android:clickable="true"
-        android:contentDescription="@string/fab_add_new_thread"
-        app:srcCompat="@drawable/ic_round_add_24"
-        android:focusable="true"
-        android:visibility="gone"
-        tools:visibility="visible" />
-
-<!--    <ImageView-->
-<!--        android:id="@+id/detail_loading_image"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:background="@color/white"-->
-<!--        android:contentDescription="@string/loading_image"-->
-<!--        android:elevation="7dp"-->
-<!--        android:scaleType="fitCenter"-->
-<!--        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"-->
-<!--        tools:srcCompat="@drawable/ic_blue_ocean11" />-->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/detail_loading_image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/white"
-        android:clickable="true"
-        android:elevation="7dp"
-        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
-        android:focusable="true">
+        android:clickable="false"
+        android:focusable="true"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
         <com.github.ybq.android.spinkit.SpinKitView
             style="@style/SpinKitView.Circle"
@@ -90,7 +79,6 @@
             android:background="@color/white"
             android:clickable="false"
             android:contentDescription="@string/loading_image"
-            android:elevation="7dp"
             android:scaleType="fitCenter"
             android:visibility="gone"
             app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
@@ -100,6 +88,17 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:srcCompat="@drawable/ic_blue_ocean1" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!--    <ImageView-->
+<!--        android:id="@+id/detail_loading_image"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        android:background="@color/white"-->
+<!--        android:contentDescription="@string/loading_image"-->
+<!--        android:elevation="7dp"-->
+<!--        android:scaleType="fitCenter"-->
+<!--        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"-->
+<!--        tools:srcCompat="@drawable/ic_blue_ocean11" />-->
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

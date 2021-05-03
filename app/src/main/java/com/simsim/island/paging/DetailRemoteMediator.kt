@@ -54,9 +54,9 @@ class DetailRemoteMediator(
                             database.keyDao().getDetailKey(it.replyThreadId)
                         }
                 }
-                Log.e(LOG_TAG, "detail remoteKey:$remoteKey")
+//                Log.e(LOG_TAG, "detail remoteKey:$remoteKey")
                 val nextKey = remoteKey?.nextKey
-                Log.e(LOG_TAG, "detail nextKey:$nextKey")
+//                Log.e(LOG_TAG, "detail nextKey:$nextKey")
                 nextKey ?: return MediatorResult.Success(endOfPaginationReached = true)
                 nextKey
             }
@@ -89,9 +89,9 @@ class DetailRemoteMediator(
                             database.threadDao().insertAllPoThreads(mutableListOf(it))
                         }
 
-                    Log.e(LOG_TAG, "detailRM poThread:$poThread")
+//                    Log.e(LOG_TAG, "detailRM poThread:$poThread")
 
-                    Log.e("Simsim", "max page:$maxPage")
+//                    Log.e("Simsim", "max page:$maxPage")
                     val replyThreads = mutableListOf<ReplyThread>()
                     if (page == 1) {
 

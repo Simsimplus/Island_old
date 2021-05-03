@@ -76,7 +76,6 @@ class MainViewModel @Inject constructor(
 
     }
 
-
     fun doUpdate() {
         viewModelScope.launch {
             val record = database.recordDao().getRecord()
@@ -195,11 +194,11 @@ class MainViewModel @Inject constructor(
         currentReplyThreads = mutableListOf()
         detailFlow = Pager(
             PagingConfig(
-                pageSize = 50,
-                prefetchDistance = 100,
+                pageSize = 20,
+                prefetchDistance = 20,
                 enablePlaceholders = true,
                 maxSize = 999999,
-                initialLoadSize = 150
+                initialLoadSize = 20
             ),
             remoteMediator = DetailRemoteMediator(
                 service = networkService,

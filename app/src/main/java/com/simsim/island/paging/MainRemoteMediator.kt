@@ -43,9 +43,9 @@ class MainRemoteMediator(
                             database.keyDao().getMainKey(it.threadId)
                         }
                 }
-                Log.e(LOG_TAG,"main remote key:$remoteKey")
+//                Log.e(LOG_TAG,"main remote key:$remoteKey")
                 val nextKey = remoteKey?.nextKey
-                Log.e(LOG_TAG,"nextKey:$nextKey")
+//                Log.e(LOG_TAG,"nextKey:$nextKey")
                 nextKey?:return MediatorResult.Success(endOfPaginationReached = true)
                 nextKey
             }
@@ -64,7 +64,7 @@ class MainRemoteMediator(
                 null
             }
 //            val endOfPaginationReached = threadList.isNullOrEmpty()
-            Log.e(LOG_TAG,"threadList:$threadList")
+//            Log.e(LOG_TAG,"threadList:$threadList")
             if (threadList != null && threadList.isNotEmpty()) {
                 database.withTransaction {
                     if (loadType == LoadType.REFRESH) {

@@ -6,9 +6,12 @@ import android.text.Spanned
 import android.text.TextPaint
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
+import android.util.Log
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.paging.PagingDataAdapter
@@ -18,12 +21,14 @@ import com.bumptech.glide.Glide
 import com.simsim.island.R
 import com.simsim.island.databinding.DetailRecyclerviewViewholderBinding
 import com.simsim.island.model.ReplyThread
+import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.handleThreadTime
 
 class DetailRecyclerViewAdapter(
     private val fragment: Fragment,
     private val imageClickListener: (imageUrl: String) -> Unit,
-    private val referenceClickListener:(reference:String)->Unit,
+    private val referenceClickListener: (reference: String) -> Unit,
+    private val popupMenuItemClickListener: (menuItem: MenuItem, thread: ReplyThread) -> Boolean,
     private val itemClickListener: () -> Unit
 ) : PagingDataAdapter<ReplyThread, DetailRecyclerViewAdapter.BasicThreadViewHolder>(diffComparator) {
     class BasicThreadViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
@@ -35,26 +40,29 @@ class DetailRecyclerViewAdapter(
 //        val imagePosted:ImageView=view.findViewById(R.id.image_posted)
 //        val commentNumber:TextView=view.findViewById(R.id.comment_number)
     }
+
     inner class HideTextSpan(
-        var color:Int,
-        val clickListener:()->Unit
-    ):ClickableSpan(){
+        var color: Int,
+        val clickListener: () -> Unit
+    ) : ClickableSpan() {
         override fun updateDrawState(textPaint: TextPaint) {
-            textPaint.bgColor=color
+            textPaint.bgColor = color
 //            super.updateDrawState(textPaint)
         }
 
         override fun onClick(widget: View) {
-            color=ContextCompat.getColor(fragment.requireContext(),R.color.transparent)
+            color = ContextCompat.getColor(fragment.requireContext(), R.color.transparent)
             widget.invalidate()
         }
     }
+
     inner class ReferenceClickableSpan(
-        val clickListener:()->Unit
-    ):ClickableSpan(){
+        val clickListener: () -> Unit
+    ) : ClickableSpan() {
         override fun updateDrawState(textPaint: TextPaint) {
-            textPaint.color=ContextCompat.getColor(fragment.requireContext(),R.color.thread_reference)
-            textPaint.isUnderlineText=true
+            textPaint.color =
+                ContextCompat.getColor(fragment.requireContext(), R.color.thread_reference)
+            textPaint.isUnderlineText = true
 //            super.updateDrawState(textPaint)
         }
 
@@ -67,62 +75,68 @@ class DetailRecyclerViewAdapter(
         val binding = DetailRecyclerviewViewholderBinding.bind(holder.view)
         val thread = getItem(position)
         thread?.let {
-            binding.firstRowDetail.visibility=View.VISIBLE
-            binding.secondRowDetail.visibility=View.VISIBLE
-            binding.firstRowDetailPlaceholder.visibility=View.GONE
-            binding.secondRowDetailPlaceholder.visibility=View.GONE
+            binding.firstRowDetail.visibility = View.VISIBLE
+            binding.secondRowDetail.visibility = View.VISIBLE
+            binding.firstRowDetailPlaceholder.visibility = View.GONE
+            binding.secondRowDetailPlaceholder.visibility = View.GONE
             bindHolder(binding, it)
-        }?: kotlin.run {
-            binding.firstRowDetail.visibility=View.GONE
-            binding.secondRowDetail.visibility=View.GONE
-            binding.firstRowDetailPlaceholder.visibility=View.VISIBLE
-            binding.secondRowDetailPlaceholder.visibility=View.VISIBLE
+        } ?: kotlin.run {
+            binding.firstRowDetail.visibility = View.GONE
+            binding.secondRowDetail.visibility = View.GONE
+            binding.firstRowDetailPlaceholder.visibility = View.VISIBLE
+            binding.secondRowDetailPlaceholder.visibility = View.VISIBLE
         }
     }
 
     fun bindHolder(
         binding: DetailRecyclerviewViewholderBinding,
-        it: ReplyThread
+        thread: ReplyThread
     ) {
-        binding.uidTextview.text = it.uid
-        binding.timeTextview.text = handleThreadTime(it.time)
-        binding.threadIdTextview.text = it.replyThreadId.toString()
-        binding.contentTextview.apply{
-            val referenceRegex=">>No.(\\d+)".toRegex()
-            val hideTextRegex="\\[h\\](.*)?\\[\\/h\\]".toRegex()
-            val hideTexts=hideTextRegex.findAll(it.content).toList().map{
+        binding.uidTextview.text = thread.uid
+        binding.timeTextview.text = handleThreadTime(thread.time)
+        binding.threadIdTextview.text = thread.replyThreadId.toString()
+        binding.contentTextview.apply {
+            val referenceRegex = ">>No.(\\d+)".toRegex()
+            val hideTextRegex = "\\[h\\](.*)?\\[\\/h\\]".toRegex()
+            val hideTexts = hideTextRegex.findAll(thread.content).toList().map {
                 it.groupValues[1]
             }
-            val content=SpannableString(it.content.replace("\\[h\\]|\\[\\/h\\]".toRegex(),""))
+            val content =
+                SpannableString(thread.content.replace("\\[h\\]|\\[\\/h\\]".toRegex(), ""))
 
-            hideTexts.distinct().forEach { hideText->
+            hideTexts.distinct().forEach { hideText ->
                 Regex.fromLiteral(hideText).findAll(content).forEach {
                     content.setSpan(
-                        HideTextSpan(ContextCompat.getColor(fragment.requireContext(),R.color.content_font_color)){},
+                        HideTextSpan(
+                            ContextCompat.getColor(
+                                fragment.requireContext(),
+                                R.color.content_font_color
+                            )
+                        ) {},
                         it.range.first,
-                        it.range.last+1,
+                        it.range.last + 1,
                         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
                 }
             }
             referenceRegex.findAll(content).forEach {
                 content.setSpan(
-                    ReferenceClickableSpan{
-                                            referenceClickListener(it.groupValues[0])
+                    ReferenceClickableSpan {
+                        referenceClickListener(it.groupValues[0])
                     },
                     it.range.first,
-                    it.range.last+1,
+                    it.range.last + 1,
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
             }
-            text=content
-            movementMethod=LinkMovementMethod.getInstance()
-            highlightColor=ContextCompat.getColor(fragment.requireContext(),R.color.transparent)
+            text = content
+            movementMethod = LinkMovementMethod.getInstance()
+            highlightColor = ContextCompat.getColor(fragment.requireContext(), R.color.transparent)
         }
         // set po id highlighted
-        if (it.isPo) {
+        if (thread.isPo) {
             binding.uidTextview.setTypeface(null, Typeface.BOLD)
-            if (it.isManager) {
+            if (thread.isManager) {
                 binding.uidTextview.setTextColor(
                     ContextCompat.getColor(
                         fragment.requireContext(),
@@ -149,8 +163,8 @@ class DetailRecyclerViewAdapter(
         }
 
         // if a posted image exists, load it from internet
-        if (it.imageUrl.isNotBlank()) {
-            val imageUrl = it.imageUrl
+        if (thread.imageUrl.isNotBlank()) {
+            val imageUrl = thread.imageUrl
             if (imageUrl.endsWith("gif")) {
                 Glide.with(binding.root).asGif().load(imageUrl)
                     .placeholder(R.drawable.image_loading)
@@ -168,11 +182,11 @@ class DetailRecyclerViewAdapter(
             binding.imagePosted.clipToOutline = true
             binding.imagePosted.setOnClickListener {
                 imageClickListener(imageUrl.replace("thumb", "image"))
-    //                    (fragment.requireActivity() as MainActivity).showImageDetailFragment(imageUrl.replace("thumb","image"))
+                //                    (fragment.requireActivity() as MainActivity).showImageDetailFragment(imageUrl.replace("thumb","image"))
             }
             //https://adnmb3.com/m/t/36468316
-            if (it.content == "分享图片" || it.content.isBlank()) {
-    //                    Log.e("Simsim","thread to remove content:$it")
+            if (thread.content == "分享图片" || thread.content.isBlank()) {
+                //                    Log.e("Simsim","thread to remove content:$it")
                 binding.contentTextview.visibility = View.GONE
                 binding.imagePosted.setPadding(0, 8, 0, 8)
             }
@@ -186,6 +200,17 @@ class DetailRecyclerViewAdapter(
 
         binding.detailMdCard.setOnClickListener {
             itemClickListener.invoke()
+        }
+        binding.contentTextview.setOnLongClickListener { card ->
+            PopupMenu(fragment.requireContext(), card).apply {
+                Log.e(LOG_TAG,"detail card long clicked")
+                inflate(R.menu.detail_card_popup_menu)
+                setOnMenuItemClickListener {
+                    Log.e(LOG_TAG,"detail card menu selected[$it]")
+                    popupMenuItemClickListener.invoke(it, thread)
+                }
+            }.show()
+            true
         }
     }
 
