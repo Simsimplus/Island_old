@@ -22,7 +22,7 @@ import com.simsim.island.model.*
         Cookie::class,
         BlockRule::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converter::class)

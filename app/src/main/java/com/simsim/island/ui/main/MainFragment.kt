@@ -23,7 +23,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.ConcatAdapter
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
@@ -35,6 +37,8 @@ import com.simsim.island.adapter.MainRecyclerViewAdapter
 import com.simsim.island.dataStore
 import com.simsim.island.databinding.MainFragmentBinding
 import com.simsim.island.dp2PxScale
+import com.simsim.island.model.BlockRule
+import com.simsim.island.model.BlockTarget
 import com.simsim.island.model.SectionGroup
 import com.simsim.island.preferenceKey.PreferenceKey
 import com.simsim.island.util.*
@@ -54,8 +58,8 @@ class MainFragment : Fragment() {
     private lateinit var mainFlowJob: Job
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var drawer: NavigationView
-    private lateinit var fab:FloatingActionButton
-    private var isFABEnable=true
+    private lateinit var fab: FloatingActionButton
+    private var isFABEnable = true
     private lateinit var preferenceKey: PreferenceKey
 //    private var loadingImageId =R.drawable.ic_blue_ocean1
 
@@ -72,8 +76,8 @@ class MainFragment : Fragment() {
         binding.lifecycleOwner = this
         drawerLayout = binding.drawerLayout
         drawer = binding.sectionDrawer
-        fab=binding.fabAdd
-        preferenceKey= PreferenceKey(requireContext())
+        fab = binding.fabAdd
+        preferenceKey = PreferenceKey(requireContext())
         requestPermissions()
 
         initialMainFlow()
@@ -94,61 +98,68 @@ class MainFragment : Fragment() {
     @SuppressLint("ClickableViewAccessibility")
     private fun setupFAB() {
         lifecycleScope.launch {
-            requireContext().dataStore.data.collectLatest { settings->
+            requireContext().dataStore.data.collectLatest { settings ->
                 settings[booleanPreferencesKey(preferenceKey.enableFabKey)]?.let { enable ->
-                    isFABEnable=enable
-                    binding.mainToolbar.menu.findItem(R.id.main_fragment_menu_add).isVisible = !enable
+                    isFABEnable = enable
+                    binding.mainToolbar.menu.findItem(R.id.main_fragment_menu_add).isVisible =
+                        !enable
                     fab.isVisible = enable
                 }
-                val swipeUp=settings[stringPreferencesKey(SWIPE_UP)]
-                val swipeDown=settings[stringPreferencesKey(SWIPE_DOWN)]
-                val swipeLeft=settings[stringPreferencesKey(SWIPE_LEFT)]
-                val swipeRight=settings[stringPreferencesKey(SWIPE_RIGHT)]
+                val swipeUp = settings[stringPreferencesKey(SWIPE_UP)]
+                val swipeDown = settings[stringPreferencesKey(SWIPE_DOWN)]
+                val swipeLeft = settings[stringPreferencesKey(SWIPE_LEFT)]
+                val swipeRight = settings[stringPreferencesKey(SWIPE_RIGHT)]
                 fab.setOnClickListener {
-                    Log.e(LOG_TAG,"fab clicked")
+                    Log.e(LOG_TAG, "fab clicked")
                 }
                 fab.setOnTouchListener(OnSwipeListener(
                     requireContext(),
                     onSwipeTop = {
-                        getFABSwipeFunction(swipeString =swipeUp ).invoke()
+                        getFABSwipeFunction(swipeString = swipeUp).invoke()
                     },
                     onSwipeBottom = {
-                        getFABSwipeFunction(swipeString =swipeDown ).invoke()
+                        getFABSwipeFunction(swipeString = swipeDown).invoke()
                     },
                     onSwipeLeft = {
-                        getFABSwipeFunction(swipeString =swipeLeft ).invoke()
+                        getFABSwipeFunction(swipeString = swipeLeft).invoke()
                     },
                     onSwipeRight = {
-                        getFABSwipeFunction(swipeString =swipeRight ).invoke()
+                        getFABSwipeFunction(swipeString = swipeRight).invoke()
                     }
                 ))
 
-                settings[booleanPreferencesKey(preferenceKey.fabDefaultSizeKey)]?.let { setSizeDefault->
-                    if (setSizeDefault){
+                settings[booleanPreferencesKey(preferenceKey.fabDefaultSizeKey)]?.let { setSizeDefault ->
+                    if (setSizeDefault) {
                         fab.customSize = FloatingActionButton.NO_CUSTOM_SIZE
                         fab.size = FloatingActionButton.SIZE_AUTO
-                    }else{
-                        settings[intPreferencesKey(preferenceKey.fabSizeSeekBarKey)]?.let { fabCustomSize->
+                    } else {
+                        settings[intPreferencesKey(preferenceKey.fabSizeSeekBarKey)]?.let { fabCustomSize ->
                             fab.customSize = (fabCustomSize * requireContext().dp2PxScale()).toInt()
                         }
                     }
 
                 }
-                (settings[booleanPreferencesKey(preferenceKey.fabPlaceRightKey)]?:true).let { placeRight->
-                    val sideMargin=settings[intPreferencesKey(preferenceKey.fabSideMarginKey)]?:0
-                    val bottomMargin=settings[intPreferencesKey(preferenceKey.fabBottomMarginKey)]?:0
-                    val layoutParams=fab.layoutParams as CoordinatorLayout.LayoutParams
-                    layoutParams.bottomMargin=((30+bottomMargin)*requireContext().dp2PxScale()).toInt()
-                    if (placeRight){
-                        layoutParams.gravity= Gravity.BOTTOM or Gravity.RIGHT
-                        layoutParams.rightMargin=((30+sideMargin)*requireContext().dp2PxScale()).toInt()
-                        layoutParams.leftMargin=0
-                    }else{
-                        layoutParams.gravity= Gravity.BOTTOM or Gravity.LEFT
-                        layoutParams.leftMargin=((30+sideMargin)*requireContext().dp2PxScale()).toInt()
-                        layoutParams.rightMargin=0
+                (settings[booleanPreferencesKey(preferenceKey.fabPlaceRightKey)]
+                    ?: true).let { placeRight ->
+                    val sideMargin =
+                        settings[intPreferencesKey(preferenceKey.fabSideMarginKey)] ?: 0
+                    val bottomMargin =
+                        settings[intPreferencesKey(preferenceKey.fabBottomMarginKey)] ?: 0
+                    val layoutParams = fab.layoutParams as CoordinatorLayout.LayoutParams
+                    layoutParams.bottomMargin =
+                        ((30 + bottomMargin) * requireContext().dp2PxScale()).toInt()
+                    if (placeRight) {
+                        layoutParams.gravity = Gravity.BOTTOM or Gravity.RIGHT
+                        layoutParams.rightMargin =
+                            ((30 + sideMargin) * requireContext().dp2PxScale()).toInt()
+                        layoutParams.leftMargin = 0
+                    } else {
+                        layoutParams.gravity = Gravity.BOTTOM or Gravity.LEFT
+                        layoutParams.leftMargin =
+                            ((30 + sideMargin) * requireContext().dp2PxScale()).toInt()
+                        layoutParams.rightMargin = 0
                     }
-                    fab.layoutParams=layoutParams
+                    fab.layoutParams = layoutParams
                     fab.requestLayout()
                 }
             }
@@ -157,14 +168,15 @@ class MainFragment : Fragment() {
             }
         }
     }
-    private fun getFABSwipeFunction(swipeString:String?):()->Unit{
-        val array=requireActivity().resources.getStringArray(R.array.swipe_function)
-        return when(swipeString){
+
+    private fun getFABSwipeFunction(swipeString: String?): () -> Unit {
+        val array = requireActivity().resources.getStringArray(R.array.swipe_function)
+        return when (swipeString) {
 //                <item> 无</item>
 //                <item>刷新页面</item>
 //                <item>打开侧边栏</item>
 //                <item>回到顶部</item>
-            array[1]->{
+            array[1] -> {
                 {
                     if (drawerLayout.isDrawerOpen(drawer)) {
                         drawerLayout.closeDrawer(drawer)
@@ -173,24 +185,26 @@ class MainFragment : Fragment() {
                     }
                 }
             }
-            array[2]->{
+            array[2] -> {
                 {
                     drawerLayout.openDrawer(drawer)
                 }
             }
-            array[3]->{
+            array[3] -> {
                 {
                     layoutManager.scrollToPosition(0)
                 }
             }
-            else->{{
-                //do nothing
-            }}
+            else -> {
+                {
+                    //do nothing
+                }
+            }
         }
     }
 
     private fun newThread() {
-        lifecycleScope.launch{
+        lifecycleScope.launch {
             val action = MainFragmentDirections.actionGlobalNewDraftFragment(
                 target = TARGET_SECTION,
                 sectionName = viewModel.currentSectionName ?: "",
@@ -347,7 +361,7 @@ class MainFragment : Fragment() {
     }
 
     private fun setupSwipeRefresh() {
-        lifecycleScope.launch{
+        lifecycleScope.launch {
             val swipeRefreshLayout = binding.swipeFreshLayout
             swipeRefreshLayout.setColorSchemeResources(R.color.colorSecondary)
             swipeRefreshLayout.setOnRefreshListener {
@@ -373,7 +387,65 @@ class MainFragment : Fragment() {
 //            .withLoadStateFooter(MainLoadStateAdapter(adapter::retry))
         layoutManager = LinearLayoutManager(context)
         binding.mainRecyclerView.layoutManager = layoutManager
-        binding.mainRecyclerView.isMotionEventSplittingEnabled=false
+        binding.mainRecyclerView.isMotionEventSplittingEnabled = false
+        val callBack = object :
+            ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                Log.e(LOG_TAG, "rv item swiped")
+                val position = viewHolder.absoluteAdapterPosition
+                adapter.getItemByPosition(position)?.let {
+                    val poThread = it.apply {
+                        isShow = false
+                    }
+                    lifecycleScope.launch {
+                        viewModel.database.threadDao().updatePoThread(poThread)
+                        var shouldBlock=true
+                        Snackbar.make(binding.mainCoordinatorLayout, "已屏蔽此串", Snackbar.LENGTH_SHORT)
+                            .setAction("取消") {
+                                shouldBlock=false
+                                lifecycleScope.launch {
+                                    viewModel.database.threadDao().updatePoThread(poThread.apply {
+                                        isShow = true
+                                    })
+                                }
+                            }
+                            .addCallback(
+                                object : Snackbar.Callback(){
+                                    override fun onDismissed(
+                                        transientBottomBar: Snackbar?,
+                                        event: Int
+                                    ) {
+                                        if (shouldBlock){
+                                            lifecycleScope.launch {
+                                                viewModel.database.blockRuleDao().insertBlockRule(
+                                                    BlockRule(
+                                                        index = 0,
+                                                        rule=poThread.threadId.toString(),
+                                                        target = BlockTarget.TargetThreadId
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            )
+                            .show()
+                    }
+                }
+            }
+
+        }
+        ItemTouchHelper(callBack).also {
+            it.attachToRecyclerView(binding.mainRecyclerView)
+        }
     }
 
     private fun toDetailFragment(poThreadId: Long) {
@@ -403,7 +475,6 @@ class MainFragment : Fragment() {
             true
         }
 //        toolbar.title = viewModel.currentSection.value
-
 
 
         toolbar.setOnMenuItemClickListener {

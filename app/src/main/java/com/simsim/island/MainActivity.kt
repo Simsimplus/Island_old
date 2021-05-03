@@ -56,7 +56,6 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var database: IslandDatabase
     private var backPressTime = LocalDateTime.now()
-
     internal val requestPermission =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             permissions.entries.forEach { entry ->

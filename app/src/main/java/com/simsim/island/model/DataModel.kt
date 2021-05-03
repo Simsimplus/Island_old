@@ -70,6 +70,7 @@ data class PoThread constructor(
         var section: String,
         var collectTime: LocalDateTime = LocalDateTime.now(),
         var timelineActualSection: String = "",
+        var isShow: Boolean=true
         ) {
     @Ignore
     var replyThreads: List<ReplyThread> = listOf()
