@@ -54,9 +54,9 @@ class DetailRemoteMediator(
                             database.keyDao().getDetailKey(it.replyThreadId)
                         }
                 }
-//                Log.e(LOG_TAG, "detail remoteKey:$remoteKey")
+                Log.e(LOG_TAG, "detail remoteKey:$remoteKey")
                 val nextKey = remoteKey?.nextKey
-//                Log.e(LOG_TAG, "detail nextKey:$nextKey")
+                Log.e(LOG_TAG, "detail nextKey:$nextKey")
                 nextKey ?: return MediatorResult.Success(endOfPaginationReached = true)
                 nextKey
             }

@@ -36,8 +36,11 @@ class Converter {
 )
 data class ReplyThread(
         @ColumnInfo(index = true)
-        @PrimaryKey var replyThreadId: Long,
+        @PrimaryKey(autoGenerate = true)
+        var threadIndexAuto:Long=0L,
+        var replyThreadId: Long,
         @ColumnInfo(index = true)
+
         var poThreadId: Long,
         var title: String = "",
         var name: String = "",

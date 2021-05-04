@@ -14,7 +14,7 @@ interface ThreadDao  {
     /*
     for basicThread fetching
      */
-    @Query("select * from ReplyThread where poThreadId =:poThreadId and replyThreadId !=9999999 order by replyThreadId asc ")
+    @Query("select * from ReplyThread where poThreadId =:poThreadId and replyThreadId !=9999999 order by threadIndexAuto asc ")
     fun getAllReplyThreadsPagingSource(poThreadId:Long): PagingSource<Int,ReplyThread>
 
     @Query("select * from ReplyThread where poThreadId =:poThreadId and replyThreadId !=9999999 order by replyThreadId asc ")
@@ -26,7 +26,7 @@ interface ThreadDao  {
     @Query("select * from ReplyThread where poThreadId =:poThreadId order by replyThreadId desc limit 1")
     suspend fun getLastReplyThread(poThreadId:Long):ReplyThread?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAllReplyThreads(replyThreads:List<ReplyThread>)
 
     /*
