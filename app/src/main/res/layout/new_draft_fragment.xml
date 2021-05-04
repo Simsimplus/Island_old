@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:ignore="HardcodedText">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -76,7 +77,8 @@
                 app:layout_constraintBottom_toBottomOf="@+id/name_value_edit_text"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/name_value_edit_text"
-                tools:visibility="visible" />
+                tools:visibility="visible"
+                 />
 
             <EditText
                 android:id="@+id/name_value_edit_text"
@@ -90,7 +92,8 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/name_title_text_view"
                 app:layout_constraintTop_toBottomOf="@id/target_value_text_view"
-                tools:visibility="visible" />
+                tools:visibility="visible"
+                 />
 
             <TextView
                 android:id="@+id/email_title_text_view"
@@ -162,7 +165,7 @@
                 android:contentDescription="@string/new_thread_content"
                 android:gravity="start|top"
                 android:inputType="text|textMultiLine"
-                android:selectAllOnFocus="true"
+                android:selectAllOnFocus="false"
                 tools:text="@tools:sample/lorem" />
 
             <androidx.constraintlayout.widget.ConstraintLayout

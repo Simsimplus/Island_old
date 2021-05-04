@@ -48,9 +48,9 @@ class DetailDialogFragment : DialogFragment() {
     private val args: DetailDialogFragmentArgs by navArgs()
     private lateinit var binding: DetailDialogfragmentBinding
     private lateinit var adapter: DetailRecyclerViewAdapter
-    private lateinit var fab:FloatingActionButton
+    private lateinit var fab: FloatingActionButton
     private lateinit var layoutManager: LinearLayoutManager
-    private var isFABEnable=true
+    private var isFABEnable = true
     private lateinit var preferenceKey: PreferenceKey
 //    private var fabSize:
 
@@ -68,45 +68,55 @@ class DetailDialogFragment : DialogFragment() {
     ): View? {
         // Inflate the layout for this fragment
         binding = DetailDialogfragmentBinding.inflate(inflater, container, false)
-        fab=binding.detailFabAdd
-        preferenceKey= PreferenceKey(requireContext())
+        fab = binding.detailFabAdd
+        preferenceKey = PreferenceKey(requireContext())
         return binding.root
     }
 
     private fun handleLoadingImage() {
         lifecycleScope.launch {
             adapter.loadStateFlow.collectLatest { loadStates ->
-                when (loadStates.refresh) {
-                    is LoadState.Loading -> {
-//                        binding.detailLoadingImage.setImageResource(viewModel.randomLoadingImage)
-                        binding.detailLoadingImage.visibility = View.VISIBLE
+                if (args.isSaved){
+                    binding.detailLoadingImage.visibility = View.INVISIBLE
+                    if (isFABEnable) {
+                        binding.detailFabAdd.visibility = View.VISIBLE
+                    } else {
                         binding.detailFabAdd.visibility = View.INVISIBLE
                     }
-                    is LoadState.Error -> {
+                }else{
+                    when (loadStates.refresh) {
+                        is LoadState.Loading -> {
 //                        binding.detailLoadingImage.setImageResource(viewModel.randomLoadingImage)
-                        binding.detailLoadingImage.visibility = View.VISIBLE
-                        Snackbar
-                            .make(
-                                binding.root,
-                                R.string.loading_page_fail_info,
-                                Snackbar.LENGTH_INDEFINITE
-                            )
-                            .setAction(getString(R.string.loading_fail_retry)) {
-                                adapter.retry()
-                            }
-                            .show()
-                        binding.detailFabAdd.visibility = View.INVISIBLE
-                    }
-                    else -> {
-                        binding.detailLoadingImage.visibility = View.INVISIBLE
-                        if (isFABEnable) {
-                            binding.detailFabAdd.visibility = View.VISIBLE
-                        } else {
+                            binding.detailLoadingImage.visibility = View.VISIBLE
                             binding.detailFabAdd.visibility = View.INVISIBLE
                         }
+                        is LoadState.Error -> {
+//                        binding.detailLoadingImage.setImageResource(viewModel.randomLoadingImage)
+                            binding.detailLoadingImage.visibility = View.VISIBLE
+                            Snackbar
+                                .make(
+                                    binding.root,
+                                    R.string.loading_page_fail_info,
+                                    Snackbar.LENGTH_INDEFINITE
+                                )
+                                .setAction(getString(R.string.loading_fail_retry)) {
+                                    adapter.retry()
+                                }
+                                .show()
+                            binding.detailFabAdd.visibility = View.INVISIBLE
+                        }
+                        else -> {
+                            binding.detailLoadingImage.visibility = View.INVISIBLE
+                            if (isFABEnable) {
+                                binding.detailFabAdd.visibility = View.VISIBLE
+                            } else {
+                                binding.detailFabAdd.visibility = View.INVISIBLE
+                            }
 
+                        }
                     }
                 }
+
             }
         }
     }
@@ -114,20 +124,21 @@ class DetailDialogFragment : DialogFragment() {
     private fun observeThreadStarStatus() {
         lifecycleScope.launch {
             viewModel.database.threadDao().isPoThreadStared(args.ThreadId).collectLatest {
-                    val starItem =
-                        binding.detailDialogToolbar.menu.findItem(R.id.detail_fragment_menu_star)
-                    if (it) {
-                        starItem.title = "取消收藏"
-                    } else {
-                        starItem.title = "收藏"
+                val starItem =
+                    binding.detailDialogToolbar.menu.findItem(R.id.detail_fragment_menu_star)
+                if (it) {
+                    starItem.title = "取消收藏"
+                } else {
+                    starItem.title = "收藏"
                 }
             }
         }
     }
+
     @SuppressLint("ClickableViewAccessibility")
     private fun setupFAB() {
         lifecycleScope.launch {
-            launch{
+            launch {
                 requireContext().dataStore.data.collectLatest { settings ->
                     settings[booleanPreferencesKey(preferenceKey.enableFabKey)]?.let { enable ->
                         isFABEnable = enable
@@ -192,7 +203,7 @@ class DetailDialogFragment : DialogFragment() {
                     }
                 }
             }
-            launch{
+            launch {
                 fab.setOnClickListener {
                     newThreadReply(
                         target = TARGET_THREAD,
@@ -204,34 +215,38 @@ class DetailDialogFragment : DialogFragment() {
             }
         }
     }
-    private fun getFABSwipeFunction(swipeString:String?):()->Unit{
-        val array=requireActivity().resources.getStringArray(R.array.swipe_function)
-        return when(swipeString){
+
+    private fun getFABSwipeFunction(swipeString: String?): () -> Unit {
+        val array = requireActivity().resources.getStringArray(R.array.swipe_function)
+        return when (swipeString) {
 //                <item> 无</item>
 //                <item>刷新页面</item>
 //                <item>打开侧边栏</item>
 //                <item>回到顶部</item>
-            array[1]->{
+            array[1] -> {
                 {
-                        adapter.refresh()
+                    adapter.refresh()
+                    layoutManager.scrollToPosition(0)
+
                 }
             }
-            array[2]->{
+            array[2] -> {
                 {
                     //无侧边栏
                 }
             }
-            array[3]->{
+            array[3] -> {
                 {
                     layoutManager.scrollToPosition(0)
                 }
             }
-            else->{{
-                //do nothing
-            }}
+            else -> {
+                {
+                    //do nothing
+                }
+            }
         }
     }
-
 
 
     private fun showReferenceDialog(reference: String) {
@@ -249,10 +264,10 @@ class DetailDialogFragment : DialogFragment() {
             }
             val holderBinding =
                 DetailRecyclerviewViewholderBinding.inflate(layoutInflater, binding.root, false)
-            holderBinding.firstRowDetail.visibility=View.VISIBLE
-            holderBinding.secondRowDetail.visibility=View.VISIBLE
-            holderBinding.firstRowDetailPlaceholder.visibility=View.GONE
-            holderBinding.secondRowDetailPlaceholder.visibility=View.GONE
+            holderBinding.firstRowDetail.visibility = View.VISIBLE
+            holderBinding.secondRowDetail.visibility = View.VISIBLE
+            holderBinding.firstRowDetailPlaceholder.visibility = View.GONE
+            holderBinding.secondRowDetailPlaceholder.visibility = View.GONE
             when (index) {
                 in (0..list.size) -> {
                     val referenceThread = list[index]
@@ -297,13 +312,28 @@ class DetailDialogFragment : DialogFragment() {
 
 
     private fun observeRecyclerViewFlow() {
-        lifecycleScope.launch {
-            viewModel.detailFlow.collectLatest {
-                Log.e("Simsim", "got thread detail data:$it")
-                adapter.submitData(it)
-                Log.e(LOG_TAG, "detail threads:${it}")
+        if (args.isSaved){
+            lifecycleScope.launch {
+                val poThread=viewModel.database.threadDao().getSavedPoThread(args.ThreadId).toPoThread()
+                launch {
+                    viewModel.setSavedReplyThreadFlow(poThread).collectLatest {
+                        Log.e("Simsim", "got thread detail data:$it")
+                        adapter.submitData(it)
+//                    Log.e(LOG_TAG, "detail threads:${it}")
+                    }
+                }
+            }
+
+        }else{
+            lifecycleScope.launch {
+                viewModel.detailFlow.collectLatest {
+                    Log.e("Simsim", "got thread detail data:$it")
+                    adapter.submitData(it)
+//                    Log.e(LOG_TAG, "detail threads:${it}")
+                }
             }
         }
+
     }
 
     private fun setupRecyclerView() {
@@ -320,7 +350,7 @@ class DetailDialogFragment : DialogFragment() {
                 when (menuItem.itemId) {
                     R.id.detail_popup_menu_reply -> {
                         newThreadReply(
-                           target = TARGET_THREAD,
+                            target = TARGET_THREAD,
                             prefill = ">>${replyThread.replyThreadId}\n",
                             threadId = replyThread.poThreadId,
                             fId = ""
@@ -337,12 +367,13 @@ class DetailDialogFragment : DialogFragment() {
                         true
                     }
                     R.id.detail_popup_menu_copy -> {
-                        val clipboardManager=requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        ClipData.newPlainText("Copied Text",replyThread.content).also {
+                        val clipboardManager =
+                            requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        ClipData.newPlainText("Copied Text", replyThread.content).also {
                             clipboardManager.setPrimaryClip(it)
                         }
-                        Snackbar.make(binding.detailDialogLayout,"已复制至剪切板",Snackbar.LENGTH_LONG)
-                            .setAction("分享"){
+                        Snackbar.make(binding.detailDialogLayout, "已复制至剪切板", Snackbar.LENGTH_LONG)
+                            .setAction("分享") {
                                 shareText(replyThread.content)
                             }
                             .show()
@@ -359,7 +390,7 @@ class DetailDialogFragment : DialogFragment() {
             adapter.withLoadStateHeader(MainLoadStateAdapter { adapter.retry() })
         layoutManager = LinearLayoutManager(context)
         binding.detailDialogRecyclerView.layoutManager = layoutManager
-        binding.detailDialogRecyclerView.isMotionEventSplittingEnabled=false
+        binding.detailDialogRecyclerView.isMotionEventSplittingEnabled = false
     }
 
     private fun setupSwipeRefreshLayout() {

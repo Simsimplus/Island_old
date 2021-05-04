@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -25,14 +26,13 @@ import com.simsim.island.R
 import com.simsim.island.adapter.MainRecyclerViewAdapter.IslandThreadViewHolder
 import com.simsim.island.databinding.MainRecyclerviewViewholderBinding
 import com.simsim.island.model.PoThread
-import com.simsim.island.ui.main.MainFragment
 import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.handleThreadTime
 
 class MainRecyclerViewAdapter(
-    private val fragment: MainFragment,
+    private val fragment: Fragment,
     private val imageClickListener: (imageUrl: String) -> Unit,
-    private val popupMenuItemClickListener: ( menuItem: MenuItem,poThread:PoThread)->Boolean,
+    private val popupMenuItemClickListener: (( menuItem: MenuItem,poThread:PoThread)->Boolean)?,
     private val clickListener: (poThread: PoThread) -> Unit
 ) : PagingDataAdapter<PoThread, IslandThreadViewHolder>(diffComparator) {
     inner class IslandThreadViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -205,14 +205,16 @@ class MainRecyclerViewAdapter(
 
             holder.itemView.setOnLongClickListener { card->
                 Log.e(LOG_TAG,"main card long clicked")
-                PopupMenu(fragment.requireContext(),card).apply {
-                    inflate(R.menu.main_card_popup_menu)
-                    setOnMenuItemClickListener{
-                        Log.e(LOG_TAG,"main card menu selected[$it]")
-                        popupMenuItemClickListener.invoke(it,poThread)
-                    }
-                }.show()
-                true
+                popupMenuItemClickListener?.let {
+                    PopupMenu(fragment.requireContext(),card).apply {
+                        inflate(R.menu.main_card_popup_menu)
+                        setOnMenuItemClickListener{
+                            Log.e(LOG_TAG,"main card menu selected[$it]")
+                            popupMenuItemClickListener.invoke(it,poThread)
+                        }
+                    }.show()
+                    true
+                }?:false
             }
             //            holder.uidTextview.text= handleThreadId(islandThread.poThread.uid)
             //            holder.timeTextview.text= handleThreadTime(islandThread.poThread.time)

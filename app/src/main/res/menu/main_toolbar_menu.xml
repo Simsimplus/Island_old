@@ -23,6 +23,9 @@
         android:enabled="true"
         android:icon="@drawable/ic_baseline_refresh_24"
         android:title="@string/menu_item_refresh"
-        android:visible="false"
-        app:showAsAction="ifRoom" />
+        android:visible="true"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/main_menu_star_collection"
+        android:title="@string/my_star_collection" />
 </menu>

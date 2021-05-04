@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -22,17 +23,13 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
-import androidx.recyclerview.widget.ConcatAdapter
-import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.simsim.island.MainActivity
 import com.simsim.island.R
-import com.simsim.island.adapter.DrawerRecyclerViewAdapter
 import com.simsim.island.adapter.MainRecyclerViewAdapter
 import com.simsim.island.dataStore
 import com.simsim.island.databinding.MainFragmentBinding
@@ -40,7 +37,7 @@ import com.simsim.island.dp2PxScale
 import com.simsim.island.model.BlockRule
 import com.simsim.island.model.BlockTarget
 import com.simsim.island.model.PoThread
-import com.simsim.island.model.SectionGroup
+import com.simsim.island.model.Section
 import com.simsim.island.preferenceKey.PreferenceKey
 import com.simsim.island.util.*
 import dagger.hilt.android.AndroidEntryPoint
@@ -188,6 +185,7 @@ class MainFragment : Fragment() {
                     if (drawerLayout.isDrawerOpen(drawer)) {
                         drawerLayout.closeDrawer(drawer)
                     } else {
+                        layoutManager.scrollToPosition(0)
                         adapter.refresh()
                     }
                 }
@@ -224,41 +222,86 @@ class MainFragment : Fragment() {
 
     private fun setupDrawerSections() {
         lifecycleScope.launch {
-            viewModel.database.sectionDao().getAllSection().distinctUntilChanged()
-                .collect { sectionList ->
-//                    val drawerLayout = binding.drawerLayout
-//                    val drawer = binding.navigationView
-                    val adapters = mutableListOf<DrawerRecyclerViewAdapter>()
-                    val concatAdapterConfig = ConcatAdapter
-                        .Config
-                        .Builder()
-                        .setIsolateViewTypes(false)
-                        .build()
-                    val sectionGroupBy = sectionList.groupBy {
-                        it.group
-                    }
-                    sectionGroupBy.forEach { (group, list) ->
-                        val groupAdapter =
-                            DrawerRecyclerViewAdapter(SectionGroup(group, list)) { section ->
-                                drawerLayout.close()
-                                binding.mainToolbar.title = section.sectionName
-                                viewModel.currentSectionId = section.fId
-                                viewModel.setMainFlow(
-                                    section.sectionName,
-                                    section.sectionUrl
-                                )
-                                observeMainFlow()
-                            }
-                        adapters.add(groupAdapter)
-                    }
-                    val concatAdapter = ConcatAdapter(concatAdapterConfig, adapters)
-                    with(binding.drawerRecyclerView) {
-                        layoutManager = LinearLayoutManager(requireContext())
-                        adapter = concatAdapter
-                    }
+            val menu=drawer.menu
+            drawer.setNavigationItemSelectedListener {
 
+                true
+            }
+            viewModel.database.sectionDao().getAllSection().distinctUntilChanged().collectLatest { sectionList ->
+                var index=10
+                sectionList.groupBy {
+                    it.group
+                }.forEach { (group, list) ->
+                    index += 1
+                    menu.addSubMenu(0,index,0,group).also { subMenu->
+                        subMenu.item
+                            .setOnMenuItemClickListener { item->
+                            Log.e(LOG_TAG,"subMenu item clicked")
+                            if (subMenu.hasVisibleItems()){
+                                subMenu.children.forEach { child->
+                                    child.isVisible = false
+                                }
+                            }else{
+                                subMenu.children.forEach { child->
+                                    child.isVisible = true
+                                }
+                            }
+                            true
+                        }
+                        list.forEach { section->
+                            subMenu.add(section.sectionName).also {
+                                it.setOnMenuItemClickListener { item->
+                                    Log.e(LOG_TAG,"drawer item index:${item.itemId}")
+                                    drawer.setCheckedItem(item)
+                                    onSectionClicked(section)
+                                    true
+                                }
+                            }
+                        }
+                    }
                 }
+            }
         }
+//        lifecycleScope.launch {
+//            viewModel.database.sectionDao().getAllSection().distinctUntilChanged()
+//                .collect { sectionList ->
+////                    val drawerLayout = binding.drawerLayout
+////                    val drawer = binding.navigationView
+//                    val adapters = mutableListOf<DrawerRecyclerViewAdapter>()
+//                    val concatAdapterConfig = ConcatAdapter
+//                        .Config
+//                        .Builder()
+//                        .setIsolateViewTypes(false)
+//                        .build()
+//                    val sectionGroupBy = sectionList.groupBy {
+//                        it.group
+//                    }
+//                    sectionGroupBy.forEach { (group, list) ->
+//                        val groupAdapter =
+//                            DrawerRecyclerViewAdapter(SectionGroup(group, list)) { section ->
+//                                onSectionClicked(section)
+//                            }
+//                        adapters.add(groupAdapter)
+//                    }
+//                    val concatAdapter = ConcatAdapter(concatAdapterConfig, adapters)
+//                    with(binding.drawerRecyclerView) {
+//                        layoutManager = LinearLayoutManager(requireContext())
+//                        adapter = concatAdapter
+//                    }
+//
+//                }
+//        }
+    }
+
+    private fun onSectionClicked(section: Section) {
+        drawerLayout.close()
+        binding.mainToolbar.title = section.sectionName
+        viewModel.currentSectionId = section.fId
+        viewModel.setMainFlow(
+            section.sectionName,
+            section.sectionUrl
+        )
+        observeMainFlow()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -411,29 +454,29 @@ class MainFragment : Fragment() {
         layoutManager = LinearLayoutManager(context)
         binding.mainRecyclerView.layoutManager = layoutManager
         binding.mainRecyclerView.isMotionEventSplittingEnabled = false
-        val callBack = object :
-            ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ): Boolean {
-                return false
-            }
-
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                Log.e(LOG_TAG, "rv item swiped")
-                val position = viewHolder.absoluteAdapterPosition
-                adapter.getItemByPosition(position)?.let {poThread->
-
-                    blockThreadById(poThread)
-                }
-            }
-
-        }
-        ItemTouchHelper(callBack).also {
-            it.attachToRecyclerView(binding.mainRecyclerView)
-        }
+//        val callBack = object :
+//            ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+//            override fun onMove(
+//                recyclerView: RecyclerView,
+//                viewHolder: RecyclerView.ViewHolder,
+//                target: RecyclerView.ViewHolder
+//            ): Boolean {
+//                return false
+//            }
+//
+//            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+//                Log.e(LOG_TAG, "rv item swiped")
+//                val position = viewHolder.absoluteAdapterPosition
+//                adapter.getItemByPosition(position)?.let {poThread->
+//
+//                    blockThreadById(poThread)
+//                }
+//            }
+//
+//        }
+//        ItemTouchHelper(callBack).also {
+//            it.attachToRecyclerView(binding.mainRecyclerView)
+//        }
     }
 
     private fun blockThreadById(poThread: PoThread) {
@@ -589,6 +632,11 @@ class MainFragment : Fragment() {
                 }
                 R.id.main_menu_setting -> {
                     val action = MainFragmentDirections.actionMainFragmentToSettingsDialogFragment()
+                    findNavController().navigate(action)
+                    true
+                }
+                R.id.main_menu_star_collection->{
+                    val action =MainFragmentDirections.actionMainFragmentToStaredThreadDialogFragment()
                     findNavController().navigate(action)
                     true
                 }

@@ -13,6 +13,8 @@ import com.simsim.island.database.IslandDatabase
 import com.simsim.island.model.*
 import com.simsim.island.paging.DetailRemoteMediator
 import com.simsim.island.paging.MainRemoteMediator
+import com.simsim.island.paging.SavedPoThreadPagingSource
+import com.simsim.island.paging.SavedReplyThreadPagingSource
 import com.simsim.island.repository.AislandRepo
 import com.simsim.island.service.AislandNetworkService
 import com.simsim.island.util.LOG_TAG
@@ -216,6 +218,37 @@ class MainViewModel @Inject constructor(
             .cachedIn(viewModelScope)
         return detailFlow
     }
+
+    fun setSavedPoThreadFlow():Flow<PagingData<PoThread>>{
+        return Pager(
+            PagingConfig(
+                pageSize = 20,
+                prefetchDistance = 20,
+                enablePlaceholders = true,
+                maxSize = 999999,
+                initialLoadSize = 20
+            ),
+        ){
+            SavedPoThreadPagingSource(database.threadDao())
+        }.flow
+            .cachedIn(viewModelScope)
+    }
+    fun setSavedReplyThreadFlow(poThread: PoThread):Flow<PagingData<ReplyThread>>{
+        return Pager(
+            PagingConfig(
+                pageSize = 20,
+                prefetchDistance = 20,
+                enablePlaceholders = true,
+                maxSize = 999999,
+                initialLoadSize = 20
+            ),
+        ){
+
+            SavedReplyThreadPagingSource(database.threadDao(),poThread =poThread )
+        }.flow
+            .cachedIn(viewModelScope)
+    }
+
 
 
     fun starPoThread(poThreadId: Long) {

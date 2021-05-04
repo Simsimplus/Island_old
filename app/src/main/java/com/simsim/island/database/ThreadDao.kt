@@ -91,7 +91,14 @@ interface ThreadDao  {
     @Insert
     suspend fun insertAllSavedReplyThread(replyThreads: List<SavedReplyThread>)
 
+    @Query("select * from SavedPoThread order by savedTime desc")
+    suspend fun getAllSavedPoThread():List<SavedPoThread>
 
+    @Query("select * from SavedPoThread where threadId=:poThreadId")
+    suspend fun getSavedPoThread(poThreadId: Long):SavedPoThread
+
+    @Query("select * from SavedReplyThread where poThreadId =:poThreadId and replyThreadId !=9999999 order by replyThreadId asc ")
+    suspend fun getAllSavedReplyThreads(poThreadId:Long):List<SavedReplyThread>
 
 
 //    @Insert

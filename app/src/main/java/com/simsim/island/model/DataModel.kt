@@ -120,6 +120,7 @@ data class SavedPoThread constructor(
         var section: String,
         var collectTime: LocalDateTime = LocalDateTime.now(),
         var timelineActualSection: String = "",
+        var savedTime:LocalDateTime=LocalDateTime.now()
 ) {
         @Ignore
         var replyThreads: List<ReplyThread> = listOf()

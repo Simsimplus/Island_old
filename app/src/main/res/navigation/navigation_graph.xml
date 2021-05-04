@@ -20,6 +20,11 @@
             app:destination="@id/settingsDialogFragment"
             app:enterAnim="@android:anim/fade_in"
             app:exitAnim="@android:anim/fade_out" />
+        <action
+            android:id="@+id/action_mainFragment_to_staredThreadDialogFragment"
+            app:destination="@id/staredThreadDialogFragment"
+            app:enterAnim="@android:anim/fade_in"
+            app:exitAnim="@android:anim/fade_out"/>
     </fragment>
     <dialog
         android:id="@+id/detailDialogFragment"
@@ -36,6 +41,10 @@
         <deepLink
             android:id="@+id/deepLink"
             app:uri="thread://island.com/{ThreadId}?poId={poId}&amp;isManager={isManager}" />
+        <argument
+            android:name="isSaved"
+            app:argType="boolean"
+            android:defaultValue="false" />
     </dialog>
     <dialog
         android:id="@+id/imageDetailFragment"
@@ -150,5 +159,14 @@
         app:destination="@id/blockRuleDialogFragment"
         app:enterAnim="@android:anim/fade_in"
         app:exitAnim="@android:anim/fade_out"/>
+    <dialog
+        android:id="@+id/staredThreadDialogFragment"
+        android:name="com.simsim.island.ui.main.StaredThreadDialogFragment"
+        android:label="StaredThreadDialogFragment"
+        tools:layout="@layout/stared_thread_dialog_fragment">
+        <action
+            android:id="@+id/action_staredThreadDialogFragment_to_detailDialogFragment"
+            app:destination="@id/detailDialogFragment" />
+    </dialog>
 
 </navigation>

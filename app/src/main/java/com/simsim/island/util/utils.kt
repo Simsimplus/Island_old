@@ -201,6 +201,40 @@ fun ReplyThread.toSavedReplyThread(): SavedReplyThread = SavedReplyThread(
     section = this.section,
     timelineActualSection = this.timelineActualSection
 )
+fun SavedPoThread.toPoThread():PoThread= PoThread(
+    threadId = this.threadId,
+    pageIndex = this.pageIndex,
+    isManager = this.isManager,
+    title = this.title,
+    name = this.name,
+    link = this.link,
+    time = this.time,
+    uid = this.uid,
+    imageUrl = this.imageUrl,
+    content = this.content,
+    isPo = this.isPo,
+    commentsNumber = this.commentsNumber,
+    section = this.section,
+    collectTime = this.collectTime,
+    timelineActualSection = this.timelineActualSection
+)
+
+fun SavedReplyThread.toReplyThread():ReplyThread= ReplyThread(
+    replyThreadId = this.replyThreadId,
+    poThreadId = this.poThreadId,
+    title = this.title,
+    name = this.name,
+    link = this.link,
+    time = this.time,
+    uid = this.uid,
+    imageUrl = this.imageUrl,
+    content = this.content,
+    isManager = this.isManager,
+    isPo = this.isPo,
+    commentsNumber = this.commentsNumber,
+    section = this.section,
+    timelineActualSection = this.timelineActualSection
+)
 
 
 class OnSwipeListener(
