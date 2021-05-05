@@ -20,4 +20,8 @@
     <item
         android:id="@+id/detail_fragment_menu_star"
         android:title="@string/detail_menu_star" />
+    <item
+        android:id="@+id/detail_fragment_menu_to_last_page"
+        android:title="@string/last_page"
+        app:showAsAction="never" />
 </menu>

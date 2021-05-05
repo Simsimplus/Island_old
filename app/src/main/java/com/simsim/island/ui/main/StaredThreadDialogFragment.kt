@@ -40,6 +40,16 @@ class StaredThreadDialogFragment : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         setupToolbar()
         setupRecyclerView()
+        viewModel.savedPoThreadDataSetChanged.observe(viewLifecycleOwner){
+            if (it){
+                lifecycleScope.launch {
+                    viewModel.setSavedPoThreadFlow().collectLatest {
+                        adapter.submitData(it)
+                    }
+                }
+                viewModel.savedPoThreadDataSetChanged.value=false
+            }
+        }
     }
 
     private fun setupRecyclerView() {
@@ -76,9 +86,8 @@ class StaredThreadDialogFragment : DialogFragment() {
 
     }
     private fun toDetailFragment(poThreadId: Long) {
-        val action = StaredThreadDialogFragmentDirections.actionStaredThreadDialogFragmentToDetailDialogFragment(
-            poThreadId,
-            isSaved = true
+        val action = StaredThreadDialogFragmentDirections.actionStaredThreadDialogFragmentToStaredDetailDialogFragment(
+            poThreadId
         )
         findNavController().navigate(action)
         viewModel.setDetailFlow(poThreadId)

@@ -66,6 +66,7 @@ class MainViewModel @Inject constructor(
     var successReply = MutableLiveData<Boolean>()
     var successPost = MutableLiveData<Boolean>()
     val QRcodeResult = MutableLiveData<String>()
+    val savedPoThreadDataSetChanged = MutableLiveData<Boolean>()
 
     init {
         doUpdate()
@@ -192,7 +193,7 @@ class MainViewModel @Inject constructor(
 
 
     @OptIn(ExperimentalPagingApi::class)
-    fun setDetailFlow(poThreadId: Long): Flow<PagingData<ReplyThread>> {
+    fun setDetailFlow(poThreadId: Long,initialPage:Int=1): Flow<PagingData<ReplyThread>> {
         currentReplyThreads = mutableListOf()
         detailFlow = Pager(
             PagingConfig(
@@ -205,7 +206,8 @@ class MainViewModel @Inject constructor(
             remoteMediator = DetailRemoteMediator(
                 service = networkService,
                 poThreadId = poThreadId,
-                database = database
+                database = database,
+                initialPage
             )
         ) {
             database.threadDao().getAllReplyThreadsPagingSource(poThreadId = poThreadId)
@@ -243,7 +245,6 @@ class MainViewModel @Inject constructor(
                 initialLoadSize = 20
             ),
         ){
-
             SavedReplyThreadPagingSource(database.threadDao(),poThread =poThread )
         }.flow
             .cachedIn(viewModelScope)
@@ -253,18 +254,26 @@ class MainViewModel @Inject constructor(
 
     fun starPoThread(poThreadId: Long) {
         viewModelScope.launch {
-            val poThread = database.threadDao().getPoThread(poThreadId)
-            val replyThreads = database.threadDao().getAllReplyThreads(poThreadId)
-            poThread?.let {
-                val staredPoThreads = poThread.toSavedPoThread()
-                database.threadDao().insertSavedPoThread(staredPoThreads)
-                database.threadDao().insertAllSavedReplyThread(
-                    replyThreads.map {
-                        it.toSavedReplyThread()
-                    }
-                )
+            if (database.threadDao().isPoThreadStared(poThreadId)){
+                database.threadDao().deleteSavedPoThread(database.threadDao().getSavedPoThread(poThreadId))
+            }else{
+                val poThread = database.threadDao().getPoThread(poThreadId)
+                val replyThreads = database.threadDao().getAllReplyThreads(poThreadId)
+                poThread?.let {
+                    val staredPoThreads = poThread.toSavedPoThread()
+                    database.threadDao().insertSavedPoThread(staredPoThreads)
+                    database.threadDao().insertAllSavedReplyThread(
+                        replyThreads.map {
+                            it.toSavedReplyThread()
+                        }
+                    )
+                }
             }
+            savedPoThreadDataSetChanged.value=true
         }
+    }
+    fun fetchAllReplyThreadWhenStared(poThreadId: Long){
+
     }
 
     fun doWhenDestroy() {
@@ -285,7 +294,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun doPost(
-        cookie: String,
+//        cookie: String,
 //        poThreadId: Long,
         content: String,
         image: InputStream?,
@@ -299,7 +308,7 @@ class MainViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             successPost.value = networkService.doPost(
-                cookie,
+//                cookie,
 //                poThreadId,
                 content,
                 image,
@@ -315,7 +324,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun doReply(
-        cookie: String,
+//        cookie: String,
         poThreadId: Long,
         content: String,
         image: InputStream?,
@@ -328,7 +337,7 @@ class MainViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             successReply.value = networkService.doReply(
-                cookie,
+//                cookie,
                 poThreadId,
                 content,
                 image,

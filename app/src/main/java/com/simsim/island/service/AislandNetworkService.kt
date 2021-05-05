@@ -3,9 +3,13 @@ package com.simsim.island.service
 import android.net.Uri
 import android.util.Log
 import android.webkit.MimeTypeMap
+import com.simsim.island.database.IslandDatabase
 import com.simsim.island.model.Cookie
 import com.simsim.island.util.LOG_TAG
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -23,9 +27,22 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
-class AislandNetworkService @Inject constructor() {
+class AislandNetworkService @Inject constructor(
+    private val database: IslandDatabase
+) {
     companion object {
         private const val baseUrl = "https://adnmb3.com"
+    }
+    var cookieInUse:String?=null
+    init {
+        CoroutineScope(Dispatchers.IO).launch {
+            database.cookieDao().getActiveCookieFlow().collectLatest {
+                it?.let { cookie ->
+                    cookieInUse=cookie.cookie
+                    Log.e(LOG_TAG,"current cookie:$cookieInUse")
+                }
+            }
+        }
     }
     val logging = HttpLoggingInterceptor().apply {
         level=HttpLoggingInterceptor.Level.BODY
@@ -56,12 +73,9 @@ class AislandNetworkService @Inject constructor() {
     private val service: IslandHtmlService by lazy { retrofit.create(IslandHtmlService::class.java) }
 
     suspend fun getHtmlStringByPage(url: String,cookie: String?=null): String? = withContext(Dispatchers.IO) {
-        val header=cookie?.let {
-            hashMapOf(
-                "Cookie" to cookie,
-                "Host" to "adnmb3.com"
-            )
-        }?: hashMapOf(
+        val header=hashMapOf(
+            "Cookie" to (cookie?:"userhash=${cookieInUse?:""}"),
+            "Host" to "adnmb3.com",
             "referer" to "https://adnmb3.com/Forum"
         )
         val response: String?=
@@ -81,7 +95,7 @@ class AislandNetworkService @Inject constructor() {
     }
 
     suspend fun doReply(
-        cookie: String,
+//        cookie: String,
         poThreadId: Long,
         content: String,
         image: InputStream?,
@@ -117,7 +131,7 @@ class AislandNetworkService @Inject constructor() {
 
                 formData["email"] = email.toRequestBody("text/plain".toMediaTypeOrNull())
 
-            val headers=hashMapOf("cookie" to "userhash=$cookie")
+            val headers=hashMapOf("cookie" to "userhash=${cookieInUse?:""}")
             val call = service.postNewThread(
                 "https://adnmb3.com/Home/Forum/doReplyThread.html",
                 headers,
@@ -125,7 +139,7 @@ class AislandNetworkService @Inject constructor() {
                 imageDataMultipart
             )
             Log.e(LOG_TAG,"image type:$imageType")
-            Log.e(LOG_TAG,"cookie:$cookie")
+            Log.e(LOG_TAG,"cookie:${cookieInUse?:""}")
             if (call.isSuccessful) {
                 Log.e(LOG_TAG, "do reply:${call.body()}")
                 call.body()?.let {
@@ -142,7 +156,7 @@ class AislandNetworkService @Inject constructor() {
     }
 
     suspend fun doPost(
-        cookie: String,
+//        cookie: String,
         content: String,
         image: InputStream?,
         imageType:String?,
@@ -178,14 +192,14 @@ class AislandNetworkService @Inject constructor() {
 
                 formData["email"] = email.toRequestBody("text/plain".toMediaTypeOrNull())
 
-            val headers=hashMapOf("cookie" to "userhash=$cookie")
+            val headers=hashMapOf("cookie" to "userhash=$${cookieInUse?:""}")
             val call = service.postNewThread(
                 "https://adnmb3.com/Home/Forum/doPostThread.html",
                 headers,
                 formData,
                 imageDataMultipart,
             )
-            Log.e(LOG_TAG,"cookie:$cookie")
+            Log.e(LOG_TAG,"cookie:${cookieInUse?:""}")
 //            Log.e("Simsim:url:", url)
             if (call.isSuccessful) {
                 Log.e(LOG_TAG, "do post:${call.body()}")

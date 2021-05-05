@@ -22,7 +22,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -47,9 +46,9 @@ import kotlinx.coroutines.launch
 import org.jsoup.Jsoup
 
 @AndroidEntryPoint
-class DetailDialogFragment : DialogFragment() {
+class StaredDetailDialogFragment : DialogFragment() {
     private val viewModel: MainViewModel by activityViewModels()
-    private val args: DetailDialogFragmentArgs by navArgs()
+    private val args: StaredDetailDialogFragmentArgs by navArgs()
     private lateinit var binding: DetailDialogfragmentBinding
     private lateinit var adapter: DetailRecyclerViewAdapter
     private lateinit var fab: FloatingActionButton
@@ -81,58 +80,11 @@ class DetailDialogFragment : DialogFragment() {
 
     private fun handleLoadingImage() {
         lifecycleScope.launch {
-            var runOnce=true
-            adapter.loadStateFlow.collectLatest { loadStates ->
-                    when (loadStates.refresh) {
-                        is LoadState.Loading -> {
-                            retryIfNotReady=lifecycleScope.launch {
-                                if (runOnce){
-                                    try {
-                                        adapter.refresh()
-                                    }catch (e:Exception){
-                                        Log.e(LOG_TAG,"retry failed:${e.stackTraceToString()}")
-                                    } finally {
-                                        runOnce=false
-                                    }
-                                }
-
-                            }
-                            retryIfNotReady.start()
-//                        binding.detailLoadingImage.setImageResource(viewModel.randomLoadingImage)
-                            binding.detailLoadingImage.visibility = View.VISIBLE
-                            binding.detailFabAdd.visibility = View.INVISIBLE
-                        }
-                        is LoadState.Error -> {
-//                        binding.detailLoadingImage.setImageResource(viewModel.randomLoadingImage)
-                            binding.detailLoadingImage.visibility = View.VISIBLE
-                            Snackbar
-                                .make(
-                                    binding.root,
-                                    R.string.loading_page_fail_info,
-                                    Snackbar.LENGTH_INDEFINITE
-                                )
-                                .setAction(getString(R.string.loading_fail_retry)) {
-                                    adapter.retry()
-                                }
-                                .show()
-                            binding.detailFabAdd.visibility = View.INVISIBLE
-                        }
-                        else -> {
-                            try {
-                                retryIfNotReady.cancel()
-                            }catch (e:Exception){
-                                Log.e(LOG_TAG,"cancel retryIfNotReady failed:${e.stackTraceToString()}")
-                            }
-                            binding.detailLoadingImage.visibility = View.INVISIBLE
-                            if (isFABEnable) {
-                                binding.detailFabAdd.visibility = View.VISIBLE
-                            } else {
-                                binding.detailFabAdd.visibility = View.INVISIBLE
-                            }
-
-                        }
-                    }
-
+            binding.detailLoadingImage.visibility = View.INVISIBLE
+            if (isFABEnable) {
+                binding.detailFabAdd.visibility = View.VISIBLE
+            } else {
+                binding.detailFabAdd.visibility = View.INVISIBLE
             }
         }
     }
@@ -141,7 +93,7 @@ class DetailDialogFragment : DialogFragment() {
         lifecycleScope.launch {
             viewModel.database.threadDao().isPoThreadStaredFlow(args.ThreadId).collectLatest {
                 val starItem =
-                    binding.detailDialogToolbar.menu.findItem(R.id.detail_fragment_menu_star)
+                    binding.detailDialogToolbar.menu.findItem(R.id.stared_detail_fragment_menu_unstar)
                 if (it) {
                     starItem.title = "取消收藏"
                 } else {
@@ -158,7 +110,7 @@ class DetailDialogFragment : DialogFragment() {
                 requireContext().dataStore.data.collectLatest { settings ->
                     settings[booleanPreferencesKey(preferenceKey.enableFabKey)]?.let { enable ->
                         isFABEnable = enable
-                        binding.detailDialogToolbar.menu.findItem(R.id.detail_fragment_menu_add).isVisible =
+                        binding.detailDialogToolbar.menu.findItem(R.id.stared_detail_fragment_menu_add).isVisible =
                             !enable
                         fab.isVisible = enable
                     }
@@ -329,13 +281,15 @@ class DetailDialogFragment : DialogFragment() {
 
     private fun observeRecyclerViewFlow() {
         lifecycleScope.launch {
-            viewModel.detailFlow.collectLatest {
-                Log.e("Simsim", "got thread detail data:$it")
-                adapter.submitData(it)
+            val poThread=viewModel.database.threadDao().getSavedPoThread(args.ThreadId).toPoThread()
+            launch {
+                viewModel.setSavedReplyThreadFlow(poThread).collectLatest {
+                    Log.e("Simsim", "got thread detail data:$it")
+                    adapter.submitData(it)
 //                    Log.e(LOG_TAG, "detail threads:${it}")
+                }
             }
         }
-
     }
 
     private fun setupRecyclerView() {
@@ -403,13 +357,13 @@ class DetailDialogFragment : DialogFragment() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     if(dy > 0) //check for scroll down
                     {
-                       val  visibleItemCount = layoutManager.getChildCount();
+                        val  visibleItemCount = layoutManager.getChildCount();
                         val  totalItemCount = layoutManager.getItemCount();
                         val  pastVisiblesItems = layoutManager.findFirstVisibleItemPosition();
-                            if ( (visibleItemCount + pastVisiblesItems) >= totalItemCount)
-                            {
-                                Log.e(LOG_TAG, "Last Item, adapter.refresh() !")
-                            }
+                        if ( (visibleItemCount + pastVisiblesItems) >= totalItemCount)
+                        {
+                            Log.e(LOG_TAG, "Last Item, adapter.refresh() !")
+                        }
                     }
                 }
             }
@@ -420,7 +374,7 @@ class DetailDialogFragment : DialogFragment() {
         val swipeRefreshLayout = binding.detailSwipeRefreshLayout
         swipeRefreshLayout.setColorSchemeResources(R.color.colorSecondary)
         swipeRefreshLayout.setOnRefreshListener {
-            adapter.refresh()
+            //todo
             if (swipeRefreshLayout.isRefreshing) {
                 swipeRefreshLayout.isRefreshing = false
             }
@@ -450,10 +404,10 @@ class DetailDialogFragment : DialogFragment() {
         toolbar.setNavigationOnClickListener {
             dismiss()
         }
-        toolbar.inflateMenu(R.menu.detail_fragment_toolbar_menu)
+        toolbar.inflateMenu(R.menu.stared_thread_detail_menu)
         toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                R.id.detail_fragment_menu_add -> {
+                R.id.stared_detail_fragment_menu_add -> {
                     newThreadReply(
                         target = TARGET_THREAD,
                         prefill = "",
@@ -462,45 +416,23 @@ class DetailDialogFragment : DialogFragment() {
                     )
                     true
                 }
-                R.id.detail_fragment_menu_report -> {
-                    newThreadReply(
-                        target = TARGET_SECTION,
-                        prefill = ">>No.${args.ThreadId}\n举报理由：",
-                        threadId = 0,
-                        fId = "18"
-                    )
-                    true
-                }
-                R.id.detail_fragment_menu_share -> {
+                R.id.stared_detail_fragment_menu_share -> {
                     val sharedText = viewModel.currentPoThread?.let { poThread ->
                         "${poThread.content}\nhttps://adnmb3.com/t/${poThread.threadId}"
                     } ?: "https://adnmb3.com/Forum"
                     shareText(sharedText)
                     true
                 }
-                R.id.detail_fragment_menu_star -> {
-                    starThread(args.ThreadId)
-//                    val starItem = toolbar.menu.findItem(R.id.detail_fragment_menu_star)
-//                    when(starItem.title){
-//                        "收藏"->{
-//                            starItem.title="取消收藏"
-//                        }
-//                        "取消收藏"->{
-//                            starItem.title="收藏"
-//                        }
-//                    }
+                R.id.stared_detail_fragment_menu_unstar -> {
+                    lifecycleScope.launch{
+                        starThread(args.ThreadId)
+                    }
                     true
                 }
-                R.id.detail_fragment_menu_to_last_page->{
+                R.id.stared_detail_fragment_menu_to_last_page->{
                     lifecycleScope.launch{
-                        viewModel.database.threadDao().getPoThread(args.ThreadId)?.let {poThread->
-                            viewModel.setDetailFlow(
-                                poThreadId = args.ThreadId,
-                                initialPage = poThread.maxPage
-                            ).collectLatest { pagingData->
-                                adapter.submitData(pagingData)
-                                binding.detailDialogRecyclerView.smoothScrollToPosition(layoutManager.childCount+1000)
-                            }
+                        viewModel.database.threadDao().countSavedReplyThreads(args.ThreadId).let { count->
+                            binding.detailDialogRecyclerView.smoothScrollToPosition(count+100)
                         }
                     }
                     true
@@ -555,6 +487,7 @@ class DetailDialogFragment : DialogFragment() {
     override fun onDetach() {
         super.onDetach()
         viewModel.isMainFragment.value = true
+
     }
 
 }

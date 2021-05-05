@@ -41,10 +41,6 @@
         <deepLink
             android:id="@+id/deepLink"
             app:uri="thread://island.com/{ThreadId}?poId={poId}&amp;isManager={isManager}" />
-        <argument
-            android:name="isSaved"
-            app:argType="boolean"
-            android:defaultValue="false" />
     </dialog>
     <dialog
         android:id="@+id/imageDetailFragment"
@@ -165,8 +161,18 @@
         android:label="StaredThreadDialogFragment"
         tools:layout="@layout/stared_thread_dialog_fragment">
         <action
-            android:id="@+id/action_staredThreadDialogFragment_to_detailDialogFragment"
-            app:destination="@id/detailDialogFragment" />
+            android:id="@+id/action_staredThreadDialogFragment_to_staredDetailDialogFragment"
+            app:destination="@id/staredDetailDialogFragment"
+            app:enterAnim="@android:anim/fade_in"
+            app:exitAnim="@android:anim/fade_out"/>
+    </dialog>
+    <dialog
+        android:id="@+id/staredDetailDialogFragment"
+        android:name="com.simsim.island.ui.main.StaredDetailDialogFragment"
+        android:label="StaredDetailDialogFragment" >
+        <argument
+            android:name="ThreadId"
+            app:argType="long" />
     </dialog>
 
 </navigation>

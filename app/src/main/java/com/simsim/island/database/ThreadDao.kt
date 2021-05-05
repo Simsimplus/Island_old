@@ -14,7 +14,7 @@ interface ThreadDao  {
     /*
     for basicThread fetching
      */
-    @Query("select * from ReplyThread where poThreadId =:poThreadId and replyThreadId !=9999999 order by threadIndexAuto asc ")
+    @Query("select * from ReplyThread where poThreadId =:poThreadId and replyThreadId !=9999999 order by replyThreadId asc ")
     fun getAllReplyThreadsPagingSource(poThreadId:Long): PagingSource<Int,ReplyThread>
 
     @Query("select * from ReplyThread where poThreadId =:poThreadId and replyThreadId !=9999999 order by replyThreadId asc ")
@@ -25,6 +25,9 @@ interface ThreadDao  {
 
     @Query("select * from ReplyThread where poThreadId =:poThreadId order by replyThreadId desc limit 1")
     suspend fun getLastReplyThread(poThreadId:Long):ReplyThread?
+
+    @Query("select * from ReplyThread where poThreadId =:poThreadId order by replyThreadId asc limit 1")
+    suspend fun getFirstReplyThread(poThreadId:Long):ReplyThread?
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAllReplyThreads(replyThreads:List<ReplyThread>)
@@ -45,6 +48,9 @@ interface ThreadDao  {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllPoThreads(poThreads:List<PoThread>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertPoThread(poThread:PoThread)
 
 //    @Query("select exists(select * from SavedPoThread where threadId=:poThreadId)")
 //    fun isPoThreadCollected(poThreadId: Long):Boolean
@@ -80,7 +86,10 @@ interface ThreadDao  {
      */
     // check whether a poThread is Stared and Saved
     @Query("select exists(select * from SavedPoThread where threadId=:poThreadId)")
-    fun isPoThreadStared(poThreadId: Long):Flow<Boolean>
+    fun isPoThreadStaredFlow(poThreadId: Long):Flow<Boolean>
+
+    @Query("select exists(select * from SavedPoThread where threadId=:poThreadId)")
+    suspend fun isPoThreadStared(poThreadId: Long):Boolean
 
     @Insert
     suspend fun insertSavedPoThread(staredPoThreads: SavedPoThread)
@@ -100,6 +109,9 @@ interface ThreadDao  {
     @Query("select * from SavedReplyThread where poThreadId =:poThreadId and replyThreadId !=9999999 order by replyThreadId asc ")
     suspend fun getAllSavedReplyThreads(poThreadId:Long):List<SavedReplyThread>
 
+    //count threads
+    @Query("select count(*) from SavedReplyThread where poThreadId=:poThreadId ")
+    suspend fun countSavedReplyThreads(poThreadId:Long):Int
 
 //    @Insert
 //    suspend fun starPoThread(savedPoThread: SavedPoThread)

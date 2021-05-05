@@ -54,6 +54,7 @@ class MainFragment : Fragment() {
     internal lateinit var adapter: MainRecyclerViewAdapter
     internal lateinit var layoutManager: LinearLayoutManager
     private lateinit var mainFlowJob: Job
+    private lateinit var retryIfNotReady:Job
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var drawer: NavigationView
     private lateinit var fab: FloatingActionButton
@@ -366,12 +367,26 @@ class MainFragment : Fragment() {
 
     private fun handleLaunchLoading() {
         lifecycleScope.launch {
+            var runOnce=true
             adapter.loadStateFlow.collectLatest { loadStates ->
                 when (loadStates.refresh) {
                     is LoadState.Loading -> {
+                        retryIfNotReady=lifecycleScope.launch {
+                            if (runOnce){
+                                try {
+                                    Log.e(LOG_TAG,"main retry")
+                                    adapter.refresh()
+                                }catch (e:Exception){
+                                    Log.e(LOG_TAG,"retry failed:${e.stackTraceToString()}")
+                                }finally {
+                                    runOnce=false
+                                }
+                            }
+
+                        }
+                        retryIfNotReady.start()
                         binding.loadingImage.visibility = View.VISIBLE
                         binding.fabAdd.visibility = View.INVISIBLE
-
 //                        Glide.with(this@MainFragment).load(viewModel.randomLoadingImage)
 //                            .into(binding.loadingImage)
                     }
@@ -390,6 +405,11 @@ class MainFragment : Fragment() {
                             .show()
                     }
                     else -> {
+                        try {
+                            retryIfNotReady.cancel()
+                        }catch (e:Exception){
+                            Log.e(LOG_TAG,"cancel retryIfNotReady failed:${e.stackTraceToString()}")
+                        }
                         binding.loadingImage.visibility = View.GONE
                         if (isFABEnable) {
                             binding.fabAdd.visibility = View.VISIBLE

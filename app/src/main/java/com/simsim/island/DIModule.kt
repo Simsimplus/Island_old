@@ -1,6 +1,8 @@
 package com.simsim.island
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
 import com.simsim.island.database.IslandDatabase
 import dagger.Module
@@ -19,4 +21,8 @@ object DatabaseModule{
     fun provideDatabase(@ApplicationContext context: Context):IslandDatabase{
         return Room.databaseBuilder(context,IslandDatabase::class.java,"IslandDatabase").fallbackToDestructiveMigration().build()
     }
+
+    @Provides
+    @Singleton
+    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> = context.dataStore
 }

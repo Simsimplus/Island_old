@@ -28,6 +28,7 @@ class DetailRecyclerViewAdapter(
     private val fragment: Fragment,
     private val imageClickListener: (imageUrl: String) -> Unit,
     private val referenceClickListener: (reference: String) -> Unit,
+    private val urlClickListener: (url: String) -> Unit,
     private val popupMenuItemClickListener: (menuItem: MenuItem, thread: ReplyThread) -> Boolean,
     private val itemClickListener: () -> Unit
 ) : PagingDataAdapter<ReplyThread, DetailRecyclerViewAdapter.BasicThreadViewHolder>(diffComparator) {
@@ -57,11 +58,25 @@ class DetailRecyclerViewAdapter(
     }
 
     inner class ReferenceClickableSpan(
-        val clickListener: () -> Unit
+        private val clickListener: () -> Unit
     ) : ClickableSpan() {
         override fun updateDrawState(textPaint: TextPaint) {
             textPaint.color =
                 ContextCompat.getColor(fragment.requireContext(), R.color.thread_reference)
+            textPaint.isUnderlineText = true
+//            super.updateDrawState(textPaint)
+        }
+
+        override fun onClick(widget: View) {
+            clickListener.invoke()
+        }
+    }
+    inner class UrlClickableSpan(
+        private val clickListener: () -> Unit
+    ) : ClickableSpan() {
+        override fun updateDrawState(textPaint: TextPaint) {
+            textPaint.color =
+                ContextCompat.getColor(fragment.requireContext(), R.color.colorPrimary)
             textPaint.isUnderlineText = true
 //            super.updateDrawState(textPaint)
         }
@@ -98,6 +113,7 @@ class DetailRecyclerViewAdapter(
         binding.contentTextview.apply {
             val referenceRegex = ">>No.(\\d+)".toRegex()
             val hideTextRegex = "\\[h\\](.*)?\\[\\/h\\]".toRegex()
+            val urlRegex="https?://(www\\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)".toRegex()
             val hideTexts = hideTextRegex.findAll(thread.content).toList().map {
                 it.groupValues[1]
             }
@@ -123,6 +139,16 @@ class DetailRecyclerViewAdapter(
                 content.setSpan(
                     ReferenceClickableSpan {
                         referenceClickListener(it.groupValues[0])
+                    },
+                    it.range.first,
+                    it.range.last + 1,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+            urlRegex.findAll(content).forEach {
+                content.setSpan(
+                    UrlClickableSpan() {
+                        urlClickListener(it.groupValues[0])
                     },
                     it.range.first,
                     it.range.last + 1,

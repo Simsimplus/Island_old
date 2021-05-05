@@ -8,10 +8,9 @@ import androidx.core.view.isVisible
 import androidx.paging.LoadState
 import androidx.paging.LoadStateAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.simsim.island.R
-import com.simsim.island.adapter.MainLoadStateAdapter.*
+import com.simsim.island.adapter.MainLoadStateAdapter.MainLoadStateViewHolder
 
 class MainLoadStateAdapter(private val retry:()->Unit) :LoadStateAdapter<MainLoadStateViewHolder>(){
     inner class MainLoadStateViewHolder(view: View):RecyclerView.ViewHolder(view){
@@ -23,8 +22,8 @@ class MainLoadStateAdapter(private val retry:()->Unit) :LoadStateAdapter<MainLoa
         holder.let {
             when(loadState){
                 is LoadState.Loading->{
-                    it.indicator.isVisible=true
-                    it.indicator.show()
+//                    it.indicator.isVisible=true
+//                    it.indicator.show()
                 }
                 is LoadState.Error->{
                     it.indicatorTextView.isVisible=true

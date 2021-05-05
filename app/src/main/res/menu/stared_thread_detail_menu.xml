@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/stared_detail_fragment_menu_add"
+        android:icon="@drawable/ic_round_add_24"
+        android:title="@string/menu_add"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/stared_detail_fragment_menu_share"
+        android:icon="@drawable/ic_round_share_24"
+        android:title="@string/menu_share_title"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/stared_detail_fragment_menu_unstar"
+        android:title="取消收藏" />
+    <item
+        android:id="@+id/stared_detail_fragment_menu_to_last_page"
+        android:title="@string/last_page"
+        app:showAsAction="never" />
+</menu>

@@ -198,7 +198,7 @@ class NewDraftFragment : DialogFragment() {
                     val name=binding.nameValueEditText.text.toString()
                     when(args.target){
                         TARGET_THREAD->{viewModel.doReply(
-                            cookie = "%D8%A9%AE%99%1BKc%BC%16iDt%94%7B%DDm%86%15%81%AA%8Ct%3E%BB",
+//                            cookie = "%D8%A9%AE%99%1BKc%BC%16iDt%94%7B%DDm%86%15%81%AA%8Ct%3E%BB",
                             poThreadId = args.threadId,
                             content = binding.newInputContent.text.toString(),
                             image = postImage,
@@ -210,7 +210,7 @@ class NewDraftFragment : DialogFragment() {
                             name = name,
                         )}
                         TARGET_SECTION->{viewModel.doPost(
-                            cookie = "%D8%A9%AE%99%1BKc%BC%16iDt%94%7B%DDm%86%15%81%AA%8Ct%3E%BB",
+//                            cookie = "%D8%A9%AE%99%1BKc%BC%16iDt%94%7B%DDm%86%15%81%AA%8Ct%3E%BB",
 //                            poThreadId = args.threadId,
                             content = binding.newInputContent.text.toString(),
                             image = postImage,

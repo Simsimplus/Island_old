@@ -36,11 +36,9 @@ class Converter {
 )
 data class ReplyThread(
         @ColumnInfo(index = true)
-        @PrimaryKey(autoGenerate = true)
-        var threadIndexAuto:Long=0L,
+        @PrimaryKey
         var replyThreadId: Long,
         @ColumnInfo(index = true)
-
         var poThreadId: Long,
         var title: String = "",
         var name: String = "",
@@ -73,7 +71,8 @@ data class PoThread constructor(
         var section: String,
         var collectTime: LocalDateTime = LocalDateTime.now(),
         var timelineActualSection: String = "",
-        var isShow: Boolean=true
+        var isShow: Boolean=true,
+        var maxPage:Int=0
         ) {
     @Ignore
     var replyThreads: List<ReplyThread> = listOf()

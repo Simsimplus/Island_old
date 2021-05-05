@@ -7,7 +7,6 @@ import com.simsim.island.database.ThreadDao
 import com.simsim.island.model.PoThread
 import com.simsim.island.model.ReplyThread
 import com.simsim.island.util.LOG_TAG
-import com.simsim.island.util.toBasicThread
 import com.simsim.island.util.toReplyThread
 
 class SavedReplyThreadPagingSource(
@@ -24,7 +23,7 @@ class SavedReplyThreadPagingSource(
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, ReplyThread> {
         return try {
             val  threadList= mutableListOf<ReplyThread>()
-            threadList.add(poThread.toBasicThread())
+//            threadList.add(poThread.toBasicThread())
             threadList.addAll(threadDao.getAllSavedReplyThreads(poThread.threadId).map {
                 it.toReplyThread()
             })
