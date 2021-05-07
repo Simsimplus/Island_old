@@ -3,9 +3,15 @@ package com.simsim.island.service
 import android.net.Uri
 import android.util.Log
 import android.webkit.MimeTypeMap
+import androidx.room.withTransaction
 import com.simsim.island.database.IslandDatabase
 import com.simsim.island.model.Cookie
+import com.simsim.island.model.DetailRemoteKey
+import com.simsim.island.model.ReplyThread
+import com.simsim.island.repository.AislandRepo
 import com.simsim.island.util.LOG_TAG
+import com.simsim.island.util.findPageNumber
+import com.simsim.island.util.toBasicThread
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -92,6 +98,106 @@ class AislandNetworkService @Inject constructor(
             throw e
         }
         response
+    }
+
+    suspend fun getReplyThreadsByPage(page: Int,poThreadId: Long,saveDataToDBHere:Boolean=false):Pair<List<ReplyThread>?,Int?> = withContext(Dispatchers.IO){
+        val url = "https://adnmb3.com/t/$poThreadId?page=$page"
+        var maxPage:Int=999
+        val threadList = getHtmlStringByPage(url)?.let{response->
+            val doc = Jsoup.parse(response)
+            val poThreadDiv = doc.selectFirst("div[class=h-threads-item-main]")
+            val pages = doc.select("[href~=.*page=[0-9]+]")
+            maxPage = try {
+                pages.map { pageTag->
+                    pageTag.attr("href").findPageNumber().toInt()
+                }.maxOrNull()?:999
+            } catch (e: Exception) {
+                999
+            }
+            poThreadDiv?.let {
+                val poThread= AislandRepo.basicThreadToPoThread(
+                    AislandRepo.divToBasicThread(
+                        poThreadDiv,
+                        section = "",
+                        poThreadId = poThreadId,
+                        isPo = true
+                    ),
+                    mutableListOf(), 999
+                ).also {
+                    database.threadDao().insertPoThread(it)
+                    database.threadDao().getPoThread(poThreadId)?.let { poThread ->
+                        database.threadDao().updatePoThread(poThread.apply {
+                            this.maxPage=maxPage?:0
+                            try {
+                                this.commentsNumber= Integer.max(
+                                    database.threadDao().countReplyThreads(poThreadId) - 1,
+                                    this.commentsNumber.toInt()
+                                ).toString()
+                                Log.e(LOG_TAG,"update poThread comment number :${this.commentsNumber}")
+                            }catch (e:Exception){
+                                Log.e(LOG_TAG,"update poThread comment number failed:${e.stackTraceToString()}")
+                            }
+                        })
+                    }
+                }
+
+//                    Log.e(LOG_TAG, "detailRM poThread:$poThread")
+
+//                    Log.e("Simsim", "max page:$maxPage")
+                val replyThreads = mutableListOf<ReplyThread>()
+                if (page == 1) {
+                    Log.e(LOG_TAG, "detailRM poThredToBasicThread:${poThread.toBasicThread()}")
+                    replyThreads.add(poThread.toBasicThread())
+                }
+                val replyDivs = doc.select("div[class=h-threads-item-reply-main]")
+                replyDivs.forEach { replyDiv ->
+                    val replyThread = AislandRepo.divToBasicThread(
+                        div = replyDiv,
+                        isPo = false,
+                        section = poThread.section,
+                        poThreadId = poThread.threadId,
+                        poUid = poThread.uid
+                    )
+                    replyThreads.add(
+                        replyThread
+                    )
+//                        Log.e(LOG_TAG, "poUid=${poThread.uid},${replyThread}")
+                }
+//                replyThreads.removeIf {
+//                    it.uid.isBlank()
+//                }
+                replyThreads
+            }
+        }
+        if (saveDataToDBHere && !threadList.isNullOrEmpty()){
+            CoroutineScope(Dispatchers.IO).launch {
+                database.withTransaction {
+                    val endOfPaginationReached = if (page >= maxPage) {
+                        when {
+                            threadList.isEmpty() -> true
+                            threadList.count() == 1 && threadList[0].replyThreadId == 9999999L -> true
+                            else -> false
+                        }
+                    } else {
+                        false
+                    }
+                    val previousKey = if (page == 1) null else page - 1
+                    val nextKey = if (threadList.size < 19) {
+                        page
+                    } else {
+                        if (endOfPaginationReached) maxPage else page + 1
+                    }
+                    val keys = threadList.map {
+                        val key = DetailRemoteKey(it.replyThreadId, previousKey, nextKey)
+//                        database.keyDao().insertDetailKey(key)
+                        key
+                    }
+                    database.keyDao().insertDetailKeys(keys)
+                    database.threadDao().insertAllReplyThreads(threadList)
+                }
+            }
+        }
+        Pair(threadList,maxPage)
     }
 
     suspend fun doReply(

@@ -38,13 +38,13 @@ import com.simsim.island.databinding.DetailRecyclerviewViewholderBinding
 import com.simsim.island.dp2PxScale
 import com.simsim.island.model.ReplyThread
 import com.simsim.island.preferenceKey.PreferenceKey
-import com.simsim.island.repository.AislandRepo
 import com.simsim.island.util.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.jsoup.Jsoup
+import java.time.LocalDateTime
 
 @AndroidEntryPoint
 class DetailDialogFragment : DialogFragment() {
@@ -284,43 +284,48 @@ class DetailDialogFragment : DialogFragment() {
             holderBinding.secondRowDetail.visibility = View.VISIBLE
             holderBinding.firstRowDetailPlaceholder.visibility = View.GONE
             holderBinding.secondRowDetailPlaceholder.visibility = View.GONE
-            when (index) {
+            val thread = when (index) {
                 in (0..list.size) -> {
-                    val referenceThread = list[index]
-                    adapter.bindHolder(
-                        binding = holderBinding, thread = referenceThread
-                    )
-                    MaterialAlertDialogBuilder(requireContext()).setView(holderBinding.root).show()
+                    list[index]
                 }
                 else -> {
-                    val url = "https://adnmb3.com/m/t/$referenceId"
+
+                    val url = "https://adnmb3.com/Home/Forum/ref?id=$referenceId"
+                    Log.e(LOG_TAG,"fetch reference from $url")
                     Log.e("Simsim", "request for thread detail:$url")
                     val response = viewModel.networkService.getHtmlStringByPage(url)
-                    val thread: ReplyThread = if (response != null) {
+                    if (response != null) {
                         val doc = Jsoup.parse(response)
-                        val poThreadDiv =
-                            doc.selectFirst("div[class=uk-container h-threads-container]")
-                        if (poThreadDiv == null) {
-                            ReplyThread(replyThreadId = 888, poThreadId = 888, section = "")
-                        } else {
-                            val poThread = AislandRepo.divToBasicThread(
-                                poThreadDiv,
-                                isPo = true,
-                                section = "",
-                                poThreadId = 0L,
-                            )
-                            poThread
-                        }
+                        val poThreadId=doc.selectFirst("a[class=h-threads-info-id]")?.let { e->
+                            e.attr("href").removeQueryTail().firstNumber().toLong()
+                        }?:0L
+                        val time=doc.selectFirst("span[class=h-threads-info-createdat]")?.let { e->
+                            parseIslandTime(e.ownText())
+                        }?: LocalDateTime.now()
+                        val uid=doc.selectFirst("span[class=h-threads-info-uid]")?.let { e->
+                            e.ownText().replace("ID:","").trim()
+                        }?: ""
+                        val content=doc.selectFirst("div[class=h-threads-content]")?.let { e->
+                            e.wholeText().trim()
+                        }?: ""
+                        ReplyThread(
+                            replyThreadId = referenceId,
+                            poThreadId =poThreadId,
+                            time=time,
+                            uid=uid,
+                            content = content,
+                            section = ""
+                        )
 
                     } else {
                         ReplyThread(replyThreadId = 888, poThreadId = 888, section = "")
                     }
-                    adapter.bindHolder(
-                        binding = holderBinding, thread = thread
-                    )
-                    MaterialAlertDialogBuilder(requireContext()).setView(holderBinding.root).show()
                 }
             }
+            adapter.bindHolder(
+                binding = holderBinding, thread = thread
+            )
+            MaterialAlertDialogBuilder(requireContext()).setView(holderBinding.root).show()
 
 
         }
@@ -374,16 +379,7 @@ class DetailDialogFragment : DialogFragment() {
                         true
                     }
                     R.id.detail_popup_menu_copy -> {
-                        val clipboardManager =
-                            requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        ClipData.newPlainText("Copied Text", replyThread.content).also {
-                            clipboardManager.setPrimaryClip(it)
-                        }
-                        Snackbar.make(binding.detailDialogLayout, "已复制至剪切板", Snackbar.LENGTH_LONG)
-                            .setAction("分享") {
-                                shareText(replyThread.content)
-                            }
-                            .show()
+                        copyTextToClipBoard(replyThread.content)
                         true
                     }
                     else -> {
@@ -414,6 +410,19 @@ class DetailDialogFragment : DialogFragment() {
                 }
             }
         )
+    }
+
+    private fun copyTextToClipBoard(text:String) {
+        val clipboardManager =
+            requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        ClipData.newPlainText("Copied Text", text).also {
+            clipboardManager.setPrimaryClip(it)
+        }
+        Snackbar.make(binding.detailDialogLayout, "已复制至剪切板", Snackbar.LENGTH_LONG)
+            .setAction("分享") {
+                shareText(text)
+            }
+            .show()
     }
 
     private fun setupSwipeRefreshLayout() {
@@ -503,6 +512,16 @@ class DetailDialogFragment : DialogFragment() {
                             }
                         }
                     }
+                    true
+                }
+                R.id.detail_fragment_menu_open_in_browser->{
+                    Intent(Intent.ACTION_VIEW, Uri.parse("https://adnmb3.com/m/t/${args.ThreadId}")).also {intent->
+                        startActivity(intent)
+                    }
+                    true
+                }
+                R.id.detail_fragment_menu_copy_thread_id->{
+                    copyTextToClipBoard(args.ThreadId.toString())
                     true
                 }
                 else -> {

@@ -143,12 +143,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
-                    android:fontFamily="sans-serif-thin"
+                    android:fontFamily="sans-serif"
                     android:maxLines="5"
                     android:paddingTop="8dp"
                     android:paddingBottom="8dp"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                     android:textColor="@color/content_font_color"
-                    android:textSize="@dimen/content_font_size" />
+                    android:textSize="@dimen/content_font_size"
+                    android:typeface="normal"
+                    tools:text="离长休还有2 个番茄工作时段 – 今天已完成2 个番茄工作时段" />
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"

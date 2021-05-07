@@ -182,8 +182,8 @@ class MainRecyclerViewAdapter(
                             return false
                         }
 
-                    }).load(imageUrl).placeholder(R.drawable.image_loading)
-                    .error(R.drawable.image_load_failed)
+                    }).load(imageUrl).placeholder(R.drawable.ic_fetch)
+                    .error(R.drawable.ic_404_image)
                     .into(holder.binding.imagePosted)
                 holder.binding.imagePosted.visibility = View.VISIBLE
                 holder.binding.imagePosted.setBackgroundResource(R.drawable.image_shape)

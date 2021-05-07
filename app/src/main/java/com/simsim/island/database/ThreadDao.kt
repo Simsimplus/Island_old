@@ -113,13 +113,10 @@ interface ThreadDao  {
     @Query("select count(*) from SavedReplyThread where poThreadId=:poThreadId ")
     suspend fun countSavedReplyThreads(poThreadId:Long):Int
 
-//    @Insert
-//    suspend fun starPoThread(savedPoThread: SavedPoThread)
-//
-//    @Delete
-//    suspend fun deletePoThread(savedPoThread: SavedPoThread)
-//
-//    @Insert
-//    suspend fun starAllBasicThread(savedBasicThreads: List<SavedReplyThread>)
+    @Query("select count(*) from ReplyThread where poThreadId=:poThreadId ")
+    suspend fun countReplyThreads(poThreadId:Long):Int
+
+
+
 
 }

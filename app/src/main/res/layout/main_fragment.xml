@@ -59,6 +59,7 @@
                         android:layout_height="match_parent"
                         android:background="@color/backGroundGrey"
                         android:paddingTop="@dimen/md_card_margin"
+                        android:paddingBottom="@dimen/md_card_margin"
                         android:visibility="visible"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"

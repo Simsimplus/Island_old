@@ -193,13 +193,13 @@ class DetailRecyclerViewAdapter(
             val imageUrl = thread.imageUrl
             if (imageUrl.endsWith("gif")) {
                 Glide.with(binding.root).asGif().load(imageUrl)
-                    .placeholder(R.drawable.image_loading)
-                    .error(R.drawable.image_load_failed)
+                    .placeholder(R.drawable.ic_fetch)
+                    .error(R.drawable.ic_404_image)
                     .into(binding.imagePosted)
             } else {
                 Glide.with(binding.root).asBitmap().load(imageUrl)
-                    .placeholder(R.drawable.image_loading)
-                    .error(R.drawable.image_load_failed).dontAnimate()
+                    .placeholder(R.drawable.ic_fetch)
+                    .error(R.drawable.ic_404_image).dontAnimate()
                     .into(binding.imagePosted)
             }
 

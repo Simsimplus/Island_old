@@ -18,6 +18,9 @@ interface CookieDao {
     @Query("select * from Cookie where isInUse=1")
     fun getActiveCookieFlow():Flow<Cookie?>
 
+    @Query("select * from Cookie where isInUse=1")
+    suspend fun getActiveCookie():Cookie?
+
     @Query("select * from Cookie where cookie=:cookieValue")
     suspend fun getCookieByValue(cookieValue:String):Cookie?
 

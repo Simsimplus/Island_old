@@ -40,16 +40,6 @@ class StaredThreadDialogFragment : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         setupToolbar()
         setupRecyclerView()
-        viewModel.savedPoThreadDataSetChanged.observe(viewLifecycleOwner){
-            if (it){
-                lifecycleScope.launch {
-                    viewModel.setSavedPoThreadFlow().collectLatest {
-                        adapter.submitData(it)
-                    }
-                }
-                viewModel.savedPoThreadDataSetChanged.value=false
-            }
-        }
     }
 
     private fun setupRecyclerView() {
@@ -79,6 +69,16 @@ class StaredThreadDialogFragment : DialogFragment() {
                 launch {
                     viewModel.setSavedPoThreadFlow().collectLatest {
                         adapter.submitData(it)
+                    }
+                    viewModel.savedPoThreadDataSetChanged.observe(viewLifecycleOwner){
+                        if (it){
+                            lifecycleScope.launch {
+                                viewModel.setSavedPoThreadFlow().collectLatest {
+                                    adapter.submitData(it)
+                                }
+                            }
+                            viewModel.savedPoThreadDataSetChanged.value=false
+                        }
                     }
                 }
             }

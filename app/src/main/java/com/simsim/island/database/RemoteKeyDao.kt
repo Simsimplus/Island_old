@@ -16,7 +16,7 @@ interface RemoteKeyDao {
     @Query("select * from MainRemoteKey where poThreadId=:poThreadId")
     suspend fun getMainKey(poThreadId:Long):MainRemoteKey
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertDetailKeys(keysDetail:List<DetailRemoteKey>)
 
 //    @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -30,4 +30,9 @@ interface RemoteKeyDao {
 
     @Query("delete from DetailRemoteKey")
     suspend fun clearReplyThreadsKeys()
+
+    //return current max remote key
+
+    @Query("select nextKey from DetailRemoteKey order by nextKey desc limit 1")
+    suspend fun getCurrentMaxPage():Int?
 }

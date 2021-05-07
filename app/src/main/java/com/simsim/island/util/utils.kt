@@ -109,6 +109,14 @@ fun handleThreadId(id: String): String {
     val regex = "I?D?:?([\\s0-9a-zA-Z]+)".toRegex()
     return regex.matchEntire(id)?.groupValues?.get(1)?.trim() ?: ""
 }
+fun parseIslandTime(timeString: String):LocalDateTime=try {
+    LocalDateTime.parse(
+        timeString
+            .replace("\\(.\\)|(?=\\d)\\s".toRegex(), "T")
+    )
+} catch (e: Exception) {
+    LocalDateTime.of(2099, 1, 1, 0, 1)
+}
 
 fun handleThreadTime(time: LocalDateTime): String {
     val now = LocalDateTime.now()

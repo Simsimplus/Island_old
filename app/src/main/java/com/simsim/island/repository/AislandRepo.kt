@@ -1,21 +1,21 @@
 package com.simsim.island.repository
 
 import android.util.Log
+import com.simsim.island.database.IslandDatabase
 import com.simsim.island.model.Emoji
 import com.simsim.island.model.PoThread
 import com.simsim.island.model.ReplyThread
 import com.simsim.island.model.Section
 import com.simsim.island.service.AislandNetworkService
-import com.simsim.island.util.LOG_TAG
-import com.simsim.island.util.firstNumber
-import com.simsim.island.util.islandUrl
-import com.simsim.island.util.removeQueryTail
+import com.simsim.island.util.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
-import java.time.LocalDateTime
 import javax.inject.Inject
 
-class AislandRepo @Inject constructor(private val service: AislandNetworkService) {
+class AislandRepo @Inject constructor(
+    private val service: AislandNetworkService,
+    private val database: IslandDatabase
+) {
     companion object {
         //        private const val baseUrl = "https://adnmb3.com/m/f/%s?page=%d"
 //        const val islandUrl="https://adnmb3.com"
@@ -111,14 +111,7 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                                             child.ownText().replace("\\D".toRegex(), "").toLong()
                                     }
                                     "h-threads-info-createdat" -> {
-                                        basicThread.time = try {
-                                            LocalDateTime.parse(
-                                                child.ownText()
-                                                    .replace("\\(.\\)|(?=\\d)\\s".toRegex(), "T")
-                                            )
-                                        } catch (e: Exception) {
-                                            LocalDateTime.of(2099, 1, 1, 0, 1)
-                                        }
+                                        basicThread.time = parseIslandTime(child.ownText())
                                     }
                                     "h-threads-info-uid" -> {
                                         val isManager = child.selectFirst("font[color=red]") != null
@@ -214,7 +207,7 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
                                 index,
                                 emoji
                             ).also {
-                                Log.e(LOG_TAG,it.toString())
+                                Log.e(LOG_TAG, it.toString())
                             }
                         )
                     }
@@ -263,4 +256,6 @@ class AislandRepo @Inject constructor(private val service: AislandNetworkService
         }
 
     }
+
+
 }
