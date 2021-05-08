@@ -63,8 +63,8 @@ class MainViewModel @Inject constructor(
     var pictureUri = MutableLiveData<Uri>()
     val drawPicture = MutableLiveData<Bitmap>()
     var shouldTakePicture = MutableLiveData<String>()
-    var successReply = MutableLiveData<Boolean>()
-    var successPost = MutableLiveData<Boolean>()
+    var successPostOrReply = MutableLiveData<Boolean?>()
+    var errorPostOrReply = MutableLiveData<String?>()
     val QRcodeResult = MutableLiveData<String>()
     val savedPoThreadDataSetChanged = MutableLiveData<Boolean>()
 
@@ -258,22 +258,62 @@ class MainViewModel @Inject constructor(
                 database.threadDao().deleteSavedPoThread(database.threadDao().getSavedPoThread(poThreadId))
             }else{
                 val poThread = database.threadDao().getPoThread(poThreadId)
-                val replyThreads = database.threadDao().getAllReplyThreads(poThreadId)
                 poThread?.let {
                     val staredPoThreads = poThread.toSavedPoThread()
                     database.threadDao().insertSavedPoThread(staredPoThreads)
-                    database.threadDao().insertAllSavedReplyThread(
-                        replyThreads.map {
-                            it.toSavedReplyThread()
+                    saveReplyThreads(poThreadId)
+                    viewModelScope.launch {
+                        val pageEnd=database.keyDao().getCurrentNextPage()
+                        val pageStart=database.keyDao().getCurrentPreviousPage()
+                        val maxPage=poThread.maxPage
+                        val minPage=1
+                        launch {
+                            launch {
+                                if (pageStart>minPage){
+                                    fetchAllReplyThreadByPageRange(poThreadId,minPage..pageStart)
+                                }
+                            }
+                            launch {
+                                if (pageEnd <= maxPage){
+                                    fetchAllReplyThreadByPageRange(poThreadId,pageEnd..maxPage)
+                                }
+                            }
+
                         }
-                    )
+
+
+                    }
                 }
             }
             savedPoThreadDataSetChanged.value=true
         }
     }
-    fun fetchAllReplyThreadWhenStared(poThreadId: Long){
 
+    private suspend fun saveReplyThreads(poThreadId: Long) {
+        database.threadDao().getAllReplyThreads(poThreadId).let { replyThreads ->
+            database.threadDao().insertAllSavedReplyThread(
+                replyThreads.map {
+                    it.toSavedReplyThread()
+                }
+            )
+        }
+    }
+
+    private suspend fun fetchAllReplyThreadByPageRange(poThreadId: Long, pageRange:IntRange){
+        pageRange.toMutableList().distinct().forEach { page->
+            viewModelScope.launch {
+                Log.e(LOG_TAG,"get threadList of threadId[$poThreadId] by page[$page]")
+                getReplyThreadsByPage(page, poThreadId)
+            }
+        }
+    }
+    private suspend fun getReplyThreadsByPage(page: Int, poThreadId: Long){
+        networkService.getReplyThreadsAndMaxPageByPage(
+            page = page,
+            poThreadId = poThreadId,
+            saveDataToDBHere = true,
+            forStar = true
+        )
     }
 
     fun doWhenDestroy() {
@@ -307,7 +347,8 @@ class MainViewModel @Inject constructor(
         title: String = ""
     ) {
         viewModelScope.launch {
-            successPost.value = networkService.doPost(
+
+            val result = networkService.doPost(
 //                cookie,
 //                poThreadId,
                 content,
@@ -320,6 +361,8 @@ class MainViewModel @Inject constructor(
                 email,
                 title,
             )
+            successPostOrReply.value=result.first
+            errorPostOrReply.value= result.second
         }
     }
 
@@ -336,7 +379,7 @@ class MainViewModel @Inject constructor(
         title: String = ""
     ) {
         viewModelScope.launch {
-            successReply.value = networkService.doReply(
+            val result = networkService.doReply(
 //                cookie,
                 poThreadId,
                 content,
@@ -348,6 +391,8 @@ class MainViewModel @Inject constructor(
                 email,
                 title,
             )
+            successPostOrReply.value=result.first
+            errorPostOrReply.value= result.second
         }
     }
 

@@ -29,7 +29,5 @@
         android:id="@+id/detail_fragment_menu_open_in_browser"
         android:title="@string/open_in_browser"
         app:showAsAction="never"/>
-    <item android:id="@+id/detail_fragment_menu_copy_thread_id"
-        android:title="@string/copy_thread_id"
-        app:showAsAction="never"/>
+
 </menu>

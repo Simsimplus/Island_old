@@ -9,4 +9,6 @@
     <item
         android:id="@+id/detail_popup_menu_copy"
         android:title="@string/copy" />
+    <item android:id="@+id/detail_fragment_menu_copy_thread_id"
+        android:title="@string/copy_thread_id" />
 </menu>

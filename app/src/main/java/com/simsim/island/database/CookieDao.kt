@@ -9,6 +9,9 @@ interface CookieDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllCookies(cookies:List<Cookie>)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCookie(cookie: Cookie)
+
     @Query("select * from Cookie")
     suspend fun getAllCookies(): List<Cookie>
 

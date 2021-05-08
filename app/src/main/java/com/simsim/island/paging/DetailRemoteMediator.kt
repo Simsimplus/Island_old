@@ -160,7 +160,7 @@ class DetailRemoteMediator(
 //                maxPage = 999
 //                null
 //            }
-            val (threadList, maxPage) = service.getReplyThreadsByPage(page, poThreadId)
+            val (threadList, maxPage) = service.getReplyThreadsAndMaxPageByPage(page, poThreadId)
             Log.e(LOG_TAG, "maxPage:$maxPage")
             threadList
                 ?: return MediatorResult.Error(Exception("can't reach to page url:${"https://adnmb3.com/t/$poThreadId?page=$page"}"))
@@ -183,7 +183,7 @@ class DetailRemoteMediator(
                         if (endOfPaginationReached) maxPage else page + 1
                     }
                     val keys = threadList.map {
-                        val key = DetailRemoteKey(it.replyThreadId, previousKey, nextKey)
+                        val key = DetailRemoteKey(it.replyThreadId, previousKey, nextKey,page)
 //                        database.keyDao().insertDetailKey(key)
                         key
                     }

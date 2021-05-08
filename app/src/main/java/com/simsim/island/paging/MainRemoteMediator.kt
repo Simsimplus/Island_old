@@ -74,7 +74,7 @@ class MainRemoteMediator(
                     val previousKey = if (page == 1) null else page - 1
                     val nextKey = page + 1
                     val keys = threadList.map {
-                        MainRemoteKey(it.threadId, previousKey, nextKey)
+                        MainRemoteKey(it.threadId, previousKey, nextKey,page)
                     }
                     database.keyDao().insertMainKeys(keys)
                     database.threadDao().insertAllPoThreads(threadList)

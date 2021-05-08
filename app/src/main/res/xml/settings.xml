@@ -26,6 +26,14 @@
             app:key="@string/cookie_from_web_view_key"
             app:title="登录用户系统" />
     </PreferenceCategory>
+    <PreferenceCategory android:title="屏蔽管理"
+        app:iconSpaceReserved="false">
+<Preference
+    app:key="@string/block_rule_manage_key"
+    app:title="管理屏蔽项"
+    app:iconSpaceReserved="false"
+    />
+    </PreferenceCategory>
     <PreferenceCategory
         app:iconSpaceReserved="false"
         app:title="悬浮按钮">
@@ -48,47 +56,38 @@
             app:title="设为默认大小" />
 
         <SeekBarPreference
+            android:max="100"
             app:defaultValue="20"
             app:iconSpaceReserved="false"
             app:isPreferenceVisible="false"
             app:key="@string/fab_seek_bar_key"
-            android:max="100"
             app:min="20"
             app:title="悬浮按钮大小"
             app:useSimpleSummaryProvider="true" />
         <SeekBarPreference
+            android:max="200"
+            app:defaultValue="0"
             app:iconSpaceReserved="false"
             app:isPreferenceVisible="true"
             app:key="@string/fab_side_distance_key"
-            android:max="200"
             app:min="0"
-            app:defaultValue="0"
             app:title="侧边距调整"
             app:useSimpleSummaryProvider="true" />
         <SeekBarPreference
+            android:max="200"
+            app:defaultValue="0"
             app:iconSpaceReserved="false"
             app:isPreferenceVisible="true"
             app:key="@string/fab_bottom_distance_key"
-            android:max="200"
             app:min="0"
-            app:defaultValue="0"
             app:title="底边距调整"
             app:useSimpleSummaryProvider="true" />
         <Preference
-            app:key="@string/fab_swipe_functions_key"
             app:iconSpaceReserved="false"
-            app:title="滑动时的功能"
-            />
+            app:key="@string/fab_swipe_functions_key"
+            app:title="滑动时的功能" />
 
 
-    </PreferenceCategory>
-    <PreferenceCategory android:title="屏蔽管理"
-        app:iconSpaceReserved="false">
-<Preference
-    app:key="@string/block_rule_manage_key"
-    app:title="管理屏蔽项"
-    app:iconSpaceReserved="false"
-    />
     </PreferenceCategory>
 
 </PreferenceScreen>

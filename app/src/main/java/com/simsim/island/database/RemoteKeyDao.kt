@@ -33,6 +33,8 @@ interface RemoteKeyDao {
 
     //return current max remote key
 
-    @Query("select nextKey from DetailRemoteKey order by nextKey desc limit 1")
-    suspend fun getCurrentMaxPage():Int?
+    @Query("select page from DetailRemoteKey order by nextKey desc limit 1")
+    suspend fun getCurrentNextPage():Int
+    @Query("select page from DetailRemoteKey order by previousKey asc limit 1")
+    suspend fun getCurrentPreviousPage():Int
 }

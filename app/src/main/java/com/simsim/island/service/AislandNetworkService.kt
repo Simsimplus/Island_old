@@ -12,6 +12,7 @@ import com.simsim.island.repository.AislandRepo
 import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.findPageNumber
 import com.simsim.island.util.toBasicThread
+import com.simsim.island.util.toSavedReplyThread
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -39,19 +40,22 @@ class AislandNetworkService @Inject constructor(
     companion object {
         private const val baseUrl = "https://adnmb3.com"
     }
-    var cookieInUse:String?=null
+
+    var cookieInUse: String? = null
+
     init {
         CoroutineScope(Dispatchers.IO).launch {
             database.cookieDao().getActiveCookieFlow().collectLatest {
                 it?.let { cookie ->
-                    cookieInUse=cookie.cookie
-                    Log.e(LOG_TAG,"current cookie:$cookieInUse")
+                    cookieInUse = cookie.cookie
+                    Log.e(LOG_TAG, "current cookie:$cookieInUse")
                 }
             }
         }
     }
+
     val logging = HttpLoggingInterceptor().apply {
-        level=HttpLoggingInterceptor.Level.BODY
+        level = HttpLoggingInterceptor.Level.BODY
     }
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(logging)
@@ -64,7 +68,10 @@ class AislandNetworkService @Inject constructor(
 
     interface IslandHtmlService {
         @GET
-        suspend fun getHtmlStringByPage(@Url url: String,@HeaderMap() header: HashMap<String, String> ): Response<String>
+        suspend fun getHtmlStringByPage(
+            @Url url: String,
+            @HeaderMap() header: HashMap<String, String>
+        ): Response<String>
 
         @Multipart
         @POST
@@ -72,50 +79,56 @@ class AislandNetworkService @Inject constructor(
             @Url url: String,
             @HeaderMap cookie: HashMap<String, String>,
             @PartMap formData: HashMap<String, RequestBody>,
-            @Part image:MultipartBody.Part?
+            @Part image: MultipartBody.Part?
         ): Response<String>
     }
 
     private val service: IslandHtmlService by lazy { retrofit.create(IslandHtmlService::class.java) }
 
-    suspend fun getHtmlStringByPage(url: String,cookie: String?=null): String? = withContext(Dispatchers.IO) {
-        val header=hashMapOf(
-            "Cookie" to (cookie?:"userhash=${cookieInUse?:""}"),
-            "Host" to "adnmb3.com",
-            "referer" to "https://adnmb3.com/Forum"
-        )
-        val response: String?=
-        try {
-            val call = service.getHtmlStringByPage(url,header)
-            Log.e("Simsim:url:", url)
-            if (call.isSuccessful) {
-                call.body()
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            Log.e(LOG_TAG, "retrofit exception:$e")
-            throw e
+    suspend fun getHtmlStringByPage(url: String, cookie: String? = null): String? =
+        withContext(Dispatchers.IO) {
+            val header = hashMapOf(
+                "Cookie" to (cookie ?: "userhash=${cookieInUse ?: ""}"),
+                "Host" to "adnmb3.com",
+                "referer" to "https://adnmb3.com/Forum"
+            )
+            val response: String? =
+                try {
+                    val call = service.getHtmlStringByPage(url, header)
+                    Log.e("Simsim:url:", url)
+                    if (call.isSuccessful) {
+                        call.body()
+                    } else {
+                        null
+                    }
+                } catch (e: Exception) {
+                    Log.e(LOG_TAG, "retrofit exception:$e")
+                    throw e
+                }
+            response
         }
-        response
-    }
 
-    suspend fun getReplyThreadsByPage(page: Int,poThreadId: Long,saveDataToDBHere:Boolean=false):Pair<List<ReplyThread>?,Int?> = withContext(Dispatchers.IO){
+    suspend fun getReplyThreadsAndMaxPageByPage(
+        page: Int,
+        poThreadId: Long,
+        saveDataToDBHere: Boolean = false,
+        forStar: Boolean = false
+    ): Pair<List<ReplyThread>?, Int?> = withContext(Dispatchers.IO) {
         val url = "https://adnmb3.com/t/$poThreadId?page=$page"
-        var maxPage:Int=999
-        val threadList = getHtmlStringByPage(url)?.let{response->
+        var maxPage: Int = 999
+        val threadList = getHtmlStringByPage(url)?.let { response ->
             val doc = Jsoup.parse(response)
             val poThreadDiv = doc.selectFirst("div[class=h-threads-item-main]")
             val pages = doc.select("[href~=.*page=[0-9]+]")
             maxPage = try {
-                pages.map { pageTag->
+                pages.map { pageTag ->
                     pageTag.attr("href").findPageNumber().toInt()
-                }.maxOrNull()?:999
+                }.maxOrNull() ?: 999
             } catch (e: Exception) {
                 999
             }
             poThreadDiv?.let {
-                val poThread= AislandRepo.basicThreadToPoThread(
+                val poThread = AislandRepo.basicThreadToPoThread(
                     AislandRepo.divToBasicThread(
                         poThreadDiv,
                         section = "",
@@ -127,15 +140,21 @@ class AislandNetworkService @Inject constructor(
                     database.threadDao().insertPoThread(it)
                     database.threadDao().getPoThread(poThreadId)?.let { poThread ->
                         database.threadDao().updatePoThread(poThread.apply {
-                            this.maxPage=maxPage?:0
+                            this.maxPage = maxPage ?: 0
                             try {
-                                this.commentsNumber= Integer.max(
+                                this.commentsNumber = Integer.max(
                                     database.threadDao().countReplyThreads(poThreadId) - 1,
                                     this.commentsNumber.toInt()
                                 ).toString()
-                                Log.e(LOG_TAG,"update poThread comment number :${this.commentsNumber}")
-                            }catch (e:Exception){
-                                Log.e(LOG_TAG,"update poThread comment number failed:${e.stackTraceToString()}")
+                                Log.e(
+                                    LOG_TAG,
+                                    "update poThread comment number :${this.commentsNumber}"
+                                )
+                            } catch (e: Exception) {
+                                Log.e(
+                                    LOG_TAG,
+                                    "update poThread comment number failed:${e.stackTraceToString()}"
+                                )
                             }
                         })
                     }
@@ -169,7 +188,7 @@ class AislandNetworkService @Inject constructor(
                 replyThreads
             }
         }
-        if (saveDataToDBHere && !threadList.isNullOrEmpty()){
+        if (saveDataToDBHere && !threadList.isNullOrEmpty()) {
             CoroutineScope(Dispatchers.IO).launch {
                 database.withTransaction {
                     val endOfPaginationReached = if (page >= maxPage) {
@@ -188,16 +207,23 @@ class AislandNetworkService @Inject constructor(
                         if (endOfPaginationReached) maxPage else page + 1
                     }
                     val keys = threadList.map {
-                        val key = DetailRemoteKey(it.replyThreadId, previousKey, nextKey)
+                        val key = DetailRemoteKey(it.replyThreadId, previousKey, nextKey, page)
 //                        database.keyDao().insertDetailKey(key)
                         key
                     }
                     database.keyDao().insertDetailKeys(keys)
                     database.threadDao().insertAllReplyThreads(threadList)
                 }
+                if (forStar) {
+                    database.threadDao().insertAllSavedReplyThread(
+                        threadList.map {
+                            it.toSavedReplyThread()
+                        }
+                    )
+                }
             }
         }
-        Pair(threadList,maxPage)
+        Pair(threadList, maxPage)
     }
 
     suspend fun doReply(
@@ -205,150 +231,181 @@ class AislandNetworkService @Inject constructor(
         poThreadId: Long,
         content: String,
         image: InputStream?,
-        imageType:String?,
-        imageName:String?,
+        imageType: String?,
+        imageName: String?,
         waterMark: Boolean = false,
         name: String = "",
         email: String = "",
         title: String = ""
-    ): Boolean = withContext(Dispatchers.IO) {
+    ): Pair<Boolean, String?> = withContext(Dispatchers.IO) {
+        var error: String? = null
         val response: Boolean = try {
             val formData = hashMapOf<String, RequestBody>()
             formData["resto"] =
                 poThreadId.toString().toRequestBody(null)
             formData["content"] = content.toRequestBody(null)
-            val imageDataMultipart=image?.let { img ->
-                val imageDataPart = img.use{
-                    val bytes=it.readBytes()
+            val imageDataMultipart = image?.let { img ->
+                val imageDataPart = img.use {
+                    val bytes = it.readBytes()
                     bytes
                 }.toRequestBody(imageType?.toMediaTypeOrNull())
-                if (waterMark){
+                if (waterMark) {
                     formData["water"] =
                         "true".toRequestBody("text/plain".toMediaTypeOrNull())
                 }
 
-                MultipartBody.Part.createFormData("image","nmb.${MimeTypeMap.getSingleton().getExtensionFromMimeType(imageType)?:"jpg"}",imageDataPart)
+                MultipartBody.Part.createFormData(
+                    "image",
+                    "nmb.${
+                        MimeTypeMap.getSingleton().getExtensionFromMimeType(imageType) ?: "jpg"
+                    }",
+                    imageDataPart
+                )
             }
-                formData["name"] = name.toRequestBody("text/plain".toMediaTypeOrNull())
+            formData["name"] = name.toRequestBody("text/plain".toMediaTypeOrNull())
 
 
-                formData["title"] = title.toRequestBody("text/plain".toMediaTypeOrNull())
+            formData["title"] = title.toRequestBody("text/plain".toMediaTypeOrNull())
 
 
-                formData["email"] = email.toRequestBody("text/plain".toMediaTypeOrNull())
+            formData["email"] = email.toRequestBody("text/plain".toMediaTypeOrNull())
 
-            val headers=hashMapOf("cookie" to "userhash=${cookieInUse?:""}")
+            val headers = hashMapOf("cookie" to "userhash=${cookieInUse ?: ""}")
             val call = service.postNewThread(
                 "https://adnmb3.com/Home/Forum/doReplyThread.html",
                 headers,
                 formData,
                 imageDataMultipart
             )
-            Log.e(LOG_TAG,"image type:$imageType")
-            Log.e(LOG_TAG,"cookie:${cookieInUse?:""}")
+            Log.e(LOG_TAG, "image type:$imageType")
+            Log.e(LOG_TAG, "cookie:${cookieInUse ?: ""}")
             if (call.isSuccessful) {
                 Log.e(LOG_TAG, "do reply:${call.body()}")
-                call.body()?.let {
-                    it.contains("成功")
-                }?:false
+                call.body()?.let { body ->
+                    val doc = Jsoup.parse(body)
+                    error = doc.selectFirst("p[class=error]")?.ownText()
+                    body.contains("成功")
+                } ?: false
             } else {
                 false
             }
         } catch (e: Exception) {
             Log.e(LOG_TAG, "retrofit exception:$e")
-            throw e
+            false
         }
-        response
+        Pair(response, error)
     }
 
     suspend fun doPost(
 //        cookie: String,
         content: String,
         image: InputStream?,
-        imageType:String?,
-        imageName:String?,
+        imageType: String?,
+        imageName: String?,
         fId: String,
         waterMark: Boolean = false,
         name: String = "",
         email: String = "",
         title: String = ""
-    ): Boolean = withContext(Dispatchers.IO) {
+    ): Pair<Boolean, String?> = withContext(Dispatchers.IO) {
+        var error: String? = null
         val response: Boolean = try {
             val formData = hashMapOf<String, RequestBody>()
             formData["fid"] = fId.toRequestBody("text/plain".toMediaTypeOrNull())
 //            formData["resto"]= RequestBody.create(MediaType.parse("text/plain"),poThreadId.toString())
             formData["content"] = content.toRequestBody("text/plain".toMediaTypeOrNull())
-            val imageDataMultipart=image?.let { img ->
-                val imageDataPart = img.use{
-                    val bytes=it.readBytes()
+            val imageDataMultipart = image?.let { img ->
+                val imageDataPart = img.use {
+                    val bytes = it.readBytes()
                     bytes
                 }.toRequestBody(imageType?.toMediaTypeOrNull())
-                if (waterMark){
+                if (waterMark) {
                     formData["water"] =
                         "true".toRequestBody("text/plain".toMediaTypeOrNull())
                 }
-                MultipartBody.Part.createFormData("image","nmb.${MimeTypeMap.getSingleton().getExtensionFromMimeType(imageType)?:"jpg"}",imageDataPart)
+                MultipartBody.Part.createFormData(
+                    "image",
+                    "nmb.${
+                        MimeTypeMap.getSingleton().getExtensionFromMimeType(imageType) ?: "jpg"
+                    }",
+                    imageDataPart
+                )
             }
 
-                formData["name"] = name.toRequestBody("text/plain".toMediaTypeOrNull())
+            formData["name"] = name.toRequestBody("text/plain".toMediaTypeOrNull())
 
 
-                formData["title"] = title.toRequestBody("text/plain".toMediaTypeOrNull())
+            formData["title"] = title.toRequestBody("text/plain".toMediaTypeOrNull())
 
 
-                formData["email"] = email.toRequestBody("text/plain".toMediaTypeOrNull())
+            formData["email"] = email.toRequestBody("text/plain".toMediaTypeOrNull())
 
-            val headers=hashMapOf("cookie" to "userhash=$${cookieInUse?:""}")
+            val headers = hashMapOf("cookie" to "userhash=${cookieInUse ?: ""}")
             val call = service.postNewThread(
                 "https://adnmb3.com/Home/Forum/doPostThread.html",
                 headers,
                 formData,
                 imageDataMultipart,
             )
-            Log.e(LOG_TAG,"cookie:${cookieInUse?:""}")
+            Log.e(LOG_TAG, "cookie:${cookieInUse ?: ""}")
 //            Log.e("Simsim:url:", url)
             if (call.isSuccessful) {
                 Log.e(LOG_TAG, "do post:${call.body()}")
-                call.body()?.let {
-                    it.contains("成功")
-                }?:false
+                call.body()?.let { body ->
+                    val doc = Jsoup.parse(body)
+                    error = doc.selectFirst("p[class=error]")?.ownText()
+                    body.contains("成功")
+                } ?: false
             } else {
                 false
             }
         } catch (e: Exception) {
             Log.e(LOG_TAG, "retrofit exception:$e")
-            throw e
+            false
         }
-        response
+
+        Pair(response, error)
     }
-    suspend fun getCookies(cookieMap:Map<String,String>):List<Cookie> = withContext(Dispatchers.IO){
-        val cookie=cookieMap.toString().replace(", ","; ").replace("[{}]".toRegex(),"")
-        val response= getHtmlStringByPage(url = "https://adnmb3.com/Member/User/Cookie/index.html",cookie =cookie )
-        response?.let { r->
-            val doc=Jsoup.parse(r)
-            val cookieList= mutableListOf<Cookie>()
-            doc.select("a[href~=/Member/User/Cookie/export/id/.*]").forEach { cookiePageTag->
-                val (cookieName,cookieValue) = getCookieFromPage(cookiePageTag.attr("href"),cookie)
-                cookieValue?.let {
-                    cookieList.add(Cookie(cookie=cookieValue,name=cookieName))
+
+    suspend fun getCookies(cookieMap: Map<String, String>): List<Cookie> =
+        withContext(Dispatchers.IO) {
+            val cookie = cookieMap.toString().replace(", ", "; ").replace("[{}]".toRegex(), "")
+            val response = getHtmlStringByPage(
+                url = "https://adnmb3.com/Member/User/Cookie/index.html",
+                cookie = cookie
+            )
+            response?.let { r ->
+                val doc = Jsoup.parse(r)
+                val cookieList = mutableListOf<Cookie>()
+                doc.select("a[href~=/Member/User/Cookie/export/id/.*]").forEach { cookiePageTag ->
+                    val (cookieName, cookieValue) = getCookieFromPage(
+                        cookiePageTag.attr("href"),
+                        cookie
+                    )
+                    cookieValue?.let {
+                        cookieList.add(Cookie(cookie = cookieValue, name = cookieName))
+                    }
                 }
-            }
-            cookieList
-        }?: listOf()
-    }
-    suspend fun getCookieFromPage(url:String,cookie: String):Pair<String,String?> = withContext(Dispatchers.IO){
-        val response= getHtmlStringByPage(url = url,cookie =cookie )
-        response?.let { r->
-            val doc=Jsoup.parse(r)
-            val cookieName=doc.selectFirst("div[class=tpl-form-maintext]")?.ownText()?:""
-            val cookieValueRaw=doc.selectFirst("img[src~=http://publicapi.ovear.info.*]")?.attr("src")
-            val cookieValue=cookieValueRaw?.let { raw->
-                val rawDecode= Uri.decode(raw).replace("""[{}"]""".toRegex(),"").replaceBeforeLast("text=","")
-                rawDecode.split(":")[1]
-            }
-            cookieName to cookieValue
-        }?:"" to ""
-    }
+                cookieList
+            } ?: listOf()
+        }
+
+    suspend fun getCookieFromPage(url: String, cookie: String): Pair<String, String?> =
+        withContext(Dispatchers.IO) {
+            val response = getHtmlStringByPage(url = url, cookie = cookie)
+            response?.let { r ->
+                val doc = Jsoup.parse(r)
+                val cookieName = doc.selectFirst("div[class=tpl-form-maintext]")?.ownText() ?: ""
+                val cookieValueRaw =
+                    doc.selectFirst("img[src~=http://publicapi.ovear.info.*]")?.attr("src")
+                val cookieValue = cookieValueRaw?.let { raw ->
+                    val rawDecode = Uri.decode(raw).replace("""[{}"]""".toRegex(), "")
+                        .replaceBeforeLast("text=", "")
+                    rawDecode.split(":")[1]
+                }
+                cookieName to cookieValue
+            } ?: "" to ""
+        }
 
 
 //    suspend fun doReplyWithFuel(

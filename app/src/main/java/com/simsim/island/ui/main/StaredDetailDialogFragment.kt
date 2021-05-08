@@ -473,12 +473,21 @@ class StaredDetailDialogFragment : DialogFragment() {
 
     fun doWhenReplySuccess() {
         lifecycleScope.launch {
-            viewModel.successReply.observe(viewLifecycleOwner) { success ->
-                if (success) {
-                    Snackbar.make(binding.detailDialogLayout, "发串成功", Snackbar.LENGTH_LONG)
-                        .show()
-                } else {
-                    //todo
+            viewModel.successPostOrReply.observe(viewLifecycleOwner) { success ->
+                success?.let {
+                    if (success) {
+                        Snackbar.make(binding.detailDialogLayout, "发串成功", Snackbar.LENGTH_LONG)
+                            .show()
+                    }else{
+                        viewModel.errorPostOrReply.observe(viewLifecycleOwner){error->
+                            error?.let {
+                                Snackbar.make(binding.detailDialogLayout, "发串失败[$error]", Snackbar.LENGTH_INDEFINITE)
+                                    .show()
+                                viewModel.errorPostOrReply.value=null
+                            }
+                        }
+                    }
+                    viewModel.successPostOrReply.value=null
                 }
             }
         }

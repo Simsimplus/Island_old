@@ -16,5 +16,10 @@
         android:id="@+id/draft_menu_send"
         android:icon="@drawable/ic_round_send_24"
         android:title="@string/menu_item_send"
+        android:visible="false"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/draft_menu_hide_tag"
+        android:title="@string/h_tag"
+        app:showAsAction="never" />
 </menu>

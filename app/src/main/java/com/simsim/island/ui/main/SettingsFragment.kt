@@ -39,6 +39,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.io.File
 import java.io.FileInputStream
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.properties.Delegates
 
 @AndroidEntryPoint
@@ -51,7 +53,7 @@ class SettingsFragment(
     //    private val viewModel:MainViewModel=ViewModelProvider(activity).get(MainViewModel::class.java)
     private val customDataStore: CustomDataStore = CustomDataStore()
     private val dataStore: DataStore<Preferences> = activity.dataStore
-    private val preferenceKey=PreferenceKey(activity)
+    private val preferenceKey = PreferenceKey(activity)
     private var dp2PxScale: Float = activity.dp2PxScale()
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -86,24 +88,38 @@ class SettingsFragment(
 
     private fun setupPreferences() {
         lifecycleScope.launch {
-            val fabSizeSeekBar = findPreference<SeekBarPreference>(preferenceKey.fabSizeSeekBarKey)?: throw Exception("can not find fabSizeSeekBar")
-            val fabSizeDefault = findPreference<SwitchPreferenceCompat>(preferenceKey.fabDefaultSizeKey)?: throw Exception("can not find setFabDefaultSize")
-            val fabSwitch = findPreference<SwitchPreferenceCompat>(preferenceKey.enableFabKey)?: throw Exception("can not find fabSwitch")
-            val fabSideMargin=findPreference<SeekBarPreference>(preferenceKey.fabSideMarginKey)?: throw Exception("can not find fabSideMargin")
-            val fabBottomMargin=findPreference<SeekBarPreference>(preferenceKey.fabBottomMarginKey)?: throw Exception("can not find fabBottomMargin")
-            val fabPlaceRight=findPreference<SwitchPreferenceCompat>(preferenceKey.fabPlaceRightKey)?:throw Exception("can not find fabPlaceRight")
-            val fabSwipeFunction=findPreference<Preference>(preferenceKey.fabSwipeFunctionsKey)?:throw Exception("can not find fabSwipeFunction")
-            val cookieInUse = findPreference<Preference>(preferenceKey.cookieInUseKey)?: throw Exception("can not find cookieInUse")
-            val cookieQR = findPreference<Preference>(preferenceKey.cookieFromQRCodeKey) ?: throw Exception("can not find cookieQR")
-            val cookieWebView = findPreference<Preference>(preferenceKey.cookieFromWebViewKey)?: throw Exception("can not find cookieWebView")
-            val blockRuleManage=findPreference<Preference>(preferenceKey.blockRuleManageKey)?: throw Exception("can not find blockRuleManage")
+            val fabSizeSeekBar = findPreference<SeekBarPreference>(preferenceKey.fabSizeSeekBarKey)
+                ?: throw Exception("can not find fabSizeSeekBar")
+            val fabSizeDefault =
+                findPreference<SwitchPreferenceCompat>(preferenceKey.fabDefaultSizeKey)
+                    ?: throw Exception("can not find setFabDefaultSize")
+            val fabSwitch = findPreference<SwitchPreferenceCompat>(preferenceKey.enableFabKey)
+                ?: throw Exception("can not find fabSwitch")
+            val fabSideMargin = findPreference<SeekBarPreference>(preferenceKey.fabSideMarginKey)
+                ?: throw Exception("can not find fabSideMargin")
+            val fabBottomMargin =
+                findPreference<SeekBarPreference>(preferenceKey.fabBottomMarginKey)
+                    ?: throw Exception("can not find fabBottomMargin")
+            val fabPlaceRight =
+                findPreference<SwitchPreferenceCompat>(preferenceKey.fabPlaceRightKey)
+                    ?: throw Exception("can not find fabPlaceRight")
+            val fabSwipeFunction = findPreference<Preference>(preferenceKey.fabSwipeFunctionsKey)
+                ?: throw Exception("can not find fabSwipeFunction")
+            val cookieInUse = findPreference<Preference>(preferenceKey.cookieInUseKey)
+                ?: throw Exception("can not find cookieInUse")
+            val cookieQR = findPreference<Preference>(preferenceKey.cookieFromQRCodeKey)
+                ?: throw Exception("can not find cookieQR")
+            val cookieWebView = findPreference<Preference>(preferenceKey.cookieFromWebViewKey)
+                ?: throw Exception("can not find cookieWebView")
+            val blockRuleManage = findPreference<Preference>(preferenceKey.blockRuleManageKey)
+                ?: throw Exception("can not find blockRuleManage")
 
             fabSwitch.apply {
                 var isFabEnable: Boolean by Delegates.observable(this.isChecked) { _, _, newValue ->
-                    if (!fabSizeDefault.isChecked){
-                        fabSizeSeekBar.isVisible=newValue
+                    if (!fabSizeDefault.isChecked) {
+                        fabSizeSeekBar.isVisible = newValue
                     }
-                    fabSwipeFunction.isVisible=newValue
+                    fabSwipeFunction.isVisible = newValue
                     fabSizeDefault.isVisible = newValue
                     fabSideMargin.isVisible = newValue
                     fabBottomMargin.isVisible = newValue
@@ -139,32 +155,54 @@ class SettingsFragment(
             }
 
             fabSwipeFunction.apply {
-                setOnPreferenceClickListener { p->
+                setOnPreferenceClickListener { p ->
                     lifecycleScope.launch {
-                        val swipeFunctionSelectionBinding= SwipeFunctionSelectionBinding.inflate(LayoutInflater.from(activity))
-                        val swipeFunctionArray=activity.resources.getStringArray(R.array.swipe_function)
+                        val swipeFunctionSelectionBinding =
+                            SwipeFunctionSelectionBinding.inflate(LayoutInflater.from(activity))
+                        val swipeFunctionArray =
+                            activity.resources.getStringArray(R.array.swipe_function)
                         preferenceDataStore?.apply {
-                            getString(SWIPE_UP,null)?.let {
-                                swipeFunctionSelectionBinding.fabSwipeUp.setSelection(swipeFunctionArray.indexOfOrFirst(it))
+                            getString(SWIPE_UP, null)?.let {
+                                swipeFunctionSelectionBinding.fabSwipeUp.setSelection(
+                                    swipeFunctionArray.indexOfOrFirst(it)
+                                )
                             }
-                            getString(SWIPE_DOWN,null)?.let {
-                                swipeFunctionSelectionBinding.fabSwipeDown.setSelection(swipeFunctionArray.indexOfOrFirst(it))
+                            getString(SWIPE_DOWN, null)?.let {
+                                swipeFunctionSelectionBinding.fabSwipeDown.setSelection(
+                                    swipeFunctionArray.indexOfOrFirst(it)
+                                )
                             }
-                            getString(SWIPE_LEFT,null)?.let {
-                                swipeFunctionSelectionBinding.fabSwipeLeft.setSelection(swipeFunctionArray.indexOfOrFirst(it))
+                            getString(SWIPE_LEFT, null)?.let {
+                                swipeFunctionSelectionBinding.fabSwipeLeft.setSelection(
+                                    swipeFunctionArray.indexOfOrFirst(it)
+                                )
                             }
-                            getString(SWIPE_RIGHT,null)?.let {
-                                swipeFunctionSelectionBinding.fabSwipeRight.setSelection(swipeFunctionArray.indexOfOrFirst(it))
+                            getString(SWIPE_RIGHT, null)?.let {
+                                swipeFunctionSelectionBinding.fabSwipeRight.setSelection(
+                                    swipeFunctionArray.indexOfOrFirst(it)
+                                )
                             }
                         }
                         MaterialAlertDialogBuilder(activity)
                             .setView(swipeFunctionSelectionBinding.root)
                             .setOnDismissListener {
                                 preferenceDataStore?.apply {
-                                    putString(SWIPE_UP,swipeFunctionSelectionBinding.fabSwipeUp.selectedItem.toString())
-                                    putString(SWIPE_DOWN,swipeFunctionSelectionBinding.fabSwipeDown.selectedItem.toString())
-                                    putString(SWIPE_LEFT,swipeFunctionSelectionBinding.fabSwipeLeft.selectedItem.toString())
-                                    putString(SWIPE_RIGHT,swipeFunctionSelectionBinding.fabSwipeRight.selectedItem.toString())
+                                    putString(
+                                        SWIPE_UP,
+                                        swipeFunctionSelectionBinding.fabSwipeUp.selectedItem.toString()
+                                    )
+                                    putString(
+                                        SWIPE_DOWN,
+                                        swipeFunctionSelectionBinding.fabSwipeDown.selectedItem.toString()
+                                    )
+                                    putString(
+                                        SWIPE_LEFT,
+                                        swipeFunctionSelectionBinding.fabSwipeLeft.selectedItem.toString()
+                                    )
+                                    putString(
+                                        SWIPE_RIGHT,
+                                        swipeFunctionSelectionBinding.fabSwipeRight.selectedItem.toString()
+                                    )
                                 }
                             }
                             .show()
@@ -179,18 +217,19 @@ class SettingsFragment(
 
 
             cookieInUse.apply {
-                val p=this
+                val p = this
                 lifecycleScope.launch {
-                    viewModel.database.cookieDao().getActiveCookieFlow().collectLatest {cookie->
+                    viewModel.database.cookieDao().getActiveCookieFlow().collectLatest { cookie ->
                         cookie?.let {
-                            p.summary="现用:${cookie.name}"
-                        }?: kotlin.run {
-                            p.summary="暂无可用"
+                            p.summary = "现用:${cookie.name}"
+                        } ?: kotlin.run {
+                            p.summary = "暂无可用"
                         }
                     }
                 }
                 setOnPreferenceClickListener {
-                    val action=SettingsDialogFragmentDirections.actionGlobalCookieManageDialogFragment()
+                    val action =
+                        SettingsDialogFragmentDirections.actionGlobalCookieManageDialogFragment()
                     settingsDialogFragment.findNavController().navigate(action)
                     true
                 }
@@ -216,34 +255,41 @@ class SettingsFragment(
                     }.show()
                     viewModel.QRcodeResult.observe(viewLifecycleOwner) { result ->
                         result?.let {
-                            Snackbar.make(
-                                binding.settingCoordinatorLayout,
-                                "扫码导入cookie大成功",
-                                Snackbar.LENGTH_LONG
-                            ).setAction("使用") {
-                                lifecycleScope.launch {
-                                    preferenceDataStore!!.putString("cookie_in_use_key", result)
-                                    val cookieInDB =
-                                        viewModel.database.cookieDao().getCookieByValue(result)
-                                    val summary = cookieInDB?.name ?: "(饼干值) $result"
-                                    cookieInDB ?: kotlin.run {
-                                        lifecycleScope.launch {
-                                            viewModel.database.cookieDao()
-                                                .insertAllCookies(listOf(Cookie(result, "无名")))
-                                        }
+                            lifecycleScope.launch {
+                                val newCookie=viewModel.database.cookieDao()
+                                    .getCookieByValue(result)?: Cookie(
+                                    cookie = result,
+                                    name = LocalDateTime.now()
+                                        .format(
+                                            DateTimeFormatter.ofPattern("yyyy_MM_dd_ss")
+                                        )
+                                )
+                                Snackbar
+                                    .make(
+                                        binding.settingCoordinatorLayout,
+                                        "扫码导入cookie大成功",
+                                        Snackbar.LENGTH_LONG
+                                    )
+                                    .setAction("使用") {
+                                        newCookie.isInUse=true
                                     }
-                                    cookieInUse.summary = "现用：$summary".ellipsis()
-                                }
-                            }.show()
-                            val cookieSet =
-                                preferenceDataStore!!.getStringSet("cookies", mutableSetOf())
-                                    ?: mutableSetOf()
-                            if (cookieSet.isEmpty()) {
-                                preferenceDataStore!!.putString("cookie_in_use_key", result)
-                                cookieInUse.summary = "现用：$result".ellipsis()
+                                    .addCallback(
+                                        object : Snackbar.Callback() {
+                                            override fun onDismissed(
+                                                transientBottomBar: Snackbar?,
+                                                event: Int
+                                            ) {
+                                                lifecycleScope.launch {
+                                                    viewModel.database.cookieDao().insertCookie(newCookie)
+                                                }
+
+                                            }
+                                        }
+                                    )
+                                    .show()
                             }
-                            cookieSet.add(result)
-                            preferenceDataStore!!.putStringSet("cookies", cookieSet)
+
+
                             viewModel.QRcodeResult.value = null
                         }
                     }
@@ -262,7 +308,8 @@ class SettingsFragment(
             }
             blockRuleManage.apply {
                 setOnPreferenceClickListener {
-                    val action=SettingsDialogFragmentDirections.actionGlobalBlockRuleDialogFragment()
+                    val action =
+                        SettingsDialogFragmentDirections.actionGlobalBlockRuleDialogFragment()
                     settingsDialogFragment.findNavController().navigate(action)
                     true
                 }

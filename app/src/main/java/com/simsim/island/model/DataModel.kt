@@ -137,6 +137,7 @@ data class MainRemoteKey(
 //        var FKpoThreadId: String,
         var previousKey: Int?,
         var nextKey: Int?,
+        var page:Int,
 )
 
 @Entity
@@ -148,6 +149,7 @@ data class DetailRemoteKey(
 //        var FkthreadId: String,
         var previousKey: Int?,
         var nextKey: Int?,
+        var page:Int,
 )
 
 //@Entity

@@ -15,6 +15,7 @@
 
         <item name="textAppearanceLargePopupMenu">@style/TextAppearance.MaterialComponents.Subtitle1</item>
         <item name="textAppearanceSmallPopupMenu">@style/TextAppearance.MaterialComponents.Subtitle1</item>
+        <item name="overlapAnchor">false</item>
 
 
     </style>

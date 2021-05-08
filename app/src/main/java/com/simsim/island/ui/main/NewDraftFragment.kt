@@ -1,17 +1,22 @@
 package com.simsim.island.ui.main
 
 //import com.github.dhaval2404.imagepicker.ImagePicker
+import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.GridView
 import android.widget.TextView
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
@@ -20,9 +25,13 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.simsim.island.MainActivity
 import com.simsim.island.R
+import com.simsim.island.dataStore
 import com.simsim.island.databinding.NewDraftFragmentBinding
+import com.simsim.island.dp2PxScale
+import com.simsim.island.preferenceKey.PreferenceKey
 import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.TARGET_SECTION
 import com.simsim.island.util.TARGET_THREAD
@@ -42,6 +51,8 @@ class NewDraftFragment : DialogFragment() {
     private var postImage: InputStream? = null
     private var imageType:String?=null
     private var imageName:String?=null
+    private lateinit var fab:FloatingActionButton
+    private lateinit var preferenceKey:PreferenceKey
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NORMAL, R.style.fullscreenDialog)
@@ -54,13 +65,15 @@ class NewDraftFragment : DialogFragment() {
         savedInstanceState: Bundle?
     ): View? {
         binding= NewDraftFragmentBinding.inflate(inflater, container, false)
+        fab=binding.fabSend
+        preferenceKey= PreferenceKey(requireContext())
         getEmojiList()
         fId=args.fId
         setupPictureTaking()
         setupInfoFillArea()
-
         return binding.root
     }
+
 
 
 
@@ -68,10 +81,8 @@ class NewDraftFragment : DialogFragment() {
     private fun setupInfoFillArea() {
         lifecycleScope.launch {
             launch {
-                binding.newInputContent.setText("")
-                binding.newInputContent.text?.let {
-                    it.insert(0,args.prefillText)
-                }
+                insertText(0,args.prefillText)
+
             }
             launch{
                 binding.expandButton.setOnClickListener {
@@ -131,6 +142,15 @@ class NewDraftFragment : DialogFragment() {
         }
     }
 
+    private fun insertText(start: Int=binding.newInputContent.selectionStart, text: String) {
+        if (binding.newInputContent.text==null){
+            binding.newInputContent.setText("")
+        }
+        binding.newInputContent.text?.let {
+            it.insert(start,text)
+        }
+    }
+
     private fun getEmojiList() {
         lifecycleScope.launch {
             viewModel.database.emojiDao().getAllEmojis().map { emojis ->
@@ -180,6 +200,60 @@ class NewDraftFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupToolbar()
+        setupFAB()
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupFAB() {
+        lifecycleScope.launch {
+            requireContext().dataStore.data.collectLatest { settings ->
+                fab.setOnClickListener {
+                    send()
+                    Log.e(LOG_TAG, "BlockRuleManageDialogFragment fab clicked")
+                }
+                settings[booleanPreferencesKey(preferenceKey.enableFabKey)]?.let { enable ->
+                    binding.newDraftDialogToolbar.menu.findItem(R.id.draft_menu_send).isVisible =
+                        !enable
+                    fab.isVisible = enable
+                }
+                settings[booleanPreferencesKey(preferenceKey.fabDefaultSizeKey)]?.let { setSizeDefault ->
+                    if (setSizeDefault) {
+                        fab.customSize = FloatingActionButton.NO_CUSTOM_SIZE
+                        fab.size = FloatingActionButton.SIZE_AUTO
+                    } else {
+                        settings[intPreferencesKey(preferenceKey.fabSizeSeekBarKey)]?.let { fabCustomSize ->
+                            fab.customSize = (fabCustomSize * requireContext().dp2PxScale()).toInt()
+                        }
+                    }
+
+                }
+                (settings[booleanPreferencesKey(preferenceKey.fabPlaceRightKey)]
+                    ?: true).let { placeRight ->
+                    val sideMargin =
+                        settings[intPreferencesKey(preferenceKey.fabSideMarginKey)] ?: 0
+                    val bottomMargin =
+                        settings[intPreferencesKey(preferenceKey.fabBottomMarginKey)] ?: 0
+                    val layoutParams = fab.layoutParams as CoordinatorLayout.LayoutParams
+                    layoutParams.bottomMargin =
+                        ((30 + bottomMargin) * requireContext().dp2PxScale()).toInt()
+                    if (placeRight) {
+                        layoutParams.gravity = Gravity.BOTTOM or Gravity.RIGHT
+                        layoutParams.rightMargin =
+                            ((30 + sideMargin) * requireContext().dp2PxScale()).toInt()
+                        layoutParams.leftMargin = 0
+                    } else {
+                        layoutParams.gravity = Gravity.BOTTOM or Gravity.LEFT
+                        layoutParams.leftMargin =
+                            ((30 + sideMargin) * requireContext().dp2PxScale()).toInt()
+                        layoutParams.rightMargin = 0
+                    }
+                    fab.layoutParams = layoutParams
+                    fab.requestLayout()
+                }
+            }
+
+        }
+
     }
 
     private fun setupToolbar() {
@@ -193,38 +267,8 @@ class NewDraftFragment : DialogFragment() {
         toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.draft_menu_send -> {
-                    val title=binding.titleValueEditText.text.toString()
-                    val email=binding.emailValueEditText.text.toString()
-                    val name=binding.nameValueEditText.text.toString()
-                    when(args.target){
-                        TARGET_THREAD->{viewModel.doReply(
-//                            cookie = "%D8%A9%AE%99%1BKc%BC%16iDt%94%7B%DDm%86%15%81%AA%8Ct%3E%BB",
-                            poThreadId = args.threadId,
-                            content = binding.newInputContent.text.toString(),
-                            image = postImage,
-                            imageType=imageType,
-                            imageName=imageName,
-                            waterMark = binding.toggleButton.isChecked,
-                            title = title,
-                            email = email,
-                            name = name,
-                        )}
-                        TARGET_SECTION->{viewModel.doPost(
-//                            cookie = "%D8%A9%AE%99%1BKc%BC%16iDt%94%7B%DDm%86%15%81%AA%8Ct%3E%BB",
-//                            poThreadId = args.threadId,
-                            content = binding.newInputContent.text.toString(),
-                            image = postImage,
-                            imageType=imageType,
-                            imageName=imageName,
-                            waterMark = binding.toggleButton.isChecked,
-                            fId = fId,
-                            title = title,
-                            email = email,
-                            name = name,
-                        )}
-                    }
-                    dismiss()
-                    Log.e(LOG_TAG,"draft_menu_send")
+
+                    send()
                     true
                 }
                 R.id.draft_menu_image_pick -> {
@@ -277,6 +321,13 @@ class NewDraftFragment : DialogFragment() {
                     showEmojiDialog()
                     true
                 }
+                R.id.draft_menu_hide_tag->{
+                    insertText(text = "[h][/h]")
+                    binding.newInputContent.apply {
+                        setSelection(selectionStart-4)
+                    }
+                    true
+                }
                 else -> {
                     false
                 }
@@ -284,7 +335,44 @@ class NewDraftFragment : DialogFragment() {
         }
     }
 
-
+    private fun send() {
+        val title = binding.titleValueEditText.text.toString()
+        val email = binding.emailValueEditText.text.toString()
+        val name = binding.nameValueEditText.text.toString()
+        when (args.target) {
+            TARGET_THREAD -> {
+                viewModel.doReply(
+    //                            cookie = "%D8%A9%AE%99%1BKc%BC%16iDt%94%7B%DDm%86%15%81%AA%8Ct%3E%BB",
+                    poThreadId = args.threadId,
+                    content = binding.newInputContent.text.toString(),
+                    image = postImage,
+                    imageType = imageType,
+                    imageName = imageName,
+                    waterMark = binding.toggleButton.isChecked,
+                    title = title,
+                    email = email,
+                    name = name,
+                )
+            }
+            TARGET_SECTION -> {
+                viewModel.doPost(
+    //                            cookie = "%D8%A9%AE%99%1BKc%BC%16iDt%94%7B%DDm%86%15%81%AA%8Ct%3E%BB",
+    //                            poThreadId = args.threadId,
+                    content = binding.newInputContent.text.toString(),
+                    image = postImage,
+                    imageType = imageType,
+                    imageName = imageName,
+                    waterMark = binding.toggleButton.isChecked,
+                    fId = fId,
+                    title = title,
+                    email = email,
+                    name = name,
+                )
+            }
+        }
+        dismiss()
+        Log.e(LOG_TAG, "draft_menu_send")
+    }
 
 
     private fun showEmojiDialog() {

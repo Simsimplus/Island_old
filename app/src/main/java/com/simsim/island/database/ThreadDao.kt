@@ -97,7 +97,7 @@ interface ThreadDao  {
     @Delete
     suspend fun deleteSavedPoThread(staredPoThreads: SavedPoThread)
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAllSavedReplyThread(replyThreads: List<SavedReplyThread>)
 
     @Query("select * from SavedPoThread order by savedTime desc")

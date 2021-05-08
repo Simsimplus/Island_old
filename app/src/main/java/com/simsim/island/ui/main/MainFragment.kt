@@ -82,6 +82,21 @@ class MainFragment : Fragment() {
         initialMainFlow()
         return binding.root
     }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupToolbar()
+        setupRecyclerView()
+
+        setupFAB()
+        handleSavedInstanceState()
+
+        setupSwipeRefresh()
+        setupDrawerSections()
+        observingDataChange()
+        handleLaunchLoading()
+        doWhenPostSuccess()
+
+    }
 
     private fun requestPermissions() {
         lifecycleScope.launch {
@@ -305,20 +320,7 @@ class MainFragment : Fragment() {
         observeMainFlow()
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        setupRecyclerView()
-        setupToolbar()
-        setupFAB()
-        handleSavedInstanceState()
 
-        setupSwipeRefresh()
-        setupDrawerSections()
-        observingDataChange()
-        handleLaunchLoading()
-        doWhenPostSuccess()
-
-    }
 
 
     private fun handleSavedInstanceState() {
@@ -592,87 +594,104 @@ class MainFragment : Fragment() {
 
 
     private fun setupToolbar() {
-        val toolbar = binding.mainToolbar
-        toolbar.inflateMenu(R.menu.main_toolbar_menu)
-        toolbar.setNavigationIcon(R.drawable.ic_round_menu_24)
-        toolbar.setNavigationOnClickListener {
-            if (drawerLayout.isDrawerOpen(drawer)) {
-                drawerLayout.closeDrawer(drawer)
-            } else {
-                drawerLayout.openDrawer(drawer)
+        lifecycleScope.launch{
+            val toolbar = binding.mainToolbar
+            toolbar.inflateMenu(R.menu.main_toolbar_menu)
+            toolbar.setNavigationIcon(R.drawable.ic_round_menu_24)
+            toolbar.setNavigationOnClickListener {
+                if (drawerLayout.isDrawerOpen(drawer)) {
+                    drawerLayout.closeDrawer(drawer)
+                } else {
+                    drawerLayout.openDrawer(drawer)
+                }
             }
-        }
-        drawer.setNavigationItemSelectedListener {
-            it.isChecked = true
-            drawerLayout.close()
-            true
-        }
+            drawer.setNavigationItemSelectedListener {
+                it.isChecked = true
+                drawerLayout.close()
+                true
+            }
 //        toolbar.title = viewModel.currentSection.value
 
 
-        toolbar.setOnMenuItemClickListener {
-            when (it.itemId) {
-                R.id.main_fragment_menu_add -> {
-                    newThread()
-                    true
-                }
-                R.id.menu_item_refresh -> {
-                    adapter.refresh()
-                    layoutManager.scrollToPosition(0)
-                    Log.e("Simsim", "refresh item pressed")
-                    true
-                }
-                R.id.menu_item_search -> {
-                    val editText =
-                        layoutInflater.inflate(R.layout.search_edit_text, null, false) as EditText
-                    MaterialAlertDialogBuilder(requireContext())
-                        .setView(editText)
-                        .setPositiveButton("去串") { dialog: DialogInterface, _ ->
-                            val threadId = editText.text.toString().toLongOrNull()
-                            threadId?.let {
-                                val action =
-                                    MainFragmentDirections.actionMainFragmentToDetailDialogFragment(
-                                        threadId
-                                    )
-                                findNavController().navigate(action)
-                                viewModel.setDetailFlow(threadId)
-                                viewModel.isMainFragment.value = false
-                                dialog.dismiss()
-                            } ?: kotlin.run {
-                                Toast.makeText(requireContext(), "去不了啊，请重试", Toast.LENGTH_SHORT)
-                                    .show()
+            toolbar.setOnMenuItemClickListener {
+                when (it.itemId) {
+                    R.id.main_fragment_menu_add -> {
+                        newThread()
+                        true
+                    }
+                    R.id.menu_item_refresh -> {
+                        adapter.refresh()
+                        layoutManager.scrollToPosition(0)
+                        Log.e("Simsim", "refresh item pressed")
+                        true
+                    }
+                    R.id.menu_item_search -> {
+                        val editText =
+                            layoutInflater.inflate(
+                                R.layout.search_edit_text,
+                                null,
+                                false
+                            ) as EditText
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setView(editText)
+                            .setPositiveButton("去串") { dialog: DialogInterface, _ ->
+                                val threadId = editText.text.toString().toLongOrNull()
+                                threadId?.let {
+                                    val action =
+                                        MainFragmentDirections.actionMainFragmentToDetailDialogFragment(
+                                            threadId
+                                        )
+                                    findNavController().navigate(action)
+                                    viewModel.setDetailFlow(threadId)
+                                    viewModel.isMainFragment.value = false
+                                    dialog.dismiss()
+                                } ?: kotlin.run {
+                                    Toast.makeText(requireContext(), "去不了啊，请重试", Toast.LENGTH_SHORT)
+                                        .show()
+                                }
                             }
-                        }
-                        .setNegativeButton("不去了") { dialog: DialogInterface, _ ->
-                            dialog.dismiss()
+                            .setNegativeButton("不去了") { dialog: DialogInterface, _ ->
+                                dialog.dismiss()
 
-                        }
-                        .show()
-                    true
+                            }
+                            .show()
+                        true
+                    }
+                    R.id.main_menu_setting -> {
+                        val action =
+                            MainFragmentDirections.actionMainFragmentToSettingsDialogFragment()
+                        findNavController().navigate(action)
+                        true
+                    }
+                    R.id.main_menu_star_collection -> {
+                        val action =
+                            MainFragmentDirections.actionMainFragmentToStaredThreadDialogFragment()
+                        findNavController().navigate(action)
+                        true
+                    }
+                    else -> false
                 }
-                R.id.main_menu_setting -> {
-                    val action = MainFragmentDirections.actionMainFragmentToSettingsDialogFragment()
-                    findNavController().navigate(action)
-                    true
-                }
-                R.id.main_menu_star_collection->{
-                    val action =MainFragmentDirections.actionMainFragmentToStaredThreadDialogFragment()
-                    findNavController().navigate(action)
-                    true
-                }
-                else -> false
             }
         }
     }
 
     fun doWhenPostSuccess() {
         lifecycleScope.launch {
-            viewModel.successPost.observe(viewLifecycleOwner) { success ->
-                if (success) {
-                    Snackbar.make(binding.mainCoordinatorLayout, "发串成功", Snackbar.LENGTH_LONG)
-                        .show()
-                } else {
-                    //todo
+            viewModel.successPostOrReply.observe(viewLifecycleOwner) { success ->
+                success?.let {
+                    if (success) {
+                        Snackbar.make(binding.mainCoordinatorLayout, "发串成功", Snackbar.LENGTH_LONG)
+                            .show()
+                    }else{
+                        viewModel.errorPostOrReply.observe(viewLifecycleOwner){error->
+                            error?.let {
+                                Snackbar.make(binding.mainCoordinatorLayout, "发串失败[$error]", Snackbar.LENGTH_INDEFINITE)
+                                    .show()
+                                viewModel.errorPostOrReply.value=null
+                            }
+                        }
+                    }
+                    viewModel.successPostOrReply.value=null
                 }
             }
         }
