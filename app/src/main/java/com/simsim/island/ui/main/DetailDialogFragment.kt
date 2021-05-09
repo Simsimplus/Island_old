@@ -517,6 +517,35 @@ class DetailDialogFragment : DialogFragment() {
                     }
                     true
                 }
+                R.id.detail_fragment_menu_po_only->{
+                        item.isChecked=!item.isChecked
+                        when(item.isChecked){
+                            true->{
+                                lifecycleScope.launch {
+                                    viewModel.setDetailFlow(
+                                        poThreadId = args.ThreadId,
+                                        localBlockRule = {
+                                            it.isPo
+                                        }
+                                    ).collectLatest { pagingData->
+                                        adapter.submitData(pagingData)
+                                    }
+                                }
+                                true
+                            }
+                            false->{
+                                lifecycleScope.launch {
+                                    viewModel.setDetailFlow(
+                                        poThreadId = args.ThreadId,
+                                    ).collectLatest { pagingData->
+                                        adapter.submitData(pagingData)
+                                    }
+                                }
+                                true
+                            } }
+
+
+                }
                 R.id.detail_fragment_menu_open_in_browser->{
                     Intent(Intent.ACTION_VIEW, Uri.parse("https://adnmb3.com/m/t/${args.ThreadId}")).also {intent->
                         startActivity(intent)

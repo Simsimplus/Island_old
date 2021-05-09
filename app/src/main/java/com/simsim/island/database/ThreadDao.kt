@@ -14,10 +14,10 @@ interface ThreadDao  {
     /*
     for basicThread fetching
      */
-    @Query("select * from ReplyThread where poThreadId =:poThreadId and replyThreadId !=9999999 order by replyThreadId asc ")
+    @Query("select * from ReplyThread where poThreadId =:poThreadId and replyThreadId !=9999999 and isShow=1 order by replyThreadId asc ")
     fun getAllReplyThreadsPagingSource(poThreadId:Long): PagingSource<Int,ReplyThread>
 
-    @Query("select * from ReplyThread where poThreadId =:poThreadId and replyThreadId !=9999999 order by replyThreadId asc ")
+    @Query("select * from ReplyThread where poThreadId =:poThreadId and replyThreadId !=9999999 and isShow=1 order by replyThreadId asc ")
     suspend fun getAllReplyThreads(poThreadId:Long):List<ReplyThread>
 
     @Query("select * from ReplyThread where replyThreadId=:threadId limit 1")
@@ -106,7 +106,7 @@ interface ThreadDao  {
     @Query("select * from SavedPoThread where threadId=:poThreadId")
     suspend fun getSavedPoThread(poThreadId: Long):SavedPoThread
 
-    @Query("select * from SavedReplyThread where poThreadId =:poThreadId and replyThreadId !=9999999 order by replyThreadId asc ")
+    @Query("select * from SavedReplyThread where poThreadId =:poThreadId and replyThreadId !=9999999 and isShow=1 order by replyThreadId asc ")
     suspend fun getAllSavedReplyThreads(poThreadId:Long):List<SavedReplyThread>
 
     //count threads

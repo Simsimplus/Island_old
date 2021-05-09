@@ -16,6 +16,9 @@
         <item name="textAppearanceLargePopupMenu">@style/TextAppearance.MaterialComponents.Subtitle1</item>
         <item name="textAppearanceSmallPopupMenu">@style/TextAppearance.MaterialComponents.Subtitle1</item>
         <item name="overlapAnchor">false</item>
+        <item name="android:colorControlActivated">@color/colorSecondary</item>
+        <item name="android:colorControlHighlight">@color/colorSecondary</item>
+        <item name="android:colorControlNormal">@color/white</item>
 
 
     </style>

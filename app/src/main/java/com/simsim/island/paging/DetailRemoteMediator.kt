@@ -18,6 +18,7 @@ class DetailRemoteMediator(
     private val poThreadId: Long,
     private val database: IslandDatabase,
     private val initialPage: Int,
+    private val onlyPo:Boolean=false
 ) : RemoteMediator<Int, ReplyThread>() {
     override suspend fun load(
         loadType: LoadType,
@@ -160,7 +161,7 @@ class DetailRemoteMediator(
 //                maxPage = 999
 //                null
 //            }
-            val (threadList, maxPage) = service.getReplyThreadsAndMaxPageByPage(page, poThreadId)
+            val (threadList, maxPage) = service.getReplyThreadsAndMaxPageByPage(page, poThreadId,onlyPo)
             Log.e(LOG_TAG, "maxPage:$maxPage")
             threadList
                 ?: return MediatorResult.Error(Exception("can't reach to page url:${"https://adnmb3.com/t/$poThreadId?page=$page"}"))

@@ -52,6 +52,7 @@ data class ReplyThread(
         var commentsNumber: String = "0",
         var section: String,
         var timelineActualSection: String = "",
+        var isShow: Boolean=true,
 )
 
 @Entity
@@ -103,6 +104,7 @@ data class SavedReplyThread(
         var commentsNumber: String = "0",
         var section: String,
         var timelineActualSection: String = "",
+        var isShow: Boolean=true,
 )
 
 @Entity

@@ -112,9 +112,14 @@ class AislandNetworkService @Inject constructor(
         page: Int,
         poThreadId: Long,
         saveDataToDBHere: Boolean = false,
-        forStar: Boolean = false
+        forStar: Boolean = false,
+        onlyPo: Boolean = false,
     ): Pair<List<ReplyThread>?, Int?> = withContext(Dispatchers.IO) {
-        val url = "https://adnmb3.com/t/$poThreadId?page=$page"
+        val url = if (onlyPo) {
+            "https://adnmb3.com/Forum/po/id/$poThreadId/page/$page.html"
+        } else {
+            "https://adnmb3.com/t/$poThreadId?page=$page"
+        }
         var maxPage: Int = 999
         val threadList = getHtmlStringByPage(url)?.let { response ->
             val doc = Jsoup.parse(response)

@@ -193,7 +193,7 @@ class MainViewModel @Inject constructor(
 
 
     @OptIn(ExperimentalPagingApi::class)
-    fun setDetailFlow(poThreadId: Long,initialPage:Int=1): Flow<PagingData<ReplyThread>> {
+    fun setDetailFlow(poThreadId: Long,initialPage:Int=1,localBlockRule:(ReplyThread)->Boolean={true},onlyPo:Boolean=false): Flow<PagingData<ReplyThread>> {
         currentReplyThreads = mutableListOf()
         detailFlow = Pager(
             PagingConfig(
@@ -207,14 +207,15 @@ class MainViewModel @Inject constructor(
                 service = networkService,
                 poThreadId = poThreadId,
                 database = database,
-                initialPage
+                initialPage = initialPage,
+                onlyPo=onlyPo
             )
         ) {
             database.threadDao().getAllReplyThreadsPagingSource(poThreadId = poThreadId)
         }.flow.map { pagingData ->
-            pagingData.map {
+            pagingData.filter {
                 currentReplyThreads.add(it)
-                it
+                localBlockRule(it)
             }
         }
             .cachedIn(viewModelScope)

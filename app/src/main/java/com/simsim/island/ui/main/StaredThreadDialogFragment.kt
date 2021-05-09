@@ -90,7 +90,6 @@ class StaredThreadDialogFragment : DialogFragment() {
             poThreadId
         )
         findNavController().navigate(action)
-        viewModel.setDetailFlow(poThreadId)
         viewModel.isMainFragment.value = false
     }
 
