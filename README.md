@@ -1,6 +1,8 @@
 ![ic_launch](ic_island_boat.png)
 
 这是完全由kotlin编写的[A岛匿名版](https://adnmb3.com/Forum)安卓客户端，app的架构遵守了开发指南所推荐的[MVVM架构](https://developer.android.com/jetpack/guide#recommended-app-arch),并且使用了Hilt,  Coroutines, Flow, Jetpack (Room, ViewModel, LiveData) 等多种组件。
+## 截图
+<img src="snapshot1.png" width="15%"><img src="snapshot2.png" width="15%"><img src="snapshot3.png" width="15%"><img src="snapshot4.png" width="15%">
 ## 功能
 1. 发串与回复
 2. 自定义屏蔽项
