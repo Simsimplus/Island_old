@@ -28,7 +28,6 @@ import androidx.lifecycle.lifecycleScope
 import com.divyanshu.draw.activity.DrawingActivity
 import com.google.android.material.snackbar.Snackbar
 import com.google.zxing.integration.android.IntentIntegrator
-import com.simsim.island.database.IslandDatabase
 import com.simsim.island.databinding.MainActivityBinding
 import com.simsim.island.model.Emoji
 import com.simsim.island.ui.main.MainViewModel
@@ -44,7 +43,6 @@ import java.io.OutputStream
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import javax.inject.Inject
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 fun Context.dp2PxScale() = this.resources.displayMetrics.density
@@ -53,8 +51,6 @@ fun Context.dp2PxScale() = this.resources.displayMetrics.density
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: MainActivityBinding
     private val viewModel: MainViewModel by viewModels()
-    @Inject
-    lateinit var database: IslandDatabase
     private var backPressTime = LocalDateTime.now()
     internal val requestPermission =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -145,17 +141,17 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         getWindowHeightAndActionBarHeight()
         lifecycleScope.launch {
-            if (!database.emojiDao().isAny()) {
+            if (!viewModel.isAnyEmoji()) {
                 val emoji =
                     "|∀ﾟ, (´ﾟДﾟ`), (;´Д`), (｀･ω･), (=ﾟωﾟ)=, | ω・´), |-` ), |д` ), |ー` ), |∀` ), (つд⊂), (ﾟДﾟ≡ﾟДﾟ), (＾o＾)ﾉ, (|||ﾟДﾟ), ( ﾟ∀ﾟ), ( ´∀`), (*´∀`), (*ﾟ∇ﾟ), (*ﾟーﾟ), (　ﾟ 3ﾟ), ( ´ー`), ( ・_ゝ・), ( ´_ゝ`), (*´д`), (・ー・), (・∀・), (ゝ∀･), (〃∀〃), (*ﾟ∀ﾟ*), ( ﾟ∀。), ( `д´), (`ε´ ), (`ヮ´ ), σ`∀´),  ﾟ∀ﾟ)σ, ﾟ ∀ﾟ)ノ, (╬ﾟдﾟ), (|||ﾟдﾟ), ( ﾟдﾟ), Σ( ﾟдﾟ), ( ;ﾟдﾟ), ( ;´д`), (　д ) ﾟ ﾟ, ( ☉д⊙), (((　ﾟдﾟ))), ( ` ・´), ( ´д`), ( -д-), (>д<), ･ﾟ( ﾉд`ﾟ), ( TдT), (￣∇￣), (￣3￣), (￣ｰ￣), (￣ . ￣), (￣皿￣), (￣艸￣), (￣︿￣), (￣︶￣), ヾ(´ωﾟ｀), (*´ω`*), (・ω・), ( ´・ω), (｀・ω), (´・ω・`), (`・ω・´), ( `_っ´), ( `ー´), ( ´_っ`), ( ´ρ`), ( ﾟωﾟ), (oﾟωﾟo), (　^ω^), (｡◕∀◕｡), /( ◕‿‿◕ )\\, ヾ(´ε`ヾ), (ノﾟ∀ﾟ)ノ, (σﾟдﾟ)σ, (σﾟ∀ﾟ)σ, |дﾟ ), ┃電柱┃, ﾟ(つд`ﾟ), ﾟÅﾟ )　, ⊂彡☆))д`), ⊂彡☆))д´), ⊂彡☆))∀`), (´∀((☆ミつ\n"
                 emoji.split(",").mapIndexed { i, s ->
                     Emoji(emojiIndex = i, emoji = s)
                 }.also { emojiList ->
-                    database.emojiDao().insertAllEmojis(emojiList)
+                    viewModel.insertAllEmojis(emojiList)
                 }
             }
-            if (!database.sectionDao().isAnySectionInDB()) {
-                database.sectionDao().insertAllSection(sections)
+            if (!viewModel.isAnySectionInDB()) {
+                viewModel.insertAllSection(sections)
             }
 
         }

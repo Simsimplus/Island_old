@@ -70,7 +70,7 @@ class SettingsFragment(
         viewModel.loginCookies.observe(viewLifecycleOwner) { loginCookieMap ->
             if (!loginCookieMap.isNullOrEmpty()) {
                 Log.e(LOG_TAG, "get login cookies from flow:$loginCookieMap")
-                viewModel.getCookies(loginCookieMap)
+                viewModel.getCookiesFromUserSystem(loginCookieMap)
                 viewModel.loginCookies.value = mapOf()
                 viewModel.loadCookieFromUserSystemSuccess.observe(viewLifecycleOwner) { success ->
                     if (success) {
@@ -219,7 +219,7 @@ class SettingsFragment(
             cookieInUse.apply {
                 val p = this
                 lifecycleScope.launch {
-                    viewModel.database.cookieDao().getActiveCookieFlow().collectLatest { cookie ->
+                    viewModel.getActiveCookieFlow().collectLatest { cookie ->
                         cookie?.let {
                             p.summary = "现用:${cookie.name}"
                         } ?: kotlin.run {
@@ -256,7 +256,7 @@ class SettingsFragment(
                     viewModel.QRcodeResult.observe(viewLifecycleOwner) { result ->
                         result?.let {
                             lifecycleScope.launch {
-                                val newCookie=viewModel.database.cookieDao()
+                                val newCookie=viewModel
                                     .getCookieByValue(result)?: Cookie(
                                     cookie = result,
                                     name = LocalDateTime.now()
@@ -280,7 +280,7 @@ class SettingsFragment(
                                                 event: Int
                                             ) {
                                                 lifecycleScope.launch {
-                                                    viewModel.database.cookieDao().insertCookie(newCookie)
+                                                    viewModel.insertCookie(newCookie)
                                                 }
 
                                             }

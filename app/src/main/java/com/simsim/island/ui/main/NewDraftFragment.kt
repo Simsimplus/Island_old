@@ -105,7 +105,7 @@ class NewDraftFragment : DialogFragment() {
                     val sectionMap = hashMapOf<String, String>()
                     val sectionMapReversed = hashMapOf<String, String>()
                     var sectionArray: Array<String>
-                    viewModel.database.sectionDao().getAllSection().collectLatest {
+                    viewModel.getAllSectionFlow().collectLatest {
                         val list = it.filter { section ->
                             section.group != "时间线"
                         }
@@ -153,7 +153,7 @@ class NewDraftFragment : DialogFragment() {
 
     private fun getEmojiList() {
         lifecycleScope.launch {
-            viewModel.database.emojiDao().getAllEmojis().map { emojis ->
+            viewModel.getAllEmojisFlow().map { emojis ->
                 emojis.map { emoji ->
                     emoji.emoji
                 }

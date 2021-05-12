@@ -45,8 +45,7 @@ class StaredThreadDialogFragment : DialogFragment() {
     private fun setupRecyclerView() {
         lifecycleScope.launch {
             launch{
-                val threadDao = viewModel.database.threadDao()
-                val threadList = threadDao.getAllSavedPoThread()
+                val threadList = viewModel.getAllSavedPoThread()
                 adapter = MainRecyclerViewAdapter(
                     fragment = this@StaredThreadDialogFragment,
                     imageClickListener = { imageUrl ->

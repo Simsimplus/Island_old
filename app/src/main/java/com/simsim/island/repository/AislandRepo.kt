@@ -2,18 +2,21 @@ package com.simsim.island.repository
 
 import android.util.Log
 import com.simsim.island.database.IslandDatabase
-import com.simsim.island.model.Emoji
-import com.simsim.island.model.PoThread
-import com.simsim.island.model.ReplyThread
-import com.simsim.island.model.Section
+import com.simsim.island.model.*
+import com.simsim.island.paging.DetailRemoteMediator
+import com.simsim.island.paging.MainRemoteMediator
+import com.simsim.island.paging.SavedPoThreadPagingSource
+import com.simsim.island.paging.SavedReplyThreadPagingSource
 import com.simsim.island.service.AislandNetworkService
 import com.simsim.island.util.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import java.io.InputStream
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 class AislandRepo @Inject constructor(
-    private val service: AislandNetworkService,
+    private val networkService: AislandNetworkService,
     private val database: IslandDatabase
 ) {
     companion object {
@@ -195,25 +198,39 @@ class AislandRepo @Inject constructor(
         }
     }
 
+    internal val threadDao = database.threadDao()
+    internal val blockRuleDao = database.blockRuleDao()
+    internal val recordDao = database.recordDao()
+    internal val sectionDao = database.sectionDao()
+    internal val emojiDao = database.emojiDao()
+    internal val cookieDao = database.cookieDao()
+    internal val savedPoThreadPagingSource = SavedPoThreadPagingSource(threadDao)
+    internal val keyDao = database.keyDao()
+    fun getSavedReplyThreadPagingSource(poThread: PoThread) =
+        SavedReplyThreadPagingSource(threadDao, poThread = poThread)
+
     suspend fun getSectionAndEmojiList(): Pair<List<Section>, List<Emoji>> {
         val sectionList = mutableListOf<Section>()
         val emojiList = mutableListOf<Emoji>()
         return try {
-            service.getHtmlStringByPage("https://adnmb3.com/Public/Js/h.desktop.js")?.let { rp ->
-                "emotList = \\[(.*)]".toRegex().find(rp)?.groupValues?.get(1)?.let { emojiSting ->
-                    emojiSting.replace("\"", "").split(", ").forEachIndexed { index, emoji ->
-                        emojiList.add(
-                            Emoji(
-                                index,
-                                emoji
-                            ).also {
-                                Log.e(LOG_TAG, it.toString())
-                            }
-                        )
-                    }
+            networkService.getHtmlStringByPage("https://adnmb3.com/Public/Js/h.desktop.js")
+                ?.let { rp ->
+                    "emotList = \\[(.*)]".toRegex().find(rp)?.groupValues?.get(1)
+                        ?.let { emojiSting ->
+                            emojiSting.replace("\"", "").split(", ")
+                                .forEachIndexed { index, emoji ->
+                                    emojiList.add(
+                                        Emoji(
+                                            index,
+                                            emoji
+                                        ).also {
+                                            Log.e(LOG_TAG, it.toString())
+                                        }
+                                    )
+                                }
+                        }
                 }
-            }
-            service.getHtmlStringByPage("https://adnmb3.com/Forum")?.let { rp ->
+            networkService.getHtmlStringByPage("https://adnmb3.com/Forum")?.let { rp ->
                 val doc = Jsoup.parse(rp)
                 val sectionGroups = doc.select("li[class~=uk-parent.*]")
                 var index = 0
@@ -226,7 +243,7 @@ class AislandRepo @Inject constructor(
                         val section = li.selectFirst("a[href~=[/f]{3,}.*|[/]Forum[/]timeline.*]")
                         if (section != null) {
                             val sectionUrl = islandUrl + section.attr("href")
-                            val sectionResponse = service.getHtmlStringByPage(sectionUrl)
+                            val sectionResponse = networkService.getHtmlStringByPage(sectionUrl)
                             val fId = sectionResponse?.let { r ->
                                 val sectionDoc = Jsoup.parse(r)
                                 sectionDoc.selectFirst("input[name=fid]")?.attr("value") ?: ""
@@ -253,9 +270,177 @@ class AislandRepo @Inject constructor(
         } catch (e: Exception) {
             Log.e(LOG_TAG, "getSectionList ${e.stackTraceToString()}")
             Pair(sectionList, emojiList)
+        } finally {
+            Log.d(LOG_TAG, "getSectionAndEmojiList")
+            sectionDao.insertAllSection(sectionList)
+            emojiDao.insertAllEmojis(emojiList)
         }
 
     }
 
+    suspend fun updateUpdateRecord() {
+        recordDao.insertRecord(UpdateRecord(lastUpdateTime = LocalDateTime.now()))
+    }
 
+    suspend fun getAllBlockRules(): List<BlockRule> = blockRuleDao.getAllBlockRules()
+    suspend fun insertBlockRule(blockRule: BlockRule)=blockRuleDao.insertBlockRule(blockRule)
+    fun getAllSectionFlow() = database.sectionDao().getAllSectionFlow()
+    fun getAllBlockRulesFlow() = blockRuleDao.getAllBlockRulesFlow()
+    fun getAllPoThreadsBySection(sectionName: String) =
+        threadDao.getAllPoThreadsBySection(sectionName)
+
+    fun getAllReplyThreadsPagingSource(poThreadId: Long) =
+        threadDao.getAllReplyThreadsPagingSource(poThreadId = poThreadId)
+
+    suspend fun saveReplyThreads(poThreadId: Long) {
+        threadDao.getAllReplyThreads(poThreadId).let { replyThreads ->
+            threadDao.insertAllSavedReplyThread(
+                replyThreads.map {
+                    it.toSavedReplyThread()
+                }
+            )
+        }
+    }
+
+    suspend fun getCookiesFromUserSystem(cookieMap: Map<String, String>) {
+        val cookieList = networkService.getCookies(cookieMap)
+        database.cookieDao().insertAllCookies(cookieList)
+    }
+
+    suspend fun getRecord() = database.recordDao().getRecord()
+    fun getMainRemoteMediator(sectionName: String, sectionUrl: String) = MainRemoteMediator(
+        service = networkService,
+        sectionName = sectionName,
+        sectionUrl = sectionUrl,
+        database = database
+    )
+
+    fun getDetailRemoteMediator(poThreadId: Long, initialPage: Int, onlyPo: Boolean = false) =
+        DetailRemoteMediator(
+            service = networkService,
+            poThreadId = poThreadId,
+            database = database,
+            initialPage = initialPage,
+            onlyPo = onlyPo
+        )
+
+    suspend fun getReplyThreadsByPage(page: Int, poThreadId: Long) {
+        networkService.getReplyThreadsAndMaxPageByPage(
+            page = page,
+            poThreadId = poThreadId,
+            saveDataToDBHere = true,
+            forStar = true
+        )
+    }
+
+    suspend fun insertSavedPoThread(staredPoThreads: SavedPoThread) =
+        threadDao.insertSavedPoThread(staredPoThreads)
+
+    suspend fun isPoThreadStared(poThreadId: Long) = threadDao.isPoThreadStared(poThreadId)
+    fun isPoThreadStaredFlow(poThreadId: Long) = threadDao.isPoThreadStaredFlow(poThreadId)
+    suspend fun deleteSavedPoThread(poThreadId: Long) =
+        threadDao.deleteSavedPoThread(threadDao.getSavedPoThread(poThreadId))
+
+    suspend fun getPoThread(poThreadId: Long) = threadDao.getPoThread(poThreadId)
+    suspend fun updatePoThread(poThread: PoThread)=threadDao.updatePoThread(poThread)
+    suspend fun getAllPoThreadsByUid(uid:String)=threadDao.getAllPoThreadsByUid(uid)
+
+    suspend fun getCurrentPreviousNextPage() =
+        Pair(keyDao.getCurrentPreviousPage(), keyDao.getCurrentNextPage())
+
+    suspend fun getReference(referenceId:Long):ReplyThread{
+        val url = "https://adnmb3.com/Home/Forum/ref?id=$referenceId"
+        Log.e(LOG_TAG, "fetch reference from $url")
+        Log.e("Simsim", "request for thread detail:$url")
+        val response = networkService.getHtmlStringByPage(url)
+        if (response != null) {
+            val doc = Jsoup.parse(response)
+            val poThreadId = doc.selectFirst("a[class=h-threads-info-id]")?.let { e ->
+                e.attr("href").removeQueryTail().firstNumber().toLong()
+            } ?: 0L
+            val time =
+                doc.selectFirst("span[class=h-threads-info-createdat]")?.let { e ->
+                    parseIslandTime(e.ownText())
+                } ?: LocalDateTime.now()
+            val uid = doc.selectFirst("span[class=h-threads-info-uid]")?.let { e ->
+                e.ownText().replace("ID:", "").trim()
+            } ?: ""
+            val content = doc.selectFirst("div[class=h-threads-content]")?.let { e ->
+                e.wholeText().trim()
+            } ?: ""
+            return ReplyThread(
+                replyThreadId = referenceId,
+                poThreadId = poThreadId,
+                time = time,
+                uid = uid,
+                content = content,
+                section = ""
+            )
+    }else {
+            return ReplyThread(replyThreadId = 888, poThreadId = 888, section = "")
+        }
+    }
+    suspend fun getAllCookies()=database.cookieDao().getAllCookies()
+    suspend fun doPost(
+        content: String,
+        image: InputStream?,
+        imageType: String?,
+        imageName: String?,
+        fId: String,
+        waterMark: Boolean = false,
+        name: String = "",
+        email: String = "",
+        title: String = ""
+    ) = networkService.doPost(
+        content,
+        image,
+        imageType,
+        imageName,
+        fId,
+        waterMark,
+        name,
+        email,
+        title,
+    )
+    suspend fun doReply(
+//        cookie: String,
+        poThreadId: Long,
+        content: String,
+        image: InputStream?,
+        imageType: String?,
+        imageName: String?,
+        waterMark: Boolean = false,
+        name: String = "",
+        email: String = "",
+        title: String = ""
+    )=networkService.doReply(
+//                cookie,
+        poThreadId,
+        content,
+        image,
+        imageType,
+        imageName,
+        waterMark,
+        name,
+        email,
+        title,
+    )
+
+    suspend fun updateCookies(cookies: List<Cookie>)=cookieDao.updateCookies(cookies)
+    suspend fun deleteCookie(cookieValue: String)=cookieDao.deleteCookie(cookieValue)
+    fun isAnyCookieAvailable()=cookieDao.isAnyCookieAvailable()
+    suspend fun updateBlockRule(blockRule: BlockRule)=blockRuleDao.updateBlockRule(blockRule)
+    suspend fun deleteBlockRule(blockRule: BlockRule)=blockRuleDao.deleteBlockRule(blockRule)
+    suspend fun getBlockRule(blockRuleIndex: Long)=blockRuleDao.getBlockRule(blockRuleIndex)
+    suspend fun getSavedPoThread(threadId: Long)=threadDao.getSavedPoThread(threadId)
+    suspend fun countSavedReplyThreads(threadId: Long)=threadDao.countSavedReplyThreads(threadId)
+    fun getActiveCookieFlow()=cookieDao.getActiveCookieFlow()
+    suspend fun getCookieByValue(result: String)=cookieDao.getCookieByValue(result)
+    suspend fun insertCookie(newCookie: Cookie)=cookieDao.insertCookie(newCookie)
+    suspend fun getAllSavedPoThread()=threadDao.getAllSavedPoThread()
+    suspend fun isAnyEmoji(): Boolean =emojiDao.isAny()
+    suspend fun insertAllEmojis(emojiList: List<Emoji>)=emojiDao.insertAllEmojis(emojiList)
+    suspend fun isAnySectionInDB(): Boolean =sectionDao.isAnySectionInDB()
+    suspend fun insertAllSection(sections: List<Section>)=sectionDao.insertAllSection(sections)
+    fun getAllEmojisFlow()=emojiDao.getAllEmojisFlow()
 }

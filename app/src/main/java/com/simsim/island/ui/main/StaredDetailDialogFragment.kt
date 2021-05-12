@@ -35,15 +35,12 @@ import com.simsim.island.dataStore
 import com.simsim.island.databinding.DetailDialogfragmentBinding
 import com.simsim.island.databinding.DetailRecyclerviewViewholderBinding
 import com.simsim.island.dp2PxScale
-import com.simsim.island.model.ReplyThread
 import com.simsim.island.preferenceKey.PreferenceKey
-import com.simsim.island.repository.AislandRepo
 import com.simsim.island.util.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import org.jsoup.Jsoup
 
 @AndroidEntryPoint
 class StaredDetailDialogFragment : DialogFragment() {
@@ -91,7 +88,7 @@ class StaredDetailDialogFragment : DialogFragment() {
 
     private fun observeThreadStarStatus() {
         lifecycleScope.launch {
-            viewModel.database.threadDao().isPoThreadStaredFlow(args.ThreadId).collectLatest {
+            viewModel.isPoThreadStaredFlow(args.threadId).collectLatest {
                 val starItem =
                     binding.detailDialogToolbar.menu.findItem(R.id.stared_detail_fragment_menu_unstar)
                 if (it) {
@@ -176,7 +173,7 @@ class StaredDetailDialogFragment : DialogFragment() {
                     newThreadReply(
                         target = TARGET_THREAD,
                         prefill = "",
-                        threadId = args.ThreadId,
+                        threadId = args.threadId,
                         fId = ""
                     )
                 }
@@ -236,43 +233,18 @@ class StaredDetailDialogFragment : DialogFragment() {
             holderBinding.secondRowDetail.visibility = View.VISIBLE
             holderBinding.firstRowDetailPlaceholder.visibility = View.GONE
             holderBinding.secondRowDetailPlaceholder.visibility = View.GONE
-            when (index) {
+            val thread = when (index) {
                 in (0..list.size) -> {
-                    val referenceThread = list[index]
-                    adapter.bindHolder(
-                        binding = holderBinding, thread = referenceThread
-                    )
-                    MaterialAlertDialogBuilder(requireContext()).setView(holderBinding.root).show()
+                    list[index]
                 }
                 else -> {
-                    val url = "https://adnmb3.com/m/t/$referenceId"
-                    Log.e("Simsim", "request for thread detail:$url")
-                    val response = viewModel.networkService.getHtmlStringByPage(url)
-                    val thread: ReplyThread = if (response != null) {
-                        val doc = Jsoup.parse(response)
-                        val poThreadDiv =
-                            doc.selectFirst("div[class=uk-container h-threads-container]")
-                        if (poThreadDiv == null) {
-                            ReplyThread(replyThreadId = 888, poThreadId = 888, section = "")
-                        } else {
-                            val poThread = AislandRepo.divToBasicThread(
-                                poThreadDiv,
-                                isPo = true,
-                                section = "",
-                                poThreadId = 0L,
-                            )
-                            poThread
-                        }
-
-                    } else {
-                        ReplyThread(replyThreadId = 888, poThreadId = 888, section = "")
-                    }
-                    adapter.bindHolder(
-                        binding = holderBinding, thread = thread
-                    )
-                    MaterialAlertDialogBuilder(requireContext()).setView(holderBinding.root).show()
+                    viewModel.getReference(referenceId)
                 }
             }
+            adapter.bindHolder(
+                binding = holderBinding, thread = thread
+            )
+            MaterialAlertDialogBuilder(requireContext()).setView(holderBinding.root).show()
 
 
         }
@@ -281,7 +253,7 @@ class StaredDetailDialogFragment : DialogFragment() {
 
     private fun observeRecyclerViewFlow() {
         lifecycleScope.launch {
-            val poThread=viewModel.database.threadDao().getSavedPoThread(args.ThreadId).toPoThread()
+            val poThread=viewModel.getSavedPoThread(args.threadId).toPoThread()
             launch {
                 viewModel.setSavedReplyThreadFlow(poThread).collectLatest {
                     Log.e("Simsim", "got thread detail data:$it")
@@ -399,7 +371,7 @@ class StaredDetailDialogFragment : DialogFragment() {
     private fun setupToolbar() {
         val toolbar = binding.detailDialogToolbar
         toolbar.setNavigationIcon(R.drawable.ic_round_arrow_back_24)
-        toolbar.subtitle = "No." + args.ThreadId
+        toolbar.subtitle = "No." + args.threadId
         toolbar.title = "adnmb.com"
         toolbar.setNavigationOnClickListener {
             dismiss()
@@ -411,7 +383,7 @@ class StaredDetailDialogFragment : DialogFragment() {
                     newThreadReply(
                         target = TARGET_THREAD,
                         prefill = "",
-                        threadId = args.ThreadId,
+                        threadId = args.threadId,
                         fId = ""
                     )
                     true
@@ -425,13 +397,13 @@ class StaredDetailDialogFragment : DialogFragment() {
                 }
                 R.id.stared_detail_fragment_menu_unstar -> {
                     lifecycleScope.launch{
-                        starThread(args.ThreadId)
+                        starThread(args.threadId)
                     }
                     true
                 }
                 R.id.stared_detail_fragment_menu_to_last_page->{
                     lifecycleScope.launch{
-                        viewModel.database.threadDao().countSavedReplyThreads(args.ThreadId).let { count->
+                        viewModel.countSavedReplyThreads(args.threadId).let { count->
                             binding.detailDialogRecyclerView.smoothScrollToPosition(count+100)
                         }
                     }

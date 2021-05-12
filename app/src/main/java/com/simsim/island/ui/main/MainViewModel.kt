@@ -9,17 +9,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.paging.*
 import com.bumptech.glide.Glide
-import com.simsim.island.database.IslandDatabase
 import com.simsim.island.model.*
-import com.simsim.island.paging.DetailRemoteMediator
-import com.simsim.island.paging.MainRemoteMediator
-import com.simsim.island.paging.SavedPoThreadPagingSource
-import com.simsim.island.paging.SavedReplyThreadPagingSource
 import com.simsim.island.repository.AislandRepo
-import com.simsim.island.service.AislandNetworkService
 import com.simsim.island.util.LOG_TAG
 import com.simsim.island.util.toSavedPoThread
-import com.simsim.island.util.toSavedReplyThread
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +21,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.InputStream
 import java.time.Duration
 import java.time.LocalDateTime
@@ -38,16 +32,13 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     application: Application,
     private val repo: AislandRepo,
-    val database: IslandDatabase,
-    val networkService: AislandNetworkService
 ) : AndroidViewModel(application) {
-    //    var randomLoadingImage: Int = R.drawable.ic_blue_ocean1
     var currentPoThread: PoThread? = null
     var currentSectionId: String = ""
     var currentSectionName: String? = null
     val savedInstanceState = MutableLiveData<Long>()
     var currentReplyThreads = mutableListOf<ReplyThread>()
-    var sectionList = database.sectionDao().getAllSection()
+    var sectionList = repo.getAllSectionFlow()
     var mainFlow: Flow<PagingData<PoThread>> = emptyFlow()
     var currentPoThreadList = MutableLiveData<List<PoThread>>()
     var detailFlow: Flow<PagingData<ReplyThread>> = emptyFlow()
@@ -70,22 +61,32 @@ class MainViewModel @Inject constructor(
 
     init {
         doUpdate()
-        viewModelScope.launch {
-            blockRules = database.blockRuleDao().getAllBlockRules()
-            database.blockRuleDao().getAllBlockRulesFlow().collectLatest {
-                blockRules = it
-            }
-        }
+        updateBlockRules()
+
 
     }
 
+    private fun updateBlockRules() {
+        viewModelScope.launch {
+            blockRules = repo.getAllBlockRules()
+            repo.getAllBlockRulesFlow().collectLatest {
+                blockRules = it
+            }
+        }
+    }
+    suspend fun insertBlockRule(blockRule: BlockRule):Long{
+            return repo.insertBlockRule(blockRule)
+    }
+    suspend fun getAllPoThreadsByUid(uid:String)=
+        repo.getAllPoThreadsByUid(uid)
+
+
     fun doUpdate() {
         viewModelScope.launch {
-            val record = database.recordDao().getRecord()
+            val record = repo.getRecord()
             if (record == null) {
                 getSectionList()
-                database.recordDao()
-                    .insertRecord(UpdateRecord(lastUpdateTime = LocalDateTime.now()))
+                updateUpdateRecord()
             } else {
                 if (Duration.between(record.lastUpdateTime, LocalDateTime.now()).toDays() >= 30) {
                     getSectionList()
@@ -94,13 +95,13 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    private suspend fun updateUpdateRecord() {
+        repo.updateUpdateRecord()
+    }
+
 
     private suspend fun getSectionList() {
-        val pair = repo.getSectionAndEmojiList()
-        val sectionList = pair.first
-        val emojiList = pair.second
-        database.sectionDao().insertAllSection(sectionList)
-        database.emojiDao().insertAllEmojis(emojiList)
+        repo.getSectionAndEmojiList()
     }
 
 
@@ -114,14 +115,9 @@ class MainViewModel @Inject constructor(
                 maxSize = 9999,
                 initialLoadSize = 20,
             ),
-            remoteMediator = MainRemoteMediator(
-                service = networkService,
-                sectionName = sectionName,
-                sectionUrl = sectionUrl,
-                database = database
-            )
+            remoteMediator = repo.getMainRemoteMediator(sectionName = sectionName,sectionUrl=sectionUrl)
         ) {
-            database.threadDao().getAllPoThreadsBySection(sectionName)
+            repo.getAllPoThreadsBySection(sectionName)
         }.flow
             .map { pagingData ->
                 val list = mutableListOf<PoThread>()
@@ -203,15 +199,13 @@ class MainViewModel @Inject constructor(
                 maxSize = 999999,
                 initialLoadSize = 200
             ),
-            remoteMediator = DetailRemoteMediator(
-                service = networkService,
-                poThreadId = poThreadId,
-                database = database,
-                initialPage = initialPage,
+            remoteMediator = repo.getDetailRemoteMediator(
+                poThreadId=poThreadId,
+                initialPage=initialPage,
                 onlyPo=onlyPo
             )
         ) {
-            database.threadDao().getAllReplyThreadsPagingSource(poThreadId = poThreadId)
+            repo.getAllReplyThreadsPagingSource(poThreadId)
         }.flow.map { pagingData ->
             pagingData.filter {
                 currentReplyThreads.add(it)
@@ -232,7 +226,7 @@ class MainViewModel @Inject constructor(
                 initialLoadSize = 20
             ),
         ){
-            SavedPoThreadPagingSource(database.threadDao())
+            repo.savedPoThreadPagingSource
         }.flow
             .cachedIn(viewModelScope)
     }
@@ -246,26 +240,29 @@ class MainViewModel @Inject constructor(
                 initialLoadSize = 20
             ),
         ){
-            SavedReplyThreadPagingSource(database.threadDao(),poThread =poThread )
+            repo.getSavedReplyThreadPagingSource(poThread =poThread )
         }.flow
             .cachedIn(viewModelScope)
     }
 
 
-
+    fun updatePoThread(poThread: PoThread) {
+        viewModelScope.launch {
+            repo.updatePoThread(poThread)
+        }
+    }
     fun starPoThread(poThreadId: Long) {
         viewModelScope.launch {
-            if (database.threadDao().isPoThreadStared(poThreadId)){
-                database.threadDao().deleteSavedPoThread(database.threadDao().getSavedPoThread(poThreadId))
+            if (repo.isPoThreadStared(poThreadId)){
+                repo.deleteSavedPoThread(poThreadId)
             }else{
-                val poThread = database.threadDao().getPoThread(poThreadId)
+                val poThread = getPoThread(poThreadId)
                 poThread?.let {
                     val staredPoThreads = poThread.toSavedPoThread()
-                    database.threadDao().insertSavedPoThread(staredPoThreads)
+                    repo.insertSavedPoThread(staredPoThreads)
                     saveReplyThreads(poThreadId)
                     viewModelScope.launch {
-                        val pageEnd=database.keyDao().getCurrentNextPage()
-                        val pageStart=database.keyDao().getCurrentPreviousPage()
+                        val (pageStart,pageEnd)=repo.getCurrentPreviousNextPage()
                         val maxPage=poThread.maxPage
                         val minPage=1
                         launch {
@@ -289,14 +286,12 @@ class MainViewModel @Inject constructor(
             savedPoThreadDataSetChanged.value=true
         }
     }
+    fun isPoThreadStaredFlow(poThreadId: Long)=repo.isPoThreadStaredFlow(poThreadId)
+    suspend fun getPoThread(poThreadId: Long) = repo.getPoThread(poThreadId)
 
     private suspend fun saveReplyThreads(poThreadId: Long) {
-        database.threadDao().getAllReplyThreads(poThreadId).let { replyThreads ->
-            database.threadDao().insertAllSavedReplyThread(
-                replyThreads.map {
-                    it.toSavedReplyThread()
-                }
-            )
+        viewModelScope.launch {
+            repo.saveReplyThreads(poThreadId)
         }
     }
 
@@ -304,36 +299,29 @@ class MainViewModel @Inject constructor(
         pageRange.toMutableList().distinct().forEach { page->
             viewModelScope.launch {
                 Log.e(LOG_TAG,"get threadList of threadId[$poThreadId] by page[$page]")
-                getReplyThreadsByPage(page, poThreadId)
+                repo.getReplyThreadsByPage(page, poThreadId)
             }
         }
     }
-    private suspend fun getReplyThreadsByPage(page: Int, poThreadId: Long){
-        networkService.getReplyThreadsAndMaxPageByPage(
-            page = page,
-            poThreadId = poThreadId,
-            saveDataToDBHere = true,
-            forStar = true
-        )
-    }
+
 
     fun doWhenDestroy() {
         viewModelScope.launch {
             CoroutineScope(Dispatchers.IO).launch {
                 Log.e(LOG_TAG, "vm do destroy work")
                 glide.clearDiskCache()
-//                database.threadDao().clearAllPoThread()
+//                threadDao.clearAllPoThread()
             }
             CoroutineScope(Dispatchers.Main).launch {
                 Log.e(LOG_TAG, "vm do destroy work")
                 glide.clearMemory()
             }
 
-//            database.keyDao().clearMainKeys()
-//            database.keyDao().clearReplyThreadsKeys()
         }
     }
-
+    suspend fun getReference(referenceId:Long):ReplyThread= withContext(viewModelScope.coroutineContext){
+        repo.getReference(referenceId)
+    }
     fun doPost(
 //        cookie: String,
 //        poThreadId: Long,
@@ -349,9 +337,7 @@ class MainViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
 
-            val result = networkService.doPost(
-//                cookie,
-//                poThreadId,
+            val result = repo.doPost(
                 content,
                 image,
                 imageType,
@@ -380,7 +366,7 @@ class MainViewModel @Inject constructor(
         title: String = ""
     ) {
         viewModelScope.launch {
-            val result = networkService.doReply(
+            val result = repo.doReply(
 //                cookie,
                 poThreadId,
                 content,
@@ -397,13 +383,32 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun getCookies(cookieMap: Map<String, String>) {
+    fun getCookiesFromUserSystem(cookieMap: Map<String, String>) {
         viewModelScope.launch {
-            val cookieList = networkService.getCookies(cookieMap)
-            database.cookieDao().insertAllCookies(cookieList)
+            repo.getCookiesFromUserSystem(cookieMap)
             loadCookieFromUserSystemSuccess.value = true
         }
     }
+    suspend fun getAllCookies()=repo.getAllCookies()
+    suspend fun updateCookies(cookies:List<Cookie>)=repo.updateCookies(cookies)
+    suspend fun deleteCookie(cookieValue:String)=repo.deleteCookie(cookieValue)
+    fun isAnyCookieAvailable()=repo.isAnyCookieAvailable()
+    suspend fun updateBlockRule(blockRule: BlockRule)=repo.updateBlockRule(blockRule)
+    suspend fun deleteBlockRule(blockRule: BlockRule)=repo.deleteBlockRule(blockRule)
+    fun getAllBlockRulesFlow()=repo.getAllBlockRulesFlow()
+    suspend fun getBlockRule(blockRuleIndex: Long)=repo.getBlockRule(blockRuleIndex)
+    suspend fun getSavedPoThread(threadId: Long)=repo.getSavedPoThread(threadId)
+    suspend fun countSavedReplyThreads(threadId: Long)=repo.countSavedReplyThreads(threadId)
+    fun getActiveCookieFlow()=repo.getActiveCookieFlow()
+    suspend fun getCookieByValue(result: String)=repo.getCookieByValue(result)
+    suspend fun insertCookie(newCookie: Cookie)=repo.insertCookie(newCookie)
+    suspend fun getAllSavedPoThread()=repo.getAllSavedPoThread()
+    suspend fun isAnyEmoji():Boolean=repo.isAnyEmoji()
+    suspend fun insertAllEmojis(emojiList: List<Emoji>)=repo.insertAllEmojis(emojiList)
+    suspend fun isAnySectionInDB(): Boolean =repo.isAnySectionInDB()
+    suspend fun insertAllSection(sections: List<Section>)=repo.insertAllSection(sections)
+    fun getAllSectionFlow()=repo.getAllSectionFlow()
+    fun getAllEmojisFlow()=repo.getAllEmojisFlow()
 
     //
 //

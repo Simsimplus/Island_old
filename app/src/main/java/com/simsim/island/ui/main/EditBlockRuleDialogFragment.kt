@@ -64,7 +64,7 @@ class EditBlockRuleDialogFragment : DialogFragment(){
         val blockTargetTextView=binding.blockTargetTextView
         if (!args.isNewOne){
             lifecycleScope.launch {
-                viewModel.database.blockRuleDao().getBlockRule(args.blockRuleIndex).let {
+                viewModel.getBlockRule(args.blockRuleIndex).let {
                     nameInput.setText(it.name)
                     ruleInput.setText(it.rule)
                     isRegex.isChecked=it.isRegex
@@ -109,11 +109,11 @@ class EditBlockRuleDialogFragment : DialogFragment(){
                                 Log.e(LOG_TAG,it.toString())
                             }
                             if (isSaved){
-                                viewModel.database.blockRuleDao().updateBlockRule(
+                                viewModel.updateBlockRule(
                                     blockRule
                                 )
                             }else{
-                                blockRuleIndex=viewModel.database.blockRuleDao().insertBlockRule(
+                                blockRuleIndex=viewModel.insertBlockRule(
                                     blockRule
                                 )
                                 isSaved=true

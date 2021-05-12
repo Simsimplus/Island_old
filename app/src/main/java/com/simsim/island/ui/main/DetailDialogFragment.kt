@@ -36,15 +36,12 @@ import com.simsim.island.dataStore
 import com.simsim.island.databinding.DetailDialogfragmentBinding
 import com.simsim.island.databinding.DetailRecyclerviewViewholderBinding
 import com.simsim.island.dp2PxScale
-import com.simsim.island.model.ReplyThread
 import com.simsim.island.preferenceKey.PreferenceKey
 import com.simsim.island.util.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import org.jsoup.Jsoup
-import java.time.LocalDateTime
 
 @AndroidEntryPoint
 class DetailDialogFragment : DialogFragment() {
@@ -81,57 +78,60 @@ class DetailDialogFragment : DialogFragment() {
 
     private fun handleLoadingImage() {
         lifecycleScope.launch {
-            var runOnce=true
+            var runOnce = true
             adapter.loadStateFlow.collectLatest { loadStates ->
-                    when (loadStates.refresh) {
-                        is LoadState.Loading -> {
-                            retryIfNotReady=lifecycleScope.launch {
-                                if (runOnce){
-                                    try {
-                                        adapter.refresh()
-                                    }catch (e:Exception){
-                                        Log.e(LOG_TAG,"retry failed:${e.stackTraceToString()}")
-                                    } finally {
-                                        runOnce=false
-                                    }
+                when (loadStates.refresh) {
+                    is LoadState.Loading -> {
+                        retryIfNotReady = lifecycleScope.launch {
+                            if (runOnce) {
+                                try {
+                                    adapter.refresh()
+                                } catch (e: Exception) {
+                                    Log.e(LOG_TAG, "retry failed:${e.stackTraceToString()}")
+                                } finally {
+                                    runOnce = false
                                 }
-
-                            }
-                            retryIfNotReady.start()
-//                        binding.detailLoadingImage.setImageResource(viewModel.randomLoadingImage)
-                            binding.detailLoadingImage.visibility = View.VISIBLE
-                            binding.detailFabAdd.visibility = View.INVISIBLE
-                        }
-                        is LoadState.Error -> {
-//                        binding.detailLoadingImage.setImageResource(viewModel.randomLoadingImage)
-                            binding.detailLoadingImage.visibility = View.VISIBLE
-                            Snackbar
-                                .make(
-                                    binding.root,
-                                    R.string.loading_page_fail_info,
-                                    Snackbar.LENGTH_INDEFINITE
-                                )
-                                .setAction(getString(R.string.loading_fail_retry)) {
-                                    adapter.retry()
-                                }
-                                .show()
-                            binding.detailFabAdd.visibility = View.INVISIBLE
-                        }
-                        else -> {
-                            try {
-                                retryIfNotReady.cancel()
-                            }catch (e:Exception){
-                                Log.e(LOG_TAG,"cancel retryIfNotReady failed:${e.stackTraceToString()}")
-                            }
-                            binding.detailLoadingImage.visibility = View.INVISIBLE
-                            if (isFABEnable) {
-                                binding.detailFabAdd.visibility = View.VISIBLE
-                            } else {
-                                binding.detailFabAdd.visibility = View.INVISIBLE
                             }
 
                         }
+                        retryIfNotReady.start()
+//                        binding.detailLoadingImage.setImageResource(viewModel.randomLoadingImage)
+                        binding.detailLoadingImage.visibility = View.VISIBLE
+                        binding.detailFabAdd.visibility = View.INVISIBLE
                     }
+                    is LoadState.Error -> {
+//                        binding.detailLoadingImage.setImageResource(viewModel.randomLoadingImage)
+                        binding.detailLoadingImage.visibility = View.VISIBLE
+                        Snackbar
+                            .make(
+                                binding.root,
+                                R.string.loading_page_fail_info,
+                                Snackbar.LENGTH_INDEFINITE
+                            )
+                            .setAction(getString(R.string.loading_fail_retry)) {
+                                adapter.retry()
+                            }
+                            .show()
+                        binding.detailFabAdd.visibility = View.INVISIBLE
+                    }
+                    else -> {
+                        try {
+                            retryIfNotReady.cancel()
+                        } catch (e: Exception) {
+                            Log.e(
+                                LOG_TAG,
+                                "cancel retryIfNotReady failed:${e.stackTraceToString()}"
+                            )
+                        }
+                        binding.detailLoadingImage.visibility = View.INVISIBLE
+                        if (isFABEnable) {
+                            binding.detailFabAdd.visibility = View.VISIBLE
+                        } else {
+                            binding.detailFabAdd.visibility = View.INVISIBLE
+                        }
+
+                    }
+                }
 
             }
         }
@@ -139,7 +139,7 @@ class DetailDialogFragment : DialogFragment() {
 
     private fun observeThreadStarStatus() {
         lifecycleScope.launch {
-            viewModel.database.threadDao().isPoThreadStaredFlow(args.ThreadId).collectLatest {
+            viewModel.isPoThreadStaredFlow(args.threadId).collectLatest {
                 val starItem =
                     binding.detailDialogToolbar.menu.findItem(R.id.detail_fragment_menu_star)
                 if (it) {
@@ -224,7 +224,7 @@ class DetailDialogFragment : DialogFragment() {
                     newThreadReply(
                         target = TARGET_THREAD,
                         prefill = "",
-                        threadId = args.ThreadId,
+                        threadId = args.threadId,
                         fId = ""
                     )
                 }
@@ -289,36 +289,7 @@ class DetailDialogFragment : DialogFragment() {
                     list[index]
                 }
                 else -> {
-                    val url = "https://adnmb3.com/Home/Forum/ref?id=$referenceId"
-                    Log.e(LOG_TAG,"fetch reference from $url")
-                    Log.e("Simsim", "request for thread detail:$url")
-                    val response = viewModel.networkService.getHtmlStringByPage(url)
-                    if (response != null) {
-                        val doc = Jsoup.parse(response)
-                        val poThreadId=doc.selectFirst("a[class=h-threads-info-id]")?.let { e->
-                            e.attr("href").removeQueryTail().firstNumber().toLong()
-                        }?:0L
-                        val time=doc.selectFirst("span[class=h-threads-info-createdat]")?.let { e->
-                            parseIslandTime(e.ownText())
-                        }?: LocalDateTime.now()
-                        val uid=doc.selectFirst("span[class=h-threads-info-uid]")?.let { e->
-                            e.ownText().replace("ID:","").trim()
-                        }?: ""
-                        val content=doc.selectFirst("div[class=h-threads-content]")?.let { e->
-                            e.wholeText().trim()
-                        }?: ""
-                        ReplyThread(
-                            replyThreadId = referenceId,
-                            poThreadId =poThreadId,
-                            time=time,
-                            uid=uid,
-                            content = content,
-                            section = ""
-                        )
-
-                    } else {
-                        ReplyThread(replyThreadId = 888, poThreadId = 888, section = "")
-                    }
+                    viewModel.getReference(referenceId)
                 }
             }
             adapter.bindHolder(
@@ -352,7 +323,7 @@ class DetailDialogFragment : DialogFragment() {
             referenceClickListener = { reference ->
                 showReferenceDialog(reference)
             },
-            urlClickListener = {url->
+            urlClickListener = { url ->
                 Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
                     startActivity(this)
                 }
@@ -381,8 +352,8 @@ class DetailDialogFragment : DialogFragment() {
                         copyTextToClipBoard(replyThread.content)
                         true
                     }
-                    R.id.detail_fragment_menu_copy_thread_id->{
-                        copyTextToClipBoard(args.ThreadId.toString())
+                    R.id.detail_fragment_menu_copy_thread_id -> {
+                        copyTextToClipBoard(args.threadId.toString())
                         true
                     }
                     else -> {
@@ -398,24 +369,23 @@ class DetailDialogFragment : DialogFragment() {
         binding.detailDialogRecyclerView.layoutManager = layoutManager
         binding.detailDialogRecyclerView.isMotionEventSplittingEnabled = false
         binding.detailDialogRecyclerView.addOnScrollListener(
-            object :RecyclerView.OnScrollListener(){
+            object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    if(dy > 0) //check for scroll down
+                    if (dy > 0) //check for scroll down
                     {
-                       val  visibleItemCount = layoutManager.getChildCount();
-                        val  totalItemCount = layoutManager.getItemCount();
-                        val  pastVisiblesItems = layoutManager.findFirstVisibleItemPosition();
-                            if ( (visibleItemCount + pastVisiblesItems) >= totalItemCount)
-                            {
-                                Log.e(LOG_TAG, "Last Item, adapter.refresh() !")
-                            }
+                        val visibleItemCount = layoutManager.getChildCount();
+                        val totalItemCount = layoutManager.getItemCount();
+                        val pastVisiblesItems = layoutManager.findFirstVisibleItemPosition();
+                        if ((visibleItemCount + pastVisiblesItems) >= totalItemCount) {
+                            Log.e(LOG_TAG, "Last Item, adapter.refresh() !")
+                        }
                     }
                 }
             }
         )
     }
 
-    private fun copyTextToClipBoard(text:String) {
+    private fun copyTextToClipBoard(text: String) {
         val clipboardManager =
             requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         ClipData.newPlainText("Copied Text", text).also {
@@ -457,7 +427,7 @@ class DetailDialogFragment : DialogFragment() {
     private fun setupToolbar() {
         val toolbar = binding.detailDialogToolbar
         toolbar.setNavigationIcon(R.drawable.ic_round_arrow_back_24)
-        toolbar.subtitle = "No." + args.ThreadId
+        toolbar.subtitle = "No." + args.threadId
         toolbar.title = "adnmb.com"
         toolbar.setNavigationOnClickListener {
             dismiss()
@@ -469,7 +439,7 @@ class DetailDialogFragment : DialogFragment() {
                     newThreadReply(
                         target = TARGET_THREAD,
                         prefill = "",
-                        threadId = args.ThreadId,
+                        threadId = args.threadId,
                         fId = ""
                     )
                     true
@@ -477,7 +447,7 @@ class DetailDialogFragment : DialogFragment() {
                 R.id.detail_fragment_menu_report -> {
                     newThreadReply(
                         target = TARGET_SECTION,
-                        prefill = ">>No.${args.ThreadId}\n举报理由：",
+                        prefill = ">>No.${args.threadId}\n举报理由：",
                         threadId = 0,
                         fId = "18"
                     )
@@ -491,7 +461,7 @@ class DetailDialogFragment : DialogFragment() {
                     true
                 }
                 R.id.detail_fragment_menu_star -> {
-                    starThread(args.ThreadId)
+                    starThread(args.threadId)
 //                    val starItem = toolbar.menu.findItem(R.id.detail_fragment_menu_star)
 //                    when(starItem.title){
 //                        "收藏"->{
@@ -503,51 +473,57 @@ class DetailDialogFragment : DialogFragment() {
 //                    }
                     true
                 }
-                R.id.detail_fragment_menu_to_last_page->{
-                    lifecycleScope.launch{
-                        viewModel.database.threadDao().getPoThread(args.ThreadId)?.let {poThread->
+                R.id.detail_fragment_menu_to_last_page -> {
+                    lifecycleScope.launch {
+                        viewModel.getPoThread(args.threadId)?.let { poThread ->
                             viewModel.setDetailFlow(
-                                poThreadId = args.ThreadId,
+                                poThreadId = args.threadId,
                                 initialPage = poThread.maxPage
-                            ).collectLatest { pagingData->
+                            ).collectLatest { pagingData ->
                                 adapter.submitData(pagingData)
-                                binding.detailDialogRecyclerView.smoothScrollToPosition(layoutManager.childCount+1000)
+                                binding.detailDialogRecyclerView.smoothScrollToPosition(
+                                    layoutManager.childCount + 1000
+                                )
                             }
                         }
                     }
                     true
                 }
-                R.id.detail_fragment_menu_po_only->{
-                        item.isChecked=!item.isChecked
-                        when(item.isChecked){
-                            true->{
-                                lifecycleScope.launch {
-                                    viewModel.setDetailFlow(
-                                        poThreadId = args.ThreadId,
-                                        localBlockRule = {
-                                            it.isPo
-                                        }
-                                    ).collectLatest { pagingData->
-                                        adapter.submitData(pagingData)
+                R.id.detail_fragment_menu_po_only -> {
+                    item.isChecked = !item.isChecked
+                    when (item.isChecked) {
+                        true -> {
+                            lifecycleScope.launch {
+                                viewModel.setDetailFlow(
+                                    poThreadId = args.threadId,
+                                    localBlockRule = {
+                                        it.isPo
                                     }
+                                ).collectLatest { pagingData ->
+                                    adapter.submitData(pagingData)
                                 }
-                                true
                             }
-                            false->{
-                                lifecycleScope.launch {
-                                    viewModel.setDetailFlow(
-                                        poThreadId = args.ThreadId,
-                                    ).collectLatest { pagingData->
-                                        adapter.submitData(pagingData)
-                                    }
+                            true
+                        }
+                        false -> {
+                            lifecycleScope.launch {
+                                viewModel.setDetailFlow(
+                                    poThreadId = args.threadId,
+                                ).collectLatest { pagingData ->
+                                    adapter.submitData(pagingData)
                                 }
-                                true
-                            } }
+                            }
+                            true
+                        }
+                    }
 
 
                 }
-                R.id.detail_fragment_menu_open_in_browser->{
-                    Intent(Intent.ACTION_VIEW, Uri.parse("https://adnmb3.com/m/t/${args.ThreadId}")).also {intent->
+                R.id.detail_fragment_menu_open_in_browser -> {
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://adnmb3.com/m/t/${args.threadId}")
+                    ).also { intent ->
                         startActivity(intent)
                     }
                     true
@@ -593,16 +569,20 @@ class DetailDialogFragment : DialogFragment() {
                     if (success) {
                         Snackbar.make(binding.detailDialogLayout, "发串成功", Snackbar.LENGTH_LONG)
                             .show()
-                    }else{
-                        viewModel.errorPostOrReply.observe(viewLifecycleOwner){error->
+                    } else {
+                        viewModel.errorPostOrReply.observe(viewLifecycleOwner) { error ->
                             error?.let {
-                                Snackbar.make(binding.detailDialogLayout, "发串失败[$error]", Snackbar.LENGTH_INDEFINITE)
+                                Snackbar.make(
+                                    binding.detailDialogLayout,
+                                    "发串失败[$error]",
+                                    Snackbar.LENGTH_INDEFINITE
+                                )
                                     .show()
-                                viewModel.errorPostOrReply.value=null
+                                viewModel.errorPostOrReply.value = null
                             }
                         }
                     }
-                    viewModel.successPostOrReply.value=null
+                    viewModel.successPostOrReply.value = null
                 }
 
             }

@@ -128,19 +128,19 @@ class BlockRuleManageDialogFragment : DialogFragment() {
                 },
                 switchOnCheckedChangeListener = { blockRule ->
                     lifecycleScope.launch {
-                        viewModel.database.blockRuleDao().updateBlockRule(blockRule)
+                        viewModel.updateBlockRule(blockRule)
                     }
                 },
                 deleteButtonClickListener = { blockRule ->
                     lifecycleScope.launch {
-                        viewModel.database.blockRuleDao().deleteBlockRule(blockRule)
+                        viewModel.deleteBlockRule(blockRule)
                     }
                 },
             )
             binding.blockRuleRecyclerView.adapter = adapter
             binding.blockRuleRecyclerView.layoutManager = LinearLayoutManager(requireContext())
             binding.blockRuleRecyclerView.isMotionEventSplittingEnabled = false
-            viewModel.database.blockRuleDao().getAllBlockRulesFlow()
+            viewModel.getAllBlockRulesFlow()
                 .collectLatest { blockRuleList ->
                     adapter.submitList(blockRuleList)
                 }

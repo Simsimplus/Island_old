@@ -10,7 +10,7 @@ interface SectionDao {
     suspend fun updateSection(section: Section)
 
     @Query("select * from sectionList where isShow=1 order by sectionIndex asc")
-    fun getAllSection(): Flow<List<Section>>
+    fun getAllSectionFlow(): Flow<List<Section>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllSection(sections: List<Section>)

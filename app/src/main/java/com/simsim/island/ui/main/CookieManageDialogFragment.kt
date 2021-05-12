@@ -8,7 +8,6 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.room.withTransaction
 import com.simsim.island.R
 import com.simsim.island.adapter.CookieRecyclerViewAdapter
 import com.simsim.island.databinding.CookieManageDialogFragmentBinding
@@ -43,25 +42,24 @@ class CookieManageDialogFragment : DialogFragment() {
 
     private fun setupRecyclerView() {
         lifecycleScope.launch {
-            val cookieDao=viewModel.database.cookieDao()
-            val cookieList = viewModel.database.cookieDao().getAllCookies()
+            val cookieList = viewModel.getAllCookies()
             adapter = CookieRecyclerViewAdapter(
                 requireContext(),
                 cookieList.toMutableList(),
                 {cookies->
                    lifecycleScope.launch {
-                       cookieDao.updateCookies(cookies)
+                       viewModel.updateCookies(cookies)
                    }
                 }
             ) { cookie ->
                 lifecycleScope.launch {
-                    cookieDao.deleteCookie(cookie.cookie)
+                    viewModel.deleteCookie(cookie.cookie)
                 }
             }
             binding.cookieRuleRecyclerView.adapter=adapter
             binding.cookieRuleRecyclerView.layoutManager = LinearLayoutManager(requireContext())
             binding.cookieRuleRecyclerView.isMotionEventSplittingEnabled=false
-            cookieDao.isAnyCookieAvailable().collectLatest { cookieAvailable->
+            viewModel.isAnyCookieAvailable().collectLatest { cookieAvailable->
                 if (!cookieAvailable){
                     binding.noCookiesTextView.visibility=View.VISIBLE
                     binding.cookieRuleRecyclerView.visibility=View.GONE

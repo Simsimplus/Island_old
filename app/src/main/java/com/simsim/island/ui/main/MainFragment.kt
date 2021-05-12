@@ -54,7 +54,7 @@ class MainFragment : Fragment() {
     internal lateinit var adapter: MainRecyclerViewAdapter
     internal lateinit var layoutManager: LinearLayoutManager
     private lateinit var mainFlowJob: Job
-    private lateinit var retryIfNotReady:Job
+    private lateinit var retryIfNotReady: Job
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var drawer: NavigationView
     private lateinit var fab: FloatingActionButton
@@ -82,6 +82,7 @@ class MainFragment : Fragment() {
         initialMainFlow()
         return binding.root
     }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupToolbar()
@@ -238,36 +239,36 @@ class MainFragment : Fragment() {
 
     private fun setupDrawerSections() {
         lifecycleScope.launch {
-            val menu=drawer.menu
+            val menu = drawer.menu
             drawer.setNavigationItemSelectedListener {
 
                 true
             }
-            viewModel.database.sectionDao().getAllSection().distinctUntilChanged().collectLatest { sectionList ->
-                var index=10
+            viewModel.sectionList.distinctUntilChanged().collectLatest { sectionList ->
+                var index = 10
                 sectionList.groupBy {
                     it.group
                 }.forEach { (group, list) ->
                     index += 1
-                    menu.addSubMenu(0,index,0,group).also { subMenu->
+                    menu.addSubMenu(0, index, 0, group).also { subMenu ->
                         subMenu.item
-                            .setOnMenuItemClickListener { item->
-                            Log.e(LOG_TAG,"subMenu item clicked")
-                            if (subMenu.hasVisibleItems()){
-                                subMenu.children.forEach { child->
-                                    child.isVisible = false
+                            .setOnMenuItemClickListener { item ->
+                                Log.e(LOG_TAG, "subMenu item clicked")
+                                if (subMenu.hasVisibleItems()) {
+                                    subMenu.children.forEach { child ->
+                                        child.isVisible = false
+                                    }
+                                } else {
+                                    subMenu.children.forEach { child ->
+                                        child.isVisible = true
+                                    }
                                 }
-                            }else{
-                                subMenu.children.forEach { child->
-                                    child.isVisible = true
-                                }
+                                true
                             }
-                            true
-                        }
-                        list.forEach { section->
+                        list.forEach { section ->
                             subMenu.add(section.sectionName).also {
-                                it.setOnMenuItemClickListener { item->
-                                    Log.e(LOG_TAG,"drawer item index:${item.itemId}")
+                                it.setOnMenuItemClickListener { item ->
+                                    Log.e(LOG_TAG, "drawer item index:${item.itemId}")
                                     drawer.setCheckedItem(item)
                                     onSectionClicked(section)
                                     true
@@ -321,8 +322,6 @@ class MainFragment : Fragment() {
     }
 
 
-
-
     private fun handleSavedInstanceState() {
         viewModel.savedInstanceState.observe(viewLifecycleOwner) {
             toDetailFragment(it)
@@ -338,7 +337,7 @@ class MainFragment : Fragment() {
 
     private fun initialMainFlow() {
         lifecycleScope.launch {
-            viewModel.database.sectionDao().getAllSection().take(1).collect {
+            viewModel.sectionList.take(1).collect {
                 val sectionId = if (it.isNotEmpty()) it[0].fId else "4"
                 val sectionName = if (it.isNotEmpty()) it[0].sectionName else "综合版1"
                 val sectionUrl =
@@ -369,19 +368,19 @@ class MainFragment : Fragment() {
 
     private fun handleLaunchLoading() {
         lifecycleScope.launch {
-            var runOnce=true
+            var runOnce = true
             adapter.loadStateFlow.collectLatest { loadStates ->
                 when (loadStates.refresh) {
                     is LoadState.Loading -> {
-                        retryIfNotReady=lifecycleScope.launch {
-                            if (runOnce){
+                        retryIfNotReady = lifecycleScope.launch {
+                            if (runOnce) {
                                 try {
-                                    Log.e(LOG_TAG,"main retry")
+                                    Log.e(LOG_TAG, "main retry")
                                     adapter.refresh()
-                                }catch (e:Exception){
-                                    Log.e(LOG_TAG,"retry failed:${e.stackTraceToString()}")
-                                }finally {
-                                    runOnce=false
+                                } catch (e: Exception) {
+                                    Log.e(LOG_TAG, "retry failed:${e.stackTraceToString()}")
+                                } finally {
+                                    runOnce = false
                                 }
                             }
 
@@ -409,8 +408,11 @@ class MainFragment : Fragment() {
                     else -> {
                         try {
                             retryIfNotReady.cancel()
-                        }catch (e:Exception){
-                            Log.e(LOG_TAG,"cancel retryIfNotReady failed:${e.stackTraceToString()}")
+                        } catch (e: Exception) {
+                            Log.e(
+                                LOG_TAG,
+                                "cancel retryIfNotReady failed:${e.stackTraceToString()}"
+                            )
                         }
                         binding.loadingImage.visibility = View.GONE
                         if (isFABEnable) {
@@ -448,21 +450,23 @@ class MainFragment : Fragment() {
                 val action = MainFragmentDirections.actionGlobalImageDetailFragment(imageUrl)
                 findNavController().navigate(action)
             },
-            popupMenuItemClickListener = {menuItem,poThread->
-                when(menuItem.itemId){
-                    R.id.main_popup_menu_block_thread->{
+            popupMenuItemClickListener = { menuItem, poThread ->
+                when (menuItem.itemId) {
+                    R.id.main_popup_menu_block_thread -> {
                         blockThreadById(poThread)
                         true
                     }
-                    R.id.main_popup_menu_block_uid->{
+                    R.id.main_popup_menu_block_uid -> {
                         blockThreadByUid(poThread)
                         true
                     }
-                    R.id.main_popup_menu_star->{
+                    R.id.main_popup_menu_star -> {
                         viewModel.starPoThread(poThread.threadId)
                         true
                     }
-                    else->{false}
+                    else -> {
+                        false
+                    }
                 }
 
             },
@@ -503,7 +507,7 @@ class MainFragment : Fragment() {
 
     private fun blockThreadById(poThread: PoThread) {
         lifecycleScope.launch {
-            viewModel.database.threadDao().updatePoThread(poThread.apply {
+            viewModel.updatePoThread(poThread.apply {
                 isShow = false
             })
             var shouldBlock = true
@@ -511,7 +515,7 @@ class MainFragment : Fragment() {
                 .setAction("取消") {
                     shouldBlock = false
                     lifecycleScope.launch {
-                        viewModel.database.threadDao().updatePoThread(poThread.apply {
+                        viewModel.updatePoThread(poThread.apply {
                             isShow = true
                         })
                     }
@@ -524,7 +528,7 @@ class MainFragment : Fragment() {
                         ) {
                             if (shouldBlock) {
                                 lifecycleScope.launch {
-                                    viewModel.database.blockRuleDao().insertBlockRule(
+                                    viewModel.insertBlockRule(
                                         BlockRule(
                                             index = 0,
                                             rule = poThread.threadId.toString(),
@@ -539,22 +543,24 @@ class MainFragment : Fragment() {
                 .show()
         }
     }
-    private fun blockThreadByUid(poThread:PoThread){
+
+    private fun blockThreadByUid(poThread: PoThread) {
         lifecycleScope.launch {
-            val list=viewModel.database.threadDao().getAllPoThreadsByUid(poThread.uid)
+            val list = viewModel.getAllPoThreadsByUid(poThread.uid)
             list.forEach {
-                viewModel.database.threadDao().updatePoThread(it.apply {
-                    isShow=false
+                viewModel.updatePoThread(it.apply {
+                    isShow = false
                 })
             }
             var shouldBlock = true
-            Snackbar.make(binding.mainCoordinatorLayout, "已屏蔽此饼干", Snackbar.LENGTH_SHORT)
+            Snackbar
+                .make(binding.mainCoordinatorLayout, "已屏蔽此饼干", Snackbar.LENGTH_SHORT)
                 .setAction("取消") {
                     shouldBlock = false
                     lifecycleScope.launch {
                         list.forEach {
-                            viewModel.database.threadDao().updatePoThread(it.apply {
-                                isShow=true
+                            viewModel.updatePoThread(it.apply {
+                                isShow = true
                             })
                         }
                     }
@@ -567,7 +573,7 @@ class MainFragment : Fragment() {
                         ) {
                             if (shouldBlock) {
                                 lifecycleScope.launch {
-                                    viewModel.database.blockRuleDao().insertBlockRule(
+                                    viewModel.insertBlockRule(
                                         BlockRule(
                                             index = 0,
                                             rule = poThread.uid,
@@ -594,7 +600,7 @@ class MainFragment : Fragment() {
 
 
     private fun setupToolbar() {
-        lifecycleScope.launch{
+        lifecycleScope.launch {
             val toolbar = binding.mainToolbar
             toolbar.inflateMenu(R.menu.main_toolbar_menu)
             toolbar.setNavigationIcon(R.drawable.ic_round_menu_24)
@@ -682,16 +688,20 @@ class MainFragment : Fragment() {
                     if (success) {
                         Snackbar.make(binding.mainCoordinatorLayout, "发串成功", Snackbar.LENGTH_LONG)
                             .show()
-                    }else{
-                        viewModel.errorPostOrReply.observe(viewLifecycleOwner){error->
+                    } else {
+                        viewModel.errorPostOrReply.observe(viewLifecycleOwner) { error ->
                             error?.let {
-                                Snackbar.make(binding.mainCoordinatorLayout, "发串失败[$error]", Snackbar.LENGTH_INDEFINITE)
+                                Snackbar.make(
+                                    binding.mainCoordinatorLayout,
+                                    "发串失败[$error]",
+                                    Snackbar.LENGTH_INDEFINITE
+                                )
                                     .show()
-                                viewModel.errorPostOrReply.value=null
+                                viewModel.errorPostOrReply.value = null
                             }
                         }
                     }
-                    viewModel.successPostOrReply.value=null
+                    viewModel.successPostOrReply.value = null
                 }
             }
         }

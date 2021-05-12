@@ -16,5 +16,5 @@ interface EmojiDao {
     suspend fun insertAllEmojis(emojis:List<Emoji>)
 
     @Query("select * from Emoji order by emojiIndex asc")
-    fun getAllEmojis(): Flow<List<Emoji>>
+    fun getAllEmojisFlow(): Flow<List<Emoji>>
 }

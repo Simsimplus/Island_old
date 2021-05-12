@@ -32,7 +32,7 @@
         android:label="DetailDialogFragment"
         tools:layout="@layout/detail_dialogfragment">
         <argument
-            android:name="ThreadId"
+            android:name="threadId"
             app:argType="long" />
         <argument
             android:name="isManager"
@@ -171,7 +171,7 @@
         android:name="com.simsim.island.ui.main.StaredDetailDialogFragment"
         android:label="StaredDetailDialogFragment" >
         <argument
-            android:name="ThreadId"
+            android:name="threadId"
             app:argType="long" />
     </dialog>
 
